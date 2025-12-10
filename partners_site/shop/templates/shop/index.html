@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="catalog">
+    <div class="container">
+        <h1 class="catalog__title">Устройства HiTE PRO</h1>
+        <p class="catalog__subtitle">
+            Современные решения для умного дома и офисов. Выберите устройство под ваши задачи.
+        </p>
+
+        <div class="catalog__grid">
+            {% for product in products %}
+                <article class="product-card">
+                    <a href="{{ product.get_absolute_url }}" class="product-card__image-wrapper">
+                        {% if product.main_image %}
+                            <img src="{{ product.main_image.url }}"
+                                 alt="{{ product.name }}"
+                                 class="product-card__image">
+                        {% elif product.images.all %}
+                            {% with img=product.images.all.0 %}
+                                {% if img %}
+                                    <img src="{{ img.photo.url }}"
+                                         alt="{{ product.name }}"
+                                         class="product-card__image">
+                                {% else %}
+                                    <div class="product-card__placeholder">Нет фото</div>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <div class="product-card__placeholder">Нет фото</div>
+                        {% endif %}
+                    </a>
+
+                    <div class="product-card__body">
+                        <h2 class="product-card__title">
+                            <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                        </h2>
+
+                        {% if product.short_description %}
+                            <p class="product-card__desc">
+                                {{ product.short_description|truncatechars:120 }}
+                            </p>
+                        {% endif %}
+
+                        <div class="product-card__footer">
+                            {% if product.price %}
+                                <div class="product-card__price">
+                                    {{ product.price|floatformat:0 }} ₽
+                                </div>
+                            {% endif %}
+                            <a href="{{ product.get_absolute_url }}" class="product-card__btn">
+                                Подробнее
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="catalog__empty">
+                    Товары пока не добавлены.
+                </p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}

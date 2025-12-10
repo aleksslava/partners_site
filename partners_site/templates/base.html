@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}HiTE PRO{% endblock %}</title>
+
+
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<header>
+    <div class="container header__inner">
+
+        <a href="/" class="header__logo">HiTE PRO</a>
+
+        <nav>
+            <ul>
+                <li><a href="/products/">Каталог</a></li>
+                <li><a href="/cabinet/">Личный кабинет</a></li>
+                <li><a href="/about/">О компании</a></li>
+                <li><a href="/contacts/">Контакты</a></li>
+                <li><a href="/shoping_cart/">Корзина</a></li>
+            </ul>
+        </nav>
+
+        <div class="mobile-toggle">☰</div>
+
+    </div>
+</header>
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    © {{ now|date:"Y" }} HiTE PRO — Умные устройства нового поколения
+</footer>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

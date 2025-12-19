@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Каталог{% endblock %}
+
+{% block content %}
+<section class="catalog">
+  <div class="container">
+    <h1 class="catalog-title">Магазин партнёров HiTE PRO!</h1>
+
+      <div class="catalog-filters" id="catalog-filters">
+          <form class="catalog-search" action="" onsubmit="return false;">
+            <div class="catalog-search__inner">
+              <input
+                id="catalog-search-input"
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                class="catalog-search__input"
+                placeholder="Поиск по товарам…"
+                autocomplete="off"
+              >
+              <button type="button" class="catalog-search__clear" id="catalog-search-clear" aria-label="Сбросить поиск">✕</button>
+            </div>
+          </form>
+
+          <div class="catalog-tags" id="catalog-tags">
+              <button type="button" class="tag-chip {% if not tag %}is-active{% endif %}" data-tag="">
+                Все
+              </button>
+
+              {% for t in tags %}
+                  <button type="button" class="tag-chip {% if tag == t.name %}is-active{% endif %}" data-tag="{{ t.name|escape }}">
+                    {{ t.name }}
+                  </button>
+              {% endfor %}
+          </div>
+      </div>
+
+
+      <div id="catalog-results">
+        <div class="catalog-grid">
+          {% for item in group_cards %}
+            {% with group=item.group product=item.product mods=item.mods %}
+            <article class="product-card js-product-card"
+                     data-group-id="{{ group.id }}"
+                     style="--card-index: {{ forloop.counter0 }}">
+
+              <!-- Фото товара -->
+              <a href="{% url 'product_group_detail' group.pk %}"
+                 class="product-image-wrapper js-details-link"
+                 data-base-href="{% url 'product_group_detail' group.pk %}">
+                {% with img=product.images.first %}
+                  {% if img %}
+                    <img src="{{ img.photo.url }}" alt="{{ product.name }}" class="product-image js-product-image">
+                  {% else %}
+                    <img src="" alt="{{ product.name }}" class="product-image js-product-image" style="display:none;">
+                  {% endif %}
+                {% endwith %}
+              </a>
+
+              <div class="product-info">
+                <h2 class="product-name">{{ group.name }}</h2>
+
+                <div class="product-prices">
+                  <span class="product-price product-price--new js-product-price-discount"></span>
+
+                  <span class="product-price-old-wrap js-old-wrap">
+                    <span class="product-discount-sup js-discount-badge"></span>
+                    <span class="product-price product-price--old js-product-price"></span>
+                  </span>
+                </div>
+
+
+
+                {% if product.short_description %}
+                  <p class="product-desc js-product-desc">{{ product.short_description }}</p>
+                {% else %}
+                  <p class="product-desc js-product-desc"></p>
+                {% endif %}
+
+                  {% if mods|length > 1 %}
+                    <!-- Выпадающий список модификаций -->
+                    <div class="product-variant product-variant--custom js-variant">
+                    <!-- Скрытый нативный select (для логики/доступности) -->
+                        <select class="product-variant__native js-variant-select" aria-hidden="true" tabindex="-1">
+                            {% for m in mods %}
+                                <option value="{{ m.id }}" {% if m.id == product.id %}selected{% endif %}>{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Видимая “кнопка” -->
+                        <button type="button"
+                                class="product-variant__button js-variant-button"
+                                aria-haspopup="listbox"
+                                aria-expanded="false">
+                            <span class="product-variant__label js-variant-label">{{ product.name }}</span>
+                            <span class="product-variant__chevron" aria-hidden="true"></span>
+                        </button>
+
+                      <!-- Выпадающий список -->
+                    <div class="product-variant__menu js-variant-menu" role="listbox">
+                        {% for m in mods %}
+                            <button type="button"
+                                    class="product-variant__option js-variant-option {% if m.id == product.id %}is-active{% endif %}"
+                                    data-value="{{ m.id }}"
+                                    role="option"
+                                    aria-selected="{% if m.id == product.id %}true{% else %}false{% endif %}">
+                            {{ m.name }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    </div>
+                  {% endif %}
+
+                <div class="product-actions">
+                  <a href="{% url 'product_group_detail' group.pk %}" class="btn btn-details js-details-link"
+                     data-base-href="{% url 'product_group_detail' group.pk %}">Подробнее</a>
+
+                  <div class="cart-control js-cart-control" data-product-id="">
+                    <button type="button" class="qty-btn js-cart-dec" aria-label="Уменьшить">−</button>
+                    <button type="button" class="btn btn-cart js-cart-main">В корзину</button>
+                    <button type="button" class="qty-btn js-cart-inc" aria-label="Увеличить">+</button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- JSON с модификациями для JS -->
+              <script type="application/json" id="mods-data-{{ group.id }}">
+                {{ item.mods_json|safe }}
+              </script>
+
+            </article>
+            {% endwith %}
+          {% empty %}
+            <p class="empty-message">Товары пока не добавлены.</p>
+          {% endfor %}
+        </div>
+      </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/catalog_variants.js' %}"></script>
+<script src="{% static 'js/catalog_search.js' %}"></script>
+<script src="{% static 'js/catalog_cart.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+:root {
+    --color-bg: #ffffff;
+
+    --color-text: #1f2937;
+    --color-text-light: #6b7280;
+
+    --color-primary: #2563eb;
+    --color-success: #10b981;
+
+    --color-dark: #0f172a;
+    --color-dark-light: #1e293b;
+
+    --radius-lg: 14px;
+    --radius-pill: 999px;
+
+    --transition-fast: 0.2s ease;
+}

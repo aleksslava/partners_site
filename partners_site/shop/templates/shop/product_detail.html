@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ active_mod.name }} — {{ group.name }}{% endblock %}
+
+{% block content %}
+<section class="product-detail">
+    <div class="container">
+
+        <h1 class="product-detail__title">{{ group.name }}</h1>
+
+        <!-- Переключатель модификаций -->
+        <div class="product-detail__mods">
+            {% for mod in modifications %}
+                <a href="?mod={{ mod.id }}"
+                   class="mod-pill {% if mod.id == active_mod.id %}mod-pill--active{% endif %}">
+                    {{ mod.name }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <div class="product-detail__layout">
+            <div class="product-detail__image">
+                {% with img=active_mod.images.first %}
+                    {% if img %}
+                        <img src="{{ img.photo.url }}" alt="{{ active_mod.name }}">
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="product-detail__info">
+                <h2>{{ active_mod.name }}</h2>
+                <p class="product-detail__price">{{ active_mod.price }} ₽</p>
+                <p class="product-detail__desc">{{ active_mod.title }}</p>
+
+                <h3>Характеристики</h3>
+                <ul class="product-detail__chars">
+                    {% for ch in active_mod.characteristics.all %}
+                        <li><strong>{{ ch.key }}:</strong> {{ ch.value }}</li>
+                    {% empty %}
+                        <li>Характеристики не указаны</li>
+                    {% endfor %}
+                </ul>
+
+                <div class="product-detail__actions">
+                    <button class="btn btn-cart">В корзину</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

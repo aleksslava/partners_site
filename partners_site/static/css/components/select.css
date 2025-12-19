@@ -1,0 +1,65 @@
+/* --- Варианты (select) --- */
+
+.product-variant {
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.product-variant__select {
+  width: 100%;
+  height: 42px;
+  padding: 0 44px 0 14px; /* справа место под стрелку */
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+
+  /* аккуратное нативное оформление */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.1s ease;
+}
+
+/* Контейнер рисует стрелку */
+.product-variant {
+  position: relative;
+}
+
+.product-variant::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  width: 10px;
+  height: 10px;
+  transform: translateY(-45%) rotate(45deg);
+  border-right: 2px solid rgba(15, 23, 42, 0.45);
+  border-bottom: 2px solid rgba(15, 23, 42, 0.45);
+  pointer-events: none;
+}
+
+/* Фокус — как “Apple”: мягкое свечение */
+.product-variant__select:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+/* Ховер — лёгкая “приподнятость” */
+.product-variant__select:hover {
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+/* Активное нажатие */
+.product-variant__select:active {
+  transform: scale(0.99);
+}
+
+/* Плейсхолдер (если будешь делать option disabled) */
+.product-variant__select:invalid {
+  color: rgba(15, 23, 42, 0.55);
+}

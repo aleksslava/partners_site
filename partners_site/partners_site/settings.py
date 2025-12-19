@@ -15,7 +15,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+MEDIA_URL = '/products/'
+MEDIA_ROOT = BASE_DIR
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -38,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'shop.apps.ShopConfig',
-    'taggit'
+    'taggit',
+    'users.apps.UsersConfig',
+    'orders'
 ]
 
 MIDDLEWARE = [
@@ -49,6 +52,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.LoginRequiredMiddleware"
 ]
 
 ROOT_URLCONF = 'partners_site.urls'
@@ -59,6 +64,7 @@ TEMPLATES = [
         'DIRS': [
             BASE_DIR / 'shop' / 'templates',
             BASE_DIR / 'templates',
+            BASE_DIR / 'users' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -84,7 +90,7 @@ DATABASES = {
     }
 }
 
-
+AUTH_USER_MODEL = "users.User"
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -102,6 +108,11 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/products/"
+LOGOUT_REDIRECT_URL = "/login/"
+
 
 
 # Internationalization

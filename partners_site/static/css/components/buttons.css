@@ -1,0 +1,48 @@
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 0;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 999px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    text-decoration: none;
+    transition: opacity 0.18s ease, transform 0.1s ease;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+/* Синяя кнопка "Подробнее" */
+.btn-details {
+    background: linear-gradient(135deg, #005bff, #0ea5e9);
+    color: #ffffff;
+}
+
+/* Зелёная кнопка "В корзину" */
+.btn-cart {
+    background: linear-gradient(135deg, #03b56f, #10b981);
+    color: #ffffff;
+}
+
+.btn:hover {
+    opacity: 0.92;
+}
+
+
+.cart-control{
+  display:inline-flex; align-items:center; gap:8px;
+}
+
+.cart-control .qty-btn{ display:none; }
+.cart-control.is-active .qty-btn{ display:inline-flex; }
+
+.cart-control .js-cart-main{
+  min-width: 120px;
+}
+

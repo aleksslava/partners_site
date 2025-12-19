@@ -1,47 +1,12 @@
 from django.contrib import admin
-from .models import Product, Image, Video, Category, Instruction, Characteristics
+from .models import Product, Image, Video, Category, Instruction, Characteristics, ProductGroup
+
+
 from django.db import models
 # Register your models here.
 
 admin.site.register([Image, Video, Category, Instruction])
 
-class ProductTypeFilter(admin.SimpleListFilter):
-    title = 'Тип товара'                # заголовок фильтра в админке
-    parameter_name = 'product_type'     # имя параметра в URL
-
-    def lookups(self, request, model_admin):
-        return (
-            ('main', 'Основной товар'),
-            ('mod', 'Модификация'),
-        )
-
-    def queryset(self, request, queryset):
-        value = self.value()
-        if value == 'main':
-            # Только основные товары (без родителя)
-            return queryset.filter(parent__isnull=True)
-        if value == 'mod':
-            # Только модификации (есть родитель)
-            return queryset.filter(parent__isnull=False)
-        return queryset
-
-class ParentProductFilter(admin.SimpleListFilter):
-    title = 'Основной товар'
-    parameter_name = 'parent_product'
-
-    def lookups(self, request, model_admin):
-        # показываем только основные товары (parent is null)
-        mains = Product.objects.filter(parent__isnull=True)
-        return [(p.id, p.name) for p in mains]
-
-    def queryset(self, request, queryset):
-        value = self.value()
-        if value:
-            # показываем и сам основной товар, и его модификации
-            return queryset.filter(
-                models.Q(id=value) | models.Q(parent_id=value)
-            )
-        return queryset
 
 class ImageInline(admin.TabularInline):
     model = Image
@@ -66,13 +31,26 @@ class InstructionInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    inlines = [CharacteristicsInline, ModificationInline, ImageInline, VideoInline, InstructionInline]
-    list_display = ('name', 'parent', 'is_main_product')
-    list_filter = (ProductTypeFilter, ParentProductFilter)
+    inlines = [CharacteristicsInline, ImageInline, VideoInline, InstructionInline]
+    list_display = ('name', 'group', 'is_primary', 'is_visible', 'price')
+    list_filter = ('is_primary', 'is_visible', 'group__category')
+    search_fields = ('name', 'amo_id')
 
-    def is_main_product(self, obj):
-        return obj.parent is None
 
-    is_main_product.boolean = True
-    is_main_product.short_description = 'Основной?'
+class ProductInline(admin.TabularInline):
+    model = Product
+    fk_name = 'group'
+    extra = 1
+    fields = ('name', 'price', 'is_primary', 'is_visible')
+    show_change_link = True
+
+@admin.register(ProductGroup)
+class ProductGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'sort_order', 'is_pinned')
+    list_filter = ('category', 'tags', 'is_pinned')
+    list_editable = ('is_pinned', 'sort_order')
+    ordering = ('sort_order', '-is_pinned', 'id')
+    inlines = [ProductInline]
+
+
 

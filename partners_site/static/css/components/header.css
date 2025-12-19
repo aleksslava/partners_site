@@ -1,0 +1,130 @@
+header {
+    width: 100%;
+    background: var(--color-dark);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+}
+
+.header__logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+}
+
+.header-nav ul {
+    display: flex;
+    gap: 28px;
+}
+
+.header-nav a {
+    font-size: 15px;
+    font-weight: 500;
+    color: #e5e7eb;
+    transition: var(--transition-fast);
+}
+
+.header-nav a:hover {
+    color: white;
+}
+
+.mobile-toggle {
+    display: none;
+    font-size: 28px;
+    color: white;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .header-nav {
+        display: none;
+    }
+    .mobile-toggle {
+        display: block;
+    }
+}
+
+.header__logo-image {
+    height: 20px;      /* подгони под свой логотип */
+    display: block;
+}
+
+/* форма не ломает навигацию */
+.nav-logout-form {
+  margin: 0;
+}
+
+/* кнопка = ссылка */
+.nav-logout-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* если у меню есть общий класс */
+nav a,
+.nav-logout-btn {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 12px;
+  transition: color 0.2s ease;
+}
+
+nav a:hover,
+.nav-logout-btn:hover {
+  color: #4da3ff; /* или твой hover-цвет */
+}
+
+/* список */
+.nav-list {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ОБЩИЙ стиль пункта меню */
+.nav-item {
+  background: none;
+  border: none;
+  padding: 8px 0;
+
+  font: inherit;
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+
+  position: relative;
+}
+
+/* hover — одинаковый для всех */
+.nav-item:hover {
+  color: #ffffff;
+}
+
+/* УБИРАЕМ браузерные эффекты кнопки */
+.nav-item--button {
+  outline: none;
+}
+
+.nav-item--button:focus,
+.nav-item--button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

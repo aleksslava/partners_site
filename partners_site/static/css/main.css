@@ -1,0 +1,21 @@
+/* --- Базовые стили --- */
+@import "base/reset.css";
+@import "base/variables.css";
+@import "base/typography.css";
+@import "base/layout.css";
+
+/* --- Компоненты --- */
+@import "components/header.css";
+@import "components/mobile_menu.css";
+@import "components/buttons.css";
+@import "components/cards.css";
+@import "components/footer.css";
+@import "components/auth.css";
+@import "components/catalog_search.css";
+@import "components/cart.css";
+
+/* --- Страницы --- */
+@import "pages/catalog.css";
+
+/* --- Утилиты --- */
+@import "utils.css";

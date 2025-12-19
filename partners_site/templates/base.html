@@ -7,8 +7,7 @@
 
     <title>{% block title %}HiTE PRO{% endblock %}</title>
 
-
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -17,23 +16,53 @@
 
 <header>
     <div class="container header__inner">
+        <a href="/products/" class="header__logo">
+            <img src="{% static 'img/logo.svg' %}" alt="HiTE PRO" class="header__logo-image">
+        </a>
 
-        <a href="/" class="header__logo">HiTE PRO</a>
+        <!-- ВАЖНО: класс header-nav -->
+        <nav class="header-nav">
+            <ul class="nav-list">
+                <li><a href="/products/" class="nav-item">Каталог</a></li>
+                <li><a href="/cabinet/" class="nav-item">Личный кабинет</a></li>
+                <li><a href="/about/" class="nav-item">О компании</a></li>
+                <li><a href="/contacts/" class="nav-item">Контакты</a></li>
+                <li><a href="/shoping_cart/" class="nav-item">Корзина</a></li>
 
-        <nav>
-            <ul>
-                <li><a href="/products/">Каталог</a></li>
-                <li><a href="/cabinet/">Личный кабинет</a></li>
-                <li><a href="/about/">О компании</a></li>
-                <li><a href="/contacts/">Контакты</a></li>
-                <li><a href="/shoping_cart/">Корзина</a></li>
+                <li>
+                    {% if user.is_authenticated %}
+                        <form action="{% url 'users:logout' %}" method="post" class="nav-logout-form">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-item nav-item--button">Выйти</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'users:login' %}">Войти</a>
+                    {% endif %}
+                </li>
             </ul>
         </nav>
 
-        <div class="mobile-toggle">☰</div>
+
+        <!-- ВАЖНО: id="mobileMenuToggle" -->
+        <div class="mobile-toggle" id="mobileMenuToggle">☰</div>
 
     </div>
 </header>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu-overlay" id="mobileMenuOverlay">
+    <div class="mobile-menu">
+        <button class="mobile-menu__close" id="mobileMenuClose">×</button>
+
+        <nav class="mobile-menu__nav">
+            <a href="/products/">Каталог</a>
+            <a href="/cabinet/">Личный кабинет</a>
+            <a href="/about/">О компании</a>
+            <a href="/contacts/">Контакты</a>
+            <a href="/shoping_cart/">Корзина</a>
+        </nav>
+    </div>
+</div>
 
 <main>
     {% block content %}
@@ -41,10 +70,13 @@
 </main>
 
 <footer>
-    © {{ now|date:"Y" }} HiTE PRO — Умные устройства нового поколения
+    © {{ now|date:"Y" }} HiTE PRO — Нет повода для провода!
 </footer>
 
 {% block extra_js %}{% endblock %}
 
+<script src="{% static 'js/mobile_menu.js' %}"></script>
+
 </body>
 </html>
+

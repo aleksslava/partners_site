@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<section class="auth">
+  <div class="container auth__container">
+    <div class="auth-card">
+      <h1 class="auth-card__title">Авторизация</h1>
+      <p class="auth-card__subtitle">Войдите, чтобы открыть каталог и личный кабинет.</p>
+
+      <form method="post" class="auth-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="auth-alert">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <div class="auth-field">
+          <label class="auth-label" for="{{ form.username.id_for_label }}">Логин</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <div class="auth-error">{{ form.username.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="{{ form.password.id_for_label }}">Пароль</label>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <div class="auth-error">{{ form.password.errors }}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="auth-submit">Войти</button>
+
+        {% if request.GET.next %}
+          <input type="hidden" name="next" value="{{ request.GET.next }}">
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

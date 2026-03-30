@@ -23,6 +23,7 @@ env/
 .env
 .env.*
 partners_site/.env
+deploy/env/prod.env
 
 # Local databases
 db.sqlite3

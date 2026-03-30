@@ -1,0 +1,6 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Roboto", sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.5;
+}

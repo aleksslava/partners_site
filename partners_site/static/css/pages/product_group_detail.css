@@ -1,0 +1,205 @@
+.pdp{ padding: 24px 0 44px; }
+.pdp-head{ display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.pdp-back{ color: rgba(15,23,42,.65); text-decoration:none; font-weight:700; }
+.pdp-title{ margin:0; font-size:34px; font-weight:900; color:#0f172a; }
+
+.pdp-grid{
+  display:grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  align-items:start;
+}
+
+.pdp-card{
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 10px 40px rgba(15,23,42,.10);
+  padding:18px;
+}
+
+.pdp-gallery{ display:flex; flex-direction:column; gap:12px; }
+
+.pdp-carousel{
+  position:relative;
+  overflow:hidden;
+  aspect-ratio: 1 / 1;
+  border-radius:18px;
+  background:#f3f4f6;
+  border:1px solid rgba(15,23,42,.08);
+}
+.pdp-carousel__track{
+  display:flex;
+  width:100%;
+  height:100%;
+  transition: transform .22s ease;
+}
+.pdp-carousel__slide{
+  flex: 0 0 100%;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+}
+.pdp-carousel__slide--empty{
+  background:#f3f4f6;
+}
+.pdp-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+.pdp-carousel__nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:0;
+  background:rgba(15,23,42,.55);
+  color:#fff;
+  font-size:26px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.pdp-carousel__nav--prev{ left:12px; }
+.pdp-carousel__nav--next{ right:12px; }
+
+.pdp-thumbs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.pdp-thumb{
+  width:74px;
+  height:74px;
+  border-radius:14px;
+  border:1px solid rgba(15,23,42,.10);
+  background:#fff;
+  overflow:hidden;
+  padding:0;
+  cursor:pointer;
+  opacity:.78;
+}
+.pdp-thumb.is-active{
+  opacity:1;
+  border-color: rgba(16,185,129,.55);
+  box-shadow:0 10px 22px rgba(16,185,129,.18);
+}
+.pdp-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.pdp-subtitle{ color: rgba(15,23,42,.55); font-weight:700; font-size:12px; }
+.pdp-modname{ font-weight:900; font-size:20px; color:#0f172a; margin-top:6px; }
+
+.pdp-price{ margin-top:10px; display:flex; align-items:baseline; gap:10px; }
+.pdp-price__new{ font-size:18px; font-weight:800; color:#0f172a; }
+
+.pdp-desc{
+  margin-top:12px;
+  color: rgba(15,23,42,.70);
+  line-height:1.55;
+  font-size:14px;
+}
+
+.pdp-actions{ margin-top:14px; display:flex; gap:12px; }
+
+.pdp-card__title{
+  margin:0 0 12px;
+  font-size:16px;
+  font-weight:900;
+  color:#0f172a;
+}
+
+.pdp-files{ display:flex; flex-direction:column; gap:10px; }
+.pdp-file{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid rgba(15,23,42,.10);
+  text-decoration:none;
+  color:#0f172a;
+  background:#fff;
+}
+.pdp-file:hover{ background: rgba(15,23,42,.03); }
+.pdp-file__icon{ width:26px; text-align:center; }
+.pdp-file__name{ font-weight:800; }
+.pdp-file__meta{ margin-left:auto; color: rgba(15,23,42,.55); font-size:12px; }
+
+.pdp-videos{ display:flex; flex-direction:column; gap:14px; }
+.pdp-video__title{ font-weight:900; margin-bottom:8px; }
+.pdp-video__player{
+  width:100%;
+  border-radius:14px;
+  background:#000;
+}
+
+.pdp-empty{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px dashed rgba(15,23,42,.18);
+  background: rgba(15,23,42,.03);
+  color: rgba(15,23,42,.55);
+  font-weight:700;
+  text-align:center;
+}
+
+@media (max-width: 980px){
+  .pdp-grid{ grid-template-columns: 1fr; }
+}
+@media (max-width: 520px){
+  .pdp-title{ font-size:28px; }
+  .pdp-thumb{ width:64px; height:64px; }
+}
+
+.pdp-info{
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+
+/* характеристики */
+.pdp-specs{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pdp-spec{
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(15,23,42,.03);
+  border: 1px solid rgba(15,23,42,.08);
+}
+.pdp-spec__k{
+  font-size: 13px;
+  color: rgba(15,23,42,.60);
+  font-weight: 700;
+}
+.pdp-spec__v{
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 800;
+  text-align: right;
+}
+@media (max-width: 520px){
+  .pdp-spec{
+    grid-template-columns: 1fr;
+  }
+  .pdp-spec__v{ text-align: left; }
+}
+
+
+

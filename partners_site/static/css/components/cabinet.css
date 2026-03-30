@@ -1,0 +1,113 @@
+/* Локальные стили страницы кабинета (можно вынести в отдельный css модуль) */
+.cabinet { padding: 24px 0 44px; }
+.cabinet-title { font-size: 34px; font-weight: 800; margin: 0 0 18px; color: #0f172a; }
+
+.cabinet-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.cabinet-card{
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.10);
+  padding: 18px;
+}
+
+.cabinet-card--wide{ grid-column: 1 / -1; }
+
+.cabinet-card__head{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cabinet-card__title{
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cabinet-card__hint{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+}
+
+.cabinet-row{
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+}
+.cabinet-row:last-child{ border-bottom: 0; }
+
+.cabinet-row__label{ color: rgba(15,23,42,.60); font-size: 13px; }
+.cabinet-row__value{ color: #0f172a; font-weight: 700; font-size: 14px; }
+.cabinet-order-link{
+  color: #2563eb;
+  text-decoration: none;
+}
+.cabinet-order-link:hover,
+.cabinet-order-link:focus{
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.cabinet-kpis{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.kpi{
+  background: rgba(15,23,42,.04);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 16px;
+  padding: 12px;
+}
+.kpi__label{
+  font-size: 12px;
+  color: rgba(15,23,42,.60);
+  margin-bottom: 6px;
+}
+.kpi__value{
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  justify-content: flex-end;
+}
+
+.orders-empty{
+  background: rgba(15,23,42,.03);
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+.orders-empty__title{ font-weight: 800; color:#0f172a; margin-bottom: 6px; }
+.orders-empty__text{ color: rgba(15,23,42,.60); font-size: 14px; margin-bottom: 14px; }
+
+.cabinet-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  background: #0ea5e9; /* чуть ближе к твоему синему */
+  color: #fff;
+}
+
+@media (max-width: 860px){
+  .cabinet-grid{ grid-template-columns: 1fr; }
+  .cabinet-row{ grid-template-columns: 1fr; }
+  .cabinet-kpis{ grid-template-columns: 1fr; }
+  .cabinet-title{ font-size: 28px; }
+}

@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<section class="cart">
+  <div class="container">
+    <h1 class="cart-title">Корзина</h1>
+
+    {% if not cart.items.count %}
+      <p>Ваша корзина пуста. <a href="/products/">Перейти в каталог</a></p>
+    {% else %}
+    <div class="cart-layout">
+        <div class="cart-items">
+            {% for item in cart.items.all %}
+                <div class="cart-item" data-product-id="{{ item.product.id }}">
+
+                  <!-- ЛЕВАЯ ЧАСТЬ -->
+                  <div class="cart-item__content">
+                    <div class="cart-line__title">
+                      {{ item.product.name }}
+                    </div>
+
+                    <div class="cart-line__calc">
+                      <span>
+                        <span id="cart-item-qty-{{ item.product.id }}">{{ item.qty }}</span> шт.
+                        по {{ item.current_unit_price_discounted }} ₽
+                      </span>
+
+                      {% if item.discount_percent %}
+                        <span class="cart-old-price">
+                          ({{ item.current_unit_price }} ₽ − {{ item.discount_percent }}%)
+                        </span>
+                      {% endif %}
+
+                      <span class="cart-line__sum">
+                        = <a id="item-line-total-{{ item.product.id }}">{{ item.line_total }}</a>
+                      </span>
+                      <span class="cart-line__sum">
+                          <a> ₽ </a>
+                      </span>
+                    </div>
+
+                    <div class="cart-bonuses">
+                      <div>Бонусов будет начислено по позиции —
+                          <strong id="item-bonuses-append-{{ item.product.id }}">
+                          {{ item.bonuses_append }}
+                          </strong>
+                      </div>
+                      <div>Бонусов будет списано по позиции —
+                          <strong id="item-bonuses-spend-{{ item.product.id }}">
+                              {{ item.bonuses_spent }}
+                          </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ПРАВАЯ ЧАСТЬ (КНОПКИ) -->
+                  <div class="cart-item__controls js-cart-control is-active">
+
+                    <button class="btn-decrease" data-product-id="{{ item.product.id }}">−</button>
+                    <button class="js-cart-main" id="button-item-qty-{{ item.product.id }}">  {{ item.qty }}</button>
+                    <button class="btn-increase" data-product-id="{{ item.product.id }}">+</button>
+
+                    <button class="cart-remove js-cart-remove btn-remove"
+                            data-product-id="{{ item.product.id }}">Удалить</button>
+                  </div>
+
+                </div>
+
+            {% endfor %}
+        </div>
+
+        <aside class="cart-sidebar">
+            <div class="cart-box">
+              <h3 class="cart-box__title">Бонусная система</h3>
+
+              <!-- dropdown как в каталоге -->
+              <div class="product-variant product-variant--custom js-cart-discount">
+                <select class="product-variant__native js-cart-discount-select">
+                  {% for value, label in cart.DiscountType.choices %}
+                    <option value="{{ value }}" {% if cart.discount_type == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+
+                <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
+                  <span class="product-variant__label js-cart-discount-label">
+                    {{ cart.get_discount_type_display }}
+                  </span>
+                  <span class="product-variant__chevron" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <!-- ДОП. ПОЛЯ -->
+              <div class="cart-bonus-extra">
+
+                <!-- Только скидка => списать бонусы -->
+                <div class="cart-field js-only-discount" {% if cart.discount_type != cart.DiscountType.DISCOUNT %}style="display:none"{% endif %}>
+                  <label class="cart-field__label" for="cart-bonuses-spend">Списать бонусы</label>
+                  <input
+                    id="cart-bonuses-spend"
+                    class="cart-field__input js-bonuses-spend"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    value="{{ cart.bonuses_spent_total|default:0 }}"
+                    placeholder="0"
+                  >
+                  <div class="cart-field__hint">Максимум ограничен правилами (сумма заказа не менее − 11 ₽ и баланс бонусов).</div>
+                </div>
+
+                <!-- Скидка и бонусы => скидка заказа -->
+                <div class="cart-field js-semi-bonuses" {% if cart.discount_type != cart.DiscountType.SEMI_BONUSES %}style="display:none"{% endif %}>
+                  <label class="cart-field__label" for="cart-order-discount">Скидка заказа (%)</label>
+                  <input
+                    id="cart-order-discount"
+                    class="cart-field__input js-order-discount"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    value="{{ cart.order_discount_percent|default:0 }}"
+                    placeholder="0"
+                  >
+                  <div class="cart-field__hint">Можно от 0 до вашей партнёрской скидки (с учётом оплаты).</div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="cart-box">
+              <h3 class="cart-box__title">Оплата</h3>
+
+              {# Выбор типа оплаты (в стиле dropdown-портала как в каталоге) #}
+              <div class="product-variant product-variant--custom js-cart-payment">
+                <select class="product-variant__native js-cart-payment-select">
+                  {% for value, label in cart.PaymentType.choices %}
+                    <option value="{{ value }}" {% if cart.payment_type == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+
+                <button type="button"
+                        class="product-variant__button js-cart-payment-button"
+                        aria-expanded="false">
+                  <span class="product-variant__label js-cart-payment-label">
+                    {{ cart.get_payment_type_display }}
+                  </span>
+                  <span class="product-variant__chevron" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              {# Реквизиты показываем только если выбран "Счет на оплату" #}
+              <div class="cart-payment-extra js-invoice-fields"
+                   {% if cart.payment_type != cart.PaymentType.INVOICE %}style="display:none"{% endif %}>
+
+                {# Поиск по сохранённым реквизитам пользователя (автоподстановка) #}
+                <div class="cart-field">
+                  <label class="cart-field__label" for="req-search">Поиск реквизитов</label>
+                  <input id="req-search"
+                         type="search"
+                         class="cart-field__input js-requisites-search"
+                         placeholder="Начните вводить: ИНН или название">
+                </div>
+                {% with r=cart.requisites %}
+                {# Поля реквизитов (заполняются при выборе из поиска, можно редактировать вручную) #}
+                <div class="cart-field">
+                  <label class="cart-field__label" for="invoice-company">Наименование организации</label>
+                  <input id="invoice-company"
+                         class="cart-field__input js-invoice-company-name"
+                         type="text"
+                         value="{{ r.company_name|default:'' }}"
+                         placeholder="ООО «Ромашка»">
+                </div>
+
+                <div class="cart-field">
+                  <label class="cart-field__label" for="invoice-inn">ИНН</label>
+                  <input id="invoice-inn"
+                         class="cart-field__input js-invoice-inn"
+                         type="text"
+                         value="{{ r.inn|default:'' }}"
+                         placeholder="10–12 цифр">
+                </div>
+
+                <div class="cart-field">
+                  <label class="cart-field__label" for="invoice-bik">БИК</label>
+                  <input id="invoice-bik"
+                         class="cart-field__input js-invoice-bik"
+                         type="text"
+                         value="{{ r.bik|default:'' }}"
+                         placeholder="9 цифр">
+                </div>
+
+                <div class="cart-field">
+                  <label class="cart-field__label" for="invoice-legal">Юр. адрес</label>
+                  <input id="invoice-legal"
+                         class="cart-field__input js-invoice-legal-address"
+                         type="text"
+                         value="{{ r.legal_address|default:'' }}"
+                         placeholder="Город, улица, дом">
+                </div>
+
+                <div class="cart-field">
+                  <label class="cart-field__label" for="invoice-account">Расчётный счёт</label>
+                  <input id="invoice-account"
+                         class="cart-field__input js-invoice-account"
+                         type="text"
+                         value="{{ r.settlement_account|default:'' }}"
+                         placeholder="20 цифр">
+                </div>
+                {% endwith %}
+
+                <button class="btn btn-cart js-save-requisites" type="button">
+                  Сохранить реквизиты
+                </button>
+
+              </div>
+            </div>
+
+            <div class="cart-box">
+              <h3 class="cart-box__title">Доставка</h3>
+
+              <div class="product-variant product-variant--custom js-cart-delivery">
+                <select class="product-variant__native js-cart-delivery-select">
+                  {% for value, label in cart.DeliveryType.choices %}
+                    <option value="{{ value }}" {% if cart.delivery_type == value %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+
+                <button type="button" class="product-variant__button js-cart-delivery-button" aria-expanded="false">
+                  <span class="product-variant__label js-cart-delivery-label">
+                    {{ cart.get_delivery_type_display }}
+                  </span>
+                  <span class="product-variant__chevron" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              {# Самовывоз: фиксированный адрес #}
+              <div class="cart-delivery-extra js-self-pickup"
+                   {% if cart.delivery_type != cart.DeliveryType.SELF_PICKUP %}style="display:none"{% endif %}>
+                <div class="cart-delivery-point">
+                  <div class="cart-delivery-point__title">Пункт самовывоза</div>
+                  <div class="cart-delivery-point__addr">Москва, Берзарина, 32 стр.10</div>
+                </div>
+              </div>
+
+              {# Курьер/ПВЗ: ручной ввод #}
+              <div class="cart-delivery-extra js-manual-delivery"
+                   {% if cart.delivery_type == cart.DeliveryType.SELF_PICKUP %}style="display:none"{% endif %}>
+
+                <div class="cart-field">
+                  <div class="cart-field__label">Название адреса</div>
+                  <input id="delivery-label-search"
+                         class="cart-field__input js-delivery-label"
+                         type="search"
+                         list="delivery-label-options"
+                         value="{{ a.label|default:'' }}"
+                         placeholder="Например: Дом, Офис, Склад">
+                  <datalist id="delivery-label-options"></datalist>
+                </div>
+
+                <div class="cart-field">
+                  <div class="cart-field__label">Город</div>
+                  <input class="cart-field__input js-delivery-city" type="text"
+                         value="{{ a.city|default:'' }}"
+                         placeholder="Город">
+                </div>
+
+                <div class="cart-field">
+                  <div class="cart-field__label">Улица</div>
+                  <input class="cart-field__input js-delivery-street" type="text"
+                         value="{{ a.street|default:'' }}"
+                         placeholder="Улица">
+                </div>
+
+                <div class="cart-field">
+                  <div class="cart-field__label">Дом</div>
+                  <input class="cart-field__input js-delivery-house" type="text"
+                         value="{{ a.house|default:'' }}"
+                         placeholder="Дом">
+                </div>
+
+                <div class="cart-field">
+                  <div class="cart-field__label">ФИО получателя</div>
+                  <input class="cart-field__input js-recipient-name" type="text"
+                         value="{{ a.recipient_name|default:'' }}"
+                         placeholder="Иванов Иван Иванович">
+                </div>
+
+                <div class="cart-field">
+                  <div class="cart-field__label">Телефон получателя</div>
+                  <input class="cart-field__input js-recipient-phone" type="tel"
+                         value="{{ a.recipient_phone|default:'' }}"
+                         placeholder="+7 (999) 123-45-67">
+                  <div class="cart-field__error js-phone-error" style="display:none;">
+                    Укажите корректный номер телефона
+                  </div>
+                </div>
+                  <button class="btn btn-cart js-save-delivery" type="button">
+                          Сохранить адрес
+                  </button>
+              </div>
+
+            </div>
+
+
+
+            <div class="cart-summary sticky-summary">
+              <h3 class="cart-summary__title">Итог</h3>
+
+              <div class="cart-summary__row">
+                <span>Товары</span>
+                <span><strong id="cart-subtotal">{{ cart.items_subtotal }}</strong> ₽</span>
+              </div>
+
+              <div class="cart-summary__row">
+                <span>Скидка</span>
+                <span>− <strong id="cart-discount">{{ cart.discount_total }}</strong> ₽</span>
+              </div>
+
+              <div class="cart-summary__row">
+                <span>Доставка</span>
+                <span><strong id="cart-delivery">{{ cart.delivery_price }}</strong> ₽</span>
+              </div>
+
+              <div class="cart-summary__divider"></div>
+
+              <div class="cart-summary__row cart-summary__total">
+                <span>Итого</span>
+                <span><strong id="cart-total">{{ cart.total }}</strong> ₽</span>
+              </div>
+
+              <form method="post" action="/api/cart/checkout/" class="cart-summary__cta-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-cart btn-checkout cart-summary__cta js-checkout">
+                  Оформить заказ
+                </button>
+              </form>
+
+              <p class="cart-summary__note">
+                Бонусов начислится: <strong id="cart-bonuses-append">{{ cart.bonuses_append_total }}</strong>
+              </p>
+              <p class="cart-summary__note">
+                Бонусов спишется:   <strong id="cart-bonuses-spent">{{ cart.bonuses_spent_total }}</strong>
+              </p>
+            </div>
+        </aside>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/cart.js' %}?v=2"></script>
+    <script src="{% static 'js/cart_discount_type.js' %}"></script>
+    <script src="{% static 'js/cart_payment.js' %}"></script>
+    <script src="{% static 'js/cart_delivery.js' %}"></script>
+{% endblock %}
+

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static l10n %}
+
+{% block title %}Заказ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/order.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="cart order-page">
+  <div class="container">
+    <h1 class="cart-title order-title">
+      Заказ № {% localize off %}{{ order.amo_crm_id|default:order.id }}{% endlocalize %} от {{ order.time_created|date:"d.m.Y" }}
+    </h1>
+
+    <div class="cart-box">
+      <h3 class="cart-box__title">Данные заказа</h3>
+      <div class="order-line"><span>Тип оплаты</span><strong>{{ order.get_payment_type_display }}</strong></div>
+      <div class="order-line"><span>Бонусов списано</span><strong>{{ order.bonuses_spent_total }}</strong></div>
+      <div class="order-line"><span>Бонусов начислено</span><strong>{{ order.bonuses_append_total }}</strong></div>
+      <div class="order-line"><span>Скидка по заказу</span><strong>{{ order.order_discount_percent }}</strong></div>
+      <div class="order-line"><span>Сумма заказа</span><strong>{{ order.total }} руб.</strong></div>
+    </div>
+
+    <div class="cart-box">
+      <h3 class="cart-box__title">Данные доставки</h3>
+      <div class="order-line"><span>Тип доставки</span><strong>{{ order.get_delivery_type_display }}</strong></div>
+      <div class="order-line"><span>Адрес доставки</span><strong>{{ order.address.delivery_address_text|default:"-" }}</strong></div>
+    </div>
+
+    <div class="cart-box">
+      <h3 class="cart-box__title">Товары</h3>
+
+      {% if order_items %}
+        <div class="order-products">
+          {% for item in order_items %}
+            <div class="order-product">
+              {% with image=item.product.images.first %}
+                {% if image %}
+                  <img src="{{ image.photo.url }}" alt="{{ item.product.name }}" class="order-product__image">
+                {% else %}
+                  <div class="order-product__placeholder">Нет фото</div>
+                {% endif %}
+              {% endwith %}
+
+              <div>
+                <div class="order-product__title">{{ item.product.name }}</div>
+                <div>{{ item.qty }} шт. по {{ item.current_unit_price_discounted }} руб. = {{ item.line_total }} руб.</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>В заказе нет товаров.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

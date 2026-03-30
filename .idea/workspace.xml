@@ -5,71 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="47d4e6ee-241e-41eb-b2e8-72ed9767b333" name="Changes" comment=".">
-      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/env/amocrm_tokens.env.example" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/env/prod.env.example" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/nginx/default.conf.template" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/scripts/backup.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/scripts/certbot-init.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/scripts/certbot-renew.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy/scripts/release.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/client.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/exceptions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/factory.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/services.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/throttling.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/migrations/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/integrations/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/orders/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/error.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/users/services/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/users/services/amocrm_login.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/users/services/amocrm_sync.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/users/templates/users/cabinet.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/orders/templates/orders/order.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/cart.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/css/base/typography.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/css/components/cabinet.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/css/pages/error.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/css/pages/order.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/css/pages/product_group_detail.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart_delivery.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart_discount_type.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart_payment.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_layout.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/product_detail_variant.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/product_group_detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/orders/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/orders/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/orders/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/services.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/orders/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/partners_site/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/partners_site/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/partners_site/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/partners_site/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/static/shop/css/styles.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/templates/shop/catalog.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/catalog.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/templates/shop/product_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/product_group_detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/buttons.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/buttons.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/cards.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/cards.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/cart.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/cart.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/catalog_search.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/catalog_search.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/main.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/pages/catalog.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/pages/catalog.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/pages/product_detail.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/integrations/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/js/catalog_cart.js" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_cart.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/js/catalog_search.js" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_search.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/js/catalog_variants.js" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_variants.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/static/shop/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/shop/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/users/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/users/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/users/templates/users/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/templates/users/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/users/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/users/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -210,7 +160,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763975438179</updated>
-      <workItem from="1774857104633" duration="11010000" />
+      <workItem from="1774857104633" duration="14347000" />
     </task>
     <task id="LOCAL-00001" summary=".">
       <option name="closed" value="true" />
@@ -236,7 +186,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766150278558</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary=".">
+      <option name="closed" value="true" />
+      <created>1774871959303</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1774871959303</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

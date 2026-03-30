@@ -16,16 +16,16 @@
 
 <header>
     <div class="container header__inner">
-        <a href="/products/" class="header__logo">
+        <a href="{% url 'catalog' %}" class="header__logo">
             <img src="{% static 'img/logo.svg' %}" alt="HiTE PRO" class="header__logo-image">
         </a>
 
         <!-- ВАЖНО: класс header-nav -->
         <nav class="header-nav">
             <ul class="nav-list">
-                <li><a href="/products/" class="nav-item">Каталог</a></li>
-                <li><a href="/cabinet/" class="nav-item">Личный кабинет</a></li>
-                <li><a href="/cart/" class="nav-item">Корзина</a></li>
+                <li><a href="{% url 'catalog' %}" class="nav-item">Каталог</a></li>
+                <li><a href="{% url 'users:user_cabinet' %}" class="nav-item">Личный кабинет</a></li>
+                <li><a href="{% url 'cart' %}" class="nav-item">Корзина</a></li>
 
                 <li>
                     {% if user.is_authenticated %}
@@ -53,11 +53,9 @@
         <button class="mobile-menu__close" id="mobileMenuClose">×</button>
 
         <nav class="mobile-menu__nav">
-            <a href="/products/">Каталог</a>
-            <a href="/cabinet/">Личный кабинет</a>
-            <a href="/about/">О компании</a>
-            <a href="/contacts/">Контакты</a>
-            <a href="/cart/">Корзина</a>
+            <a href="{% url 'catalog' %}">Каталог</a>
+            <a href="{% url 'users:user_cabinet' %}">Личный кабинет</a>
+            <a href="{% url 'cart' %}">Корзина</a>
         </nav>
     </div>
 </div>

@@ -25,6 +25,7 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
     client_max_body_size 200M;
+    add_header Content-Security-Policy "upgrade-insecure-requests; block-all-mixed-content" always;
 
     location /static/ {
         alias /var/www/static/;

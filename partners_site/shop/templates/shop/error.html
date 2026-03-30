@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ошибка{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/error.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="error-page">
+  <div>
+    <h1 class="error-page__title">Произошла ошибка</h1>
+    <p class="error-page__message">{{ error_message }}</p>
+    <div class="error-page__actions">
+      <a
+        class="btn error-page__action"
+        href="https://t.me/+79251930861"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Сообщить менеджеру в Telegram
+      </a>
+      <a
+        class="btn error-page__action"
+        href="https://max.ru/u/f9LHodD0cOLRJPZ-Vm5lXdFA6YvPYESWoU7_n6imsgqQorxD9nvTdH9pXxU"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Сообщить менеджеру в MAX
+      </a>
+      <a
+        class="btn error-page__action"
+        href="https://wa.me/79251930861"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Сообщить менеджеру в whats'app
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

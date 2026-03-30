@@ -1,0 +1,15 @@
+.git
+.idea
+.venv
+
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+partners_site/.env
+partners_site/db.sqlite3
+partners_site/products/
+
+data/
+backups/

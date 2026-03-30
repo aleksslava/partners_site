@@ -1,0 +1,42 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Local secrets and env files
+.env
+.env.*
+partners_site/.env
+
+# Local databases
+db.sqlite3
+partners_site/db.sqlite3
+
+# Django build/runtime artifacts
+staticfiles/
+partners_site/staticfiles/
+data/
+backups/
+
+# Media uploads / large binary files
+partners_site/products/
+
+# Certbot / TLS runtime data
+deploy/letsencrypt/
+deploy/certbot-www/

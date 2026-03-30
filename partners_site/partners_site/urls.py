@@ -23,10 +23,14 @@ from partners_site import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include("users.urls")),
+    path('', include('users.urls')),
     path('', include('shop.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('cart/', include('orders.urls')),
+    path('api/cart/', include('orders.urls')),
+    path('cabinet/', include('users.urls')),
+]
 
 
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

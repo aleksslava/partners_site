@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static l10n %}
+
+{% block title %}Личный кабинет{% endblock %}
+
+{% block content %}
+<section class="cabinet">
+  <div class="container">
+    <h1 class="cabinet-title">Личный кабинет</h1>
+
+    <div class="cabinet-grid">
+
+      <!-- Профиль -->
+      <div class="cabinet-card">
+        <h2 class="cabinet-card__title">Пользователь</h2>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">ФИО</div>
+          <div class="cabinet-row__value">
+            {{ user.first_name }} {{ user.last_name }}
+          </div>
+        </div>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Телефон</div>
+          <div class="cabinet-row__value">
+            {{ user.phone|default:"—" }}
+          </div>
+        </div>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Email</div>
+          <div class="cabinet-row__value">
+            {{ user.email|default:"—" }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Бонусный аккаунт -->
+      <div class="cabinet-card">
+        <h2 class="cabinet-card__title">Бонусный аккаунт</h2>
+
+        {% with c=user.customer %}
+          <div class="cabinet-row">
+            <div class="cabinet-row__label">Аккаунт</div>
+            <div class="cabinet-row__value">
+              {{ c.name|default:"—" }}
+            </div>
+          </div>
+
+          <div class="cabinet-row">
+            <div class="cabinet-row__label">Статус партнёра</div>
+            <div class="cabinet-row__value">
+              {{ c.get_partner_status_display|default:c.partner_status|default:"—" }}
+            </div>
+          </div>
+
+          <div class="cabinet-kpis">
+            <div class="kpi">
+              <div class="kpi__label">Бонусы на балансе</div>
+              <div class="kpi__value">{{ c.bonuses|default:0 }}</div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi__label">Сумма покупок</div>
+              <div class="kpi__value">{{ c.total_buyout|default:0 }} ₽</div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi__label">За прошлый квартал</div>
+              <div class="kpi__value">{{ c.buyout_per_quater|default:0 }} ₽</div>
+            </div>
+
+            <div class="kpi">
+              <div class="kpi__label">Скидка покупателя</div>
+              <div class="kpi__value">{{ c.partner_discount|default:0 }} %</div>
+            </div>
+          </div>
+        {% endwith %}
+      </div>
+
+      <!-- Заказы -->
+      <div class="cabinet-card cabinet-card--wide">
+        <div class="cabinet-card__head">
+          <h2 class="cabinet-card__title">Заказы</h2>
+        </div>
+
+        {% if orders %}
+          {% for order in orders %}
+            <div class="cabinet-row">
+              <div class="cabinet-row__label">ID заказа</div>
+              <div class="cabinet-row__value">
+                <a class="cabinet-order-link" href="/cart/order/{{ order.id }}/">{% localize off %}{{ order.amo_crm_id|default:"-" }}{% endlocalize %}</a>
+              </div>
+            </div>
+            <div class="cabinet-row">
+              <div class="cabinet-row__label">Сумма заказа</div>
+              <div class="cabinet-row__value">{{ order.total|default:0 }} руб.</div>
+            </div>
+            <div class="cabinet-row">
+              <div class="cabinet-row__label">Списано бонусов</div>
+              <div class="cabinet-row__value">{{ order.bonuses_spent_total|default:0 }}</div>
+            </div>
+            <div class="cabinet-row">
+              <div class="cabinet-row__label">Начислено бонусов</div>
+              <div class="cabinet-row__value">{{ order.bonuses_append_total|default:0 }}</div>
+            </div>
+            {% if not forloop.last %}<hr>{% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="orders-empty">
+            <div class="orders-empty__title">Пока заказов нет</div>
+            <div class="orders-empty__text">
+              Когда появится модель заказов, здесь будет список с номером, статусом, датой и суммой.
+            </div>
+            <a href="/products/" class="btn cabinet-btn">Перейти в каталог</a>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

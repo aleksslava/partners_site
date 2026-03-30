@@ -1,0 +1,65 @@
+name: partners_site
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - deploy/env/prod.env
+    environment:
+      DJANGO_SETTINGS_MODULE: partners_site.settings
+      SQLITE_PATH: /app/data/db.sqlite3
+      DJANGO_MEDIA_ROOT: /var/www/media
+      DJANGO_STATIC_ROOT: /var/www/static
+      AMOCRM_TOKENS_ENV_PATH: /app/runtime/amocrm_tokens.env
+    volumes:
+      - ./data/db:/app/data
+      - ./data/media:/var/www/media
+      - ./data/static:/var/www/static
+      - ./data/amocrm_tokens.env:/app/runtime/amocrm_tokens.env
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import socket; s=socket.create_connection(('127.0.0.1', 8000), 2); s.close()\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./data/static:/var/www/static:ro
+      - ./data/media:/var/www/media:ro
+      - ./data/certbot-www:/var/www/certbot:ro
+      - ./data/letsencrypt:/etc/letsencrypt:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

@@ -9,24 +9,30 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import os
 from pathlib import Path
+
+from environs import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-MEDIA_URL = '/products/'
-MEDIA_ROOT = BASE_DIR
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+env = Env()
+env.read_env(path=str(BASE_DIR / ".env"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s1^@1tg4c-0s#$=sl-b2#5_&uru=o9q7ebf4o$bb2#@4_e8m2)'
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default="change-me-in-production",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS",
+    default=["127.0.0.1", "localhost"] if DEBUG else [],
+)
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 
 # Application definition
@@ -86,7 +92,7 @@ WSGI_APPLICATION = 'partners_site.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': Path(env("SQLITE_PATH", default=str(BASE_DIR / "db.sqlite3"))),
     }
 }
 
@@ -113,6 +119,10 @@ LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/products/"
 LOGOUT_REDIRECT_URL = "/login/"
 
+USE_L10N = True
+USE_THOUSAND_SEPARATOR = True
+THOUSAND_SEPARATOR = ' '
+
 
 
 # Internationalization
@@ -130,13 +140,42 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
+STATIC_ROOT = Path(env("DJANGO_STATIC_ROOT", default=str(BASE_DIR / "staticfiles")))
+
+MEDIA_URL = '/products/'
+MEDIA_ROOT = Path(env("DJANGO_MEDIA_ROOT", default=str(BASE_DIR / "products")))
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=not DEBUG)
+SESSION_COOKIE_SECURE = env.bool("DJANGO_SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool("DJANGO_CSRF_COOKIE_SECURE", default=not DEBUG)
+
+SECURE_HSTS_SECONDS = env.int(
+    "DJANGO_SECURE_HSTS_SECONDS",
+    default=0 if DEBUG else 3600,
+)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
+SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=False)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AMOCRM = {
+    "PATH_TO_ENV": Path(env("AMOCRM_TOKENS_ENV_PATH", default=str(BASE_DIR / ".env"))),
+    "SUBDOMAIN": env("AMOCRM_SUBDOMAIN", default=""),
+    "CLIENT_ID": env("AMOCRM_CLIENT_ID", default=""),
+    "CLIENT_SECRET": env("AMOCRM_CLIENT_SECRET", default=""),
+    "REDIRECT_URL": env("AMOCRM_REDIRECT_URL", default=""),
+    "ACCESS_TOKEN": env("AMOCRM_ACCESS_TOKEN", default=None),
+    "REFRESH_TOKEN": env("AMOCRM_REFRESH_TOKEN", default=None),
+    "SECRET_CODE": env("AMOCRM_SECRET_CODE", default=None),
+}

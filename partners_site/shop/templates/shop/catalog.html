@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}Каталог{% endblock %}
 
@@ -7,6 +7,34 @@
 <section class="catalog">
   <div class="container">
     <h1 class="catalog-title">Магазин партнёров HiTE PRO!</h1>
+    {% if customer %}
+      <div class="catalog-partner-info">
+        <div class="catalog-partner-info__title">Данные партнёра</div>
+        <div class="catalog-partner-badges">
+          <div class="catalog-partner-badge">
+            <span class="catalog-partner-badge__label">
+              <span class="catalog-partner-badge__icon">S</span>
+              Статус партнёра
+            </span>
+            <strong class="catalog-partner-badge__value">{{ customer.get_partner_status_display }}</strong>
+          </div>
+          <div class="catalog-partner-badge">
+            <span class="catalog-partner-badge__label">
+              <span class="catalog-partner-badge__icon">%</span>
+              Скидка партнёра
+            </span>
+            <strong class="catalog-partner-badge__value">{{ customer.partner_discount|localize }} %</strong>
+          </div>
+          <div class="catalog-partner-badge">
+            <span class="catalog-partner-badge__label">
+              <span class="catalog-partner-badge__icon">B</span>
+              Бонусов на балансе
+            </span>
+            <strong class="catalog-partner-badge__value">{{ customer.bonuses|localize }}</strong>
+          </div>
+        </div>
+      </div>
+    {% endif %}
 
       <div class="catalog-filters" id="catalog-filters">
           <form class="catalog-search" action="" onsubmit="return false;">
@@ -37,6 +65,9 @@
           </div>
       </div>
 
+      <div class="catalog-loading" id="catalog-loading" hidden aria-hidden="true">
+        <div class="catalog-loading__bar"></div>
+      </div>
 
       <div id="catalog-results">
         <div class="catalog-grid">
@@ -117,7 +148,7 @@
                   <a href="{% url 'product_group_detail' group.pk %}" class="btn btn-details js-details-link"
                      data-base-href="{% url 'product_group_detail' group.pk %}">Подробнее</a>
 
-                  <div class="cart-control js-cart-control" data-product-id="">
+                  <div class="cart-control js-cart-control" data-product-id="{{ product.id }}">
                     <button type="button" class="qty-btn js-cart-dec" aria-label="Уменьшить">−</button>
                     <button type="button" class="btn btn-cart js-cart-main">В корзину</button>
                     <button type="button" class="qty-btn js-cart-inc" aria-label="Увеличить">+</button>
@@ -144,6 +175,7 @@
 
 {% block extra_js %}
 <script src="{% static 'js/catalog_variants.js' %}"></script>
+<script src="{% static 'js/catalog_layout.js' %}"></script>
 <script src="{% static 'js/catalog_search.js' %}"></script>
 <script src="{% static 'js/catalog_cart.js' %}"></script>
 {% endblock %}

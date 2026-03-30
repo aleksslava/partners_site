@@ -5,12 +5,14 @@
   }
 
   async function apiGetQuantities() {
-    const r = await fetch('/api/cart/quantities/', { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+    const r = await fetch('/api/cart/quantities/', {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
     return r.ok ? r.json() : {};
   }
 
   async function apiUpdateItem(productId, delta) {
-    const r = await fetch('/api/cart/items/', {
+    const r = await fetch('/api/cart/add/', {   // <-- ОБЯЗАТЕЛЬНО со слэшем в начале
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -19,14 +21,19 @@
       },
       body: JSON.stringify({ product_id: productId, delta })
     });
-    if (!r.ok) throw new Error('Cart update failed');
-    return r.json(); // ожидаем {product_id, qty, quantities?}
+
+    if (!r.ok) {
+      const text = await r.text().catch(() => '');
+      console.error('Cart update failed', r.status, text);
+      throw new Error('Cart update failed');
+    }
+    return r.json(); // {product_id, qty}
   }
 
   function setControlState(control, qty) {
     const mainBtn = control.querySelector('.js-cart-main');
     control.classList.toggle('is-active', qty > 0);
-    mainBtn.textContent = qty > 0 ? String(qty) : 'В корзину';
+    if (mainBtn) mainBtn.textContent = qty > 0 ? String(qty) : 'В корзину';
   }
 
   function initCartControls(root) {
@@ -38,27 +45,35 @@
       if (!control || control.dataset.init === '1') return;
       control.dataset.init = '1';
 
-      const select = card.querySelector('.js-variant-select');
+      const select = card.querySelector('.js-variant-select'); // может отсутствовать
       const decBtn = control.querySelector('.js-cart-dec');
       const incBtn = control.querySelector('.js-cart-inc');
       const mainBtn = control.querySelector('.js-cart-main');
 
-      // Текущий product_id берём из выбранной модификации
+      // всегда должен вернуть productId
       function currentProductId() {
-        return select ? String(select.value) : (control.dataset.productId || '');
+        if (select) return String(select.value || '');
+        return String(control.dataset.productId || '');
       }
 
-      // обновление data-product-id при смене модификации
+      // если есть select — при смене модификации обновляем productId в control
       if (select) {
         select.addEventListener('change', () => {
-          control.dataset.productId = currentProductId();
+          control.dataset.productId = String(select.value || '');
           const qty = window.__cartQty?.[control.dataset.productId] || 0;
           setControlState(control, qty);
         });
-        control.dataset.productId = currentProductId();
+
+        // первичная установка
+        control.dataset.productId = String(select.value || control.dataset.productId || '');
       }
 
-      // клики
+      // если select нет — убеждаемся, что productId уже проставлен из шаблона
+      // (data-product-id="{{ product.id }}")
+      if (!select && !control.dataset.productId) {
+        console.warn('Cart control has no productId. Add data-product-id in template.');
+      }
+
       async function applyDelta(delta) {
         const pid = currentProductId();
         if (!pid) return;
@@ -67,26 +82,35 @@
         const qty = Number(res.qty || 0);
 
         window.__cartQty = window.__cartQty || {};
-        window.__cartQty[pid] = qty;
+        window.__cartQty[String(pid)] = qty;
 
         setControlState(control, qty);
       }
 
-      mainBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const pid = currentProductId();
-        const qty = window.__cartQty?.[pid] || 0;
-        // если было 0 — добавляем 1, иначе ничего не делаем (можно сделать +1)
-        applyDelta(qty > 0 ? 0 : 1).catch(console.error);
-      });
+      if (mainBtn) {
+        mainBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const pid = currentProductId();
+          if (!pid) return;
 
-      incBtn.addEventListener('click', (e) => { e.preventDefault(); applyDelta(1).catch(console.error); });
-      decBtn.addEventListener('click', (e) => { e.preventDefault(); applyDelta(-1).catch(console.error); });
+          const qty = window.__cartQty?.[pid] || 0;
+          // если было 0 — добавляем 1, иначе можно ничего не делать
+          applyDelta(qty > 0 ? 0 : 1).catch(console.error);
+        });
+      }
+
+      if (incBtn) incBtn.addEventListener('click', (e) => { e.preventDefault(); applyDelta(1).catch(console.error); });
+      if (decBtn) decBtn.addEventListener('click', (e) => { e.preventDefault(); applyDelta(-1).catch(console.error); });
+
+      // первичная отрисовка для этой карточки
+      const initPid = currentProductId();
+      const initQty = initPid ? (window.__cartQty?.[initPid] || 0) : 0;
+      setControlState(control, initQty);
     });
 
-    // выставляем начальные qty
+    // на случай, если разметка уже содержит controls без init (после ajax)
     scope.querySelectorAll('.js-cart-control').forEach(control => {
-      const pid = control.dataset.productId;
+      const pid = String(control.dataset.productId || '');
       if (!pid) return;
       const qty = window.__cartQty?.[pid] || 0;
       setControlState(control, qty);

@@ -1,8 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+from django.db.models import CharField
 
-# Create your models here.
 
 class Customer(models.Model):
 
@@ -44,7 +44,7 @@ class Customer(models.Model):
         elif self.partner_status == self.PartnerStatus.Business:
             self.partner_discount = 40
         elif self.partner_status == self.PartnerStatus.Exclusive:
-            self.partner_discount = 15
+            self.partner_discount = 0
         super().save(*args, **kwargs)
 
     class Meta:
@@ -52,7 +52,9 @@ class Customer(models.Model):
         verbose_name_plural = 'Покупатели'
 
     def __str__(self):
-        return f'Customer #{self.pk} ({self.amo_id_customer})'
+        return f'Покупатель id{self.amo_id_customer} ({self.name})'
+
+# Модель для телефона
 
 
 
@@ -68,6 +70,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=32, blank=True, unique=True, null=True, verbose_name='Номер телефона')
     amo_id_contact = models.IntegerField(blank=True, null=True, verbose_name='ID контакта в AMO')
     telegram_id = models.IntegerField(blank=True, null=True, verbose_name='Телеграм ID')
+    max_id = models.IntegerField(blank=True, null=True, verbose_name='MAX ID')
     email = models.EmailField(blank=True, null=True, verbose_name='E-mail')
     time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
@@ -79,6 +82,24 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+class UserPhone(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='phones',
+    )
+    phone = CharField(
+        max_length=20,
+        blank=True, )
+
+    class Meta:
+        verbose_name = "Телефон"
+        verbose_name_plural = "Телефоны"
+        constraints = [
+            models.UniqueConstraint(fields=["phone"], name="uniq_user_phone"),
+        ]
+
 
 
 class Address(models.Model):
@@ -111,6 +132,7 @@ class Address(models.Model):
         max_length=32,
         blank=True,
         verbose_name="Телефон получателя",
+        null=True
     )
 
     country = models.CharField(
@@ -152,6 +174,13 @@ class Address(models.Model):
         help_text="Подъезд, этаж, код домофона и т.п.",
     )
 
+    delivery_address_text = models.TextField(max_length=455, blank=True, verbose_name="Адрес доставки полный")
+
+    # ПВЗ/самовывоз: хранить идентификаторы (адрес получателя всё равно в Address)
+    pickup_point_code = models.CharField(max_length=120, blank=True)
+    pickup_point_address = models.CharField(max_length=255, blank=True)
+    pickup_point_provider = models.CharField(max_length=50, blank=True)
+
     time_created = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания",
@@ -172,3 +201,34 @@ class Address(models.Model):
         if self.apartment:
             base += f", {self.apartment}"
         return base
+
+
+class Requisites(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    company_name = models.CharField(max_length=255, verbose_name='Наименование')
+    inn = models.CharField(max_length=20, blank=True, verbose_name="ИНН")
+    kpp = models.CharField(max_length=20, blank=True, verbose_name="КПП")
+
+    bik = models.CharField(max_length=20, blank=True, verbose_name="БИК")
+    legal_address = models.CharField(max_length=255, blank=True, verbose_name="Юридический адрес")
+    settlement_account = models.CharField(max_length=40, blank=True, verbose_name="Расчётный счёт")
+
+    is_default = models.BooleanField(default=False, verbose_name="По умолчанию")
+
+    time_created = models.DateTimeField(auto_now_add=True)
+    time_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Реквизиты"
+        verbose_name_plural = "Реквизиты"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "inn", "settlement_account"], name="uniq_user_inn_rs"),
+        ]
+
+    def __str__(self):
+        return f"{self.company_name} (ИНН {self.inn})"
+
+

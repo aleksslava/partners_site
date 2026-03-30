@@ -1,6 +1,10 @@
 from django.db import models
 from django.db.models import Q
+from django.core.files.base import ContentFile
 from taggit.managers import TaggableManager
+from pathlib import Path
+from io import BytesIO
+from PIL import Image as PilImage, ImageOps
 
 
 
@@ -87,17 +91,90 @@ class Product(models.Model):
         return self.name
 
 class Image(models.Model):
-    name = models.CharField(max_length=255, verbose_name='Наименование')
-    title = models.CharField(max_length=255, verbose_name='Описание')
-    photo = models.ImageField(upload_to='products/', verbose_name='Фото')
+    MAX_IMAGE_SIDE = 1600
+    JPEG_QUALITY = 82
+    WEBP_QUALITY = 80
+
+    name = models.CharField(max_length=255, verbose_name='\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435')
+    title = models.CharField(max_length=255, verbose_name='\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435')
+    photo = models.ImageField(upload_to='products/', verbose_name='\u0424\u043e\u0442\u043e')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
+    time_created = models.DateTimeField(auto_now_add=True, verbose_name='\u0414\u0430\u0442\u0430 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f')
+    time_updated = models.DateTimeField(auto_now=True, verbose_name='\u0414\u0430\u0442\u0430 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f')
 
     class Meta:
-        verbose_name = 'Фото'
-        verbose_name_plural = 'Изображения'
+        verbose_name = '\u0424\u043e\u0442\u043e'
+        verbose_name_plural = '\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f'
 
+    @staticmethod
+    def _build_caption_from_photo(photo_name: str) -> str:
+        stem = Path(photo_name or '').stem
+        caption = ' '.join(stem.replace('_', ' ').replace('-', ' ').split())
+        return (caption or 'image')[:255]
+
+    def _optimize_photo_if_needed(self):
+        if not self.photo or getattr(self.photo, '_committed', True):
+            return
+
+        file_name = Path(self.photo.name)
+        try:
+            self.photo.open('rb')
+            with PilImage.open(self.photo) as raw_image:
+                image = ImageOps.exif_transpose(raw_image)
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+
+                if max(image.size) > self.MAX_IMAGE_SIDE:
+                    image.thumbnail(
+                        (self.MAX_IMAGE_SIDE, self.MAX_IMAGE_SIDE),
+                        PilImage.Resampling.LANCZOS,
+                    )
+
+                original_format = (raw_image.format or file_name.suffix.lstrip('.')).upper()
+                output = BytesIO()
+
+                if original_format in {'JPG', 'JPEG'}:
+                    if image.mode not in {'RGB', 'L'}:
+                        image = image.convert('RGB')
+                    image.save(
+                        output,
+                        format='JPEG',
+                        optimize=True,
+                        progressive=True,
+                        quality=self.JPEG_QUALITY,
+                    )
+                    new_suffix = '.jpg'
+                elif original_format == 'PNG':
+                    image.save(output, format='PNG', optimize=True, compress_level=9)
+                    new_suffix = '.png'
+                else:
+                    if image.mode not in {'RGB', 'RGBA'}:
+                        image = image.convert('RGB')
+                    image.save(output, format='WEBP', quality=self.WEBP_QUALITY, method=6)
+                    new_suffix = '.webp'
+
+                output.seek(0)
+                optimized_name = f"{file_name.stem}{new_suffix}"
+                self.photo.save(optimized_name, ContentFile(output.read()), save=False)
+        except Exception:
+            # Fallback: keep original file if optimization failed.
+            return
+        finally:
+            try:
+                self.photo.close()
+            except Exception:
+                pass
+
+    def save(self, *args, **kwargs):
+        if self.photo:
+            caption = self._build_caption_from_photo(getattr(self.photo, 'name', ''))
+            if not (self.name or '').strip():
+                self.name = caption
+            if not (self.title or '').strip():
+                self.title = caption
+
+        self._optimize_photo_if_needed()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -130,7 +207,7 @@ class Video(models.Model):
 class Instruction(models.Model):
     name = models.CharField(max_length=255, verbose_name='Наименование')
     institution = models.FileField(upload_to='products', verbose_name='Файл инструкции')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Товар')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Товар', related_name='instructions')
     time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
 
@@ -140,3 +217,4 @@ class Instruction(models.Model):
 
     def __str__(self):
         return self.name
+

@@ -17,3 +17,112 @@
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 26px;
 }
+
+
+.catalog-partner-info {
+  margin: 0 0 18px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.catalog-partner-info__title {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.catalog-partner-badges {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.catalog-partner-badge {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+  min-height: 76px;
+  align-content: space-between;
+}
+
+.catalog-partner-badge__label {
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-partner-badge__value {
+  color: #0f172a;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.catalog-partner-badge__icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: #ffffff;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex: 0 0 22px;
+}
+
+.catalog-loading {
+  margin: 0 0 16px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.catalog-loading__bar {
+  width: 35%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0ea5e9, #2563eb);
+  animation: catalogLoading 1s ease-in-out infinite;
+}
+
+#catalog-results {
+  transition: opacity 0.16s ease;
+}
+
+#catalog-results.is-loading {
+  opacity: 0.52;
+  pointer-events: none;
+}
+
+@keyframes catalogLoading {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@media (max-width: 760px) {
+  .catalog-partner-badges {
+    grid-template-columns: 1fr;
+  }
+  .catalog-partner-badge {
+    min-height: 0;
+  }
+}

@@ -39,10 +39,6 @@
   display:inline-flex; align-items:center; gap:8px;
 }
 
-.cart-control .qty-btn{ display:none; }
-.cart-control.is-active .qty-btn{ display:inline-flex; }
 
-.cart-control .js-cart-main{
-  min-width: 120px;
-}
+
 

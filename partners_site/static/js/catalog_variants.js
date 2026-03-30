@@ -3,6 +3,14 @@
   let portal = null;
   let opened = null;
   let globalsReady = false;
+  const priceFormatter = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+
+  function formatMoney(value) {
+    if (value == null || value === '') return '';
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '';
+    return `${priceFormatter.format(num)} ₽`;
+  }
 
   function ensurePortal() {
     if (portal) return;
@@ -28,35 +36,28 @@
     portal.style.width = `${rect.width}px`;
   }
 
-  function applyToCard(ctx, m) {
-    if (!m) return;
+  function applyToCard(ctx, mod) {
+    if (!mod) return;
 
-    // Базовая цена (старая)
-    if (ctx.priceEl) {
-      ctx.priceEl.textContent = (m.price != null ? `${m.price} ₽` : '');
-    }
+    if (ctx.priceEl) ctx.priceEl.textContent = formatMoney(mod.price);
 
-    // Цена со скидкой (новая)
     if (ctx.discountPriceEl) {
-      const dp = (m.discounted_price != null ? `${m.discounted_price} ₽` : '');
-      ctx.discountPriceEl.textContent = dp || (m.price != null ? `${m.price} ₽` : '');
+      const discounted = formatMoney(mod.discounted_price);
+      ctx.discountPriceEl.textContent = discounted || formatMoney(mod.price);
     }
 
-    // Показываем/скрываем старую цену + бейдж
-    const discountPercent = Number(m.discount_percent || 0);
+    const discountPercent = Number(mod.discount_percent || 0);
     const hasDiscount = discountPercent > 0;
 
     if (ctx.oldWrapEl) ctx.oldWrapEl.style.display = hasDiscount ? '' : 'none';
-    if (hasDiscount && ctx.badgeEl) ctx.badgeEl.textContent = `–${discountPercent}%`;
+    if (hasDiscount && ctx.badgeEl) ctx.badgeEl.textContent = `-${discountPercent}%`;
 
-    // Описание
-    if (ctx.descEl) ctx.descEl.textContent = m.short_description || '';
+    if (ctx.descEl) ctx.descEl.textContent = mod.short_description || '';
 
-    // Картинка
     if (ctx.imgEl) {
-      if (m.image_url) {
-        ctx.imgEl.src = m.image_url;
-        ctx.imgEl.alt = m.name || ctx.imgEl.alt || '';
+      if (mod.image_url) {
+        ctx.imgEl.src = mod.image_url;
+        ctx.imgEl.alt = mod.name || ctx.imgEl.alt || '';
         ctx.imgEl.style.display = '';
       } else {
         ctx.imgEl.removeAttribute('src');
@@ -64,28 +65,24 @@
       }
     }
 
-    // "Подробнее" -> на выбранную модификацию
     if (ctx.detailsLinks && ctx.detailsLinks.length) {
-      ctx.detailsLinks.forEach(link => {
+      ctx.detailsLinks.forEach((link) => {
         const base = link.dataset.baseHref || link.getAttribute('href') || '';
         if (!base) return;
-        link.href = `${base}?mod=${m.id}`;
+        link.href = `${base}?mod=${mod.id}`;
       });
     }
 
-    // Подпись на кнопке dropdown
-    if (ctx.label) ctx.label.textContent = m.name || '';
+    if (ctx.label) ctx.label.textContent = mod.name || '';
   }
 
   function buildPortalOptions(ctx, activeId) {
     portal.innerHTML = '';
 
-    ctx.mods.forEach(mod => {
+    ctx.mods.forEach((mod) => {
       const opt = document.createElement('button');
       opt.type = 'button';
-      opt.className =
-        'variant-portal__option' +
-        (String(mod.id) === String(activeId) ? ' is-active' : '');
+      opt.className = `variant-portal__option${String(mod.id) === String(activeId) ? ' is-active' : ''}`;
       opt.textContent = mod.name;
       opt.dataset.value = mod.id;
 
@@ -141,8 +138,8 @@
     const imgEl = card.querySelector('.js-product-image');
     const detailsLinks = card.querySelectorAll('.js-details-link');
 
-    const dropdown = card.querySelector('.js-variant');         // может отсутствовать
-    const select = card.querySelector('.js-variant-select');    // hidden select
+    const dropdown = card.querySelector('.js-variant');
+    const select = card.querySelector('.js-variant-select');
     const btn = card.querySelector('.js-variant-button');
     const label = card.querySelector('.js-variant-label');
 
@@ -158,27 +155,32 @@
     }
 
     const ctxBase = {
-      priceEl, discountPriceEl, oldWrapEl, badgeEl,
-      descEl, imgEl, detailsLinks,
-      select, mods, label
+      priceEl,
+      discountPriceEl,
+      oldWrapEl,
+      badgeEl,
+      descEl,
+      imgEl,
+      detailsLinks,
+      select,
+      mods,
+      label,
     };
 
-    // Если dropdown отсутствует (1 модификация)
     if (!dropdown || !select || !btn || !label) {
       applyToCard({ ...ctxBase, label: null, select: null }, mods[0]);
+      if (window.syncCatalogCardRows) window.syncCatalogCardRows(document);
       return;
     }
 
-    // Обновление карточки при смене select
     select.addEventListener('change', () => {
-      const m = mods.find(x => String(x.id) === String(select.value));
-      applyToCard(ctxBase, m);
+      const mod = mods.find((x) => String(x.id) === String(select.value));
+      applyToCard(ctxBase, mod);
+      if (window.syncCatalogCardRows) window.syncCatalogCardRows(document);
     });
 
-    // Первичный рендер
     select.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // Открытие портала
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -186,7 +188,6 @@
       ensurePortal();
       initGlobalListeners();
 
-      // если клик по уже открытому — закрываем
       if (opened && opened.card === card) {
         closePortal();
         return;
@@ -205,8 +206,7 @@
     });
   }
 
-  // Публичная реинициализация (после AJAX-поиска)
-  window.initCatalogVariants = function (rootEl) {
+  window.initCatalogVariants = function initCatalogVariants(rootEl) {
     ensurePortal();
     initGlobalListeners();
 
@@ -214,7 +214,6 @@
     root.querySelectorAll('.js-product-card').forEach(initCard);
   };
 
-  // Стартовая инициализация
   document.addEventListener('DOMContentLoaded', () => {
     window.initCatalogVariants(document);
   });

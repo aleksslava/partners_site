@@ -163,6 +163,9 @@ def recalculate_cart(cart: Cart) -> Cart:
             it.bonuses_append = _calc_amount_by_percent(line_subtotal, bonus_percent)
             bonuses_append_total += it.bonuses_append
 
+        it.line_total = it.current_unit_price_discounted * it.qty
+
+
     # --- Режим DISCOUNT: лимит и распределение списываемых бонусов ---
     if cart.discount_type == Cart.DiscountType.DISCOUNT:
         items_total_after_discount = items_subtotal - discount_total
@@ -206,6 +209,8 @@ def recalculate_cart(cart: Cart) -> Cart:
         cart.bonuses_spent_total = 0
         cart.bonuses_append_total = bonuses_append_total
 
+
+
     # --- Итоги корзины ---
     cart.items_subtotal = items_subtotal
     cart.discount_total = discount_total
@@ -216,6 +221,9 @@ def recalculate_cart(cart: Cart) -> Cart:
         0,
         items_total_after_discount - int(cart.bonuses_spent_total or 0) + int(cart.delivery_price or 0)
     )
+
+
+
 
     # --- Сохраняем изменения по позициям и корзине ---
     CartItem.objects.bulk_update(
@@ -228,6 +236,7 @@ def recalculate_cart(cart: Cart) -> Cart:
             "bonuses_append",
             "bonuses_spent",
             "time_updated",
+            "line_total",
         ],
     )
 

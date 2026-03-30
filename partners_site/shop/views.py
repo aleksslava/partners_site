@@ -13,6 +13,7 @@ import json
 from taggit.models import Tag
 
 from shop.models import Product, ProductGroup
+from users.models import User
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,48 +24,62 @@ from django.shortcuts import render
 from .models import ProductGroup
 
 
+from django.db.models import Q, F
+from django.db.models.functions import Lower
+import json
+from decimal import Decimal, ROUND_HALF_UP
+
 def catalog_view(request):
     q = (request.GET.get('q') or '').strip()
     tag = (request.GET.get('tag') or '').strip()
 
-    groups = (
-        ProductGroup.objects
-        .filter(modifications__is_visible=True)
-        .distinct()
-        .select_related('category')
-        .prefetch_related('modifications__images')
-        .order_by('-is_pinned', 'sort_order', '-id')
-    )
+    user = request.user
+    customer = None
+    if request.user.is_authenticated:
+        user = (
+            User.objects
+            .select_related('customer')
+            .filter(pk=request.user.pk)
+            .first()
+            or request.user
+        )
+        customer = getattr(user, "customer", None)
 
+    # Начинаем с группы товаров
+    groups = ProductGroup.objects.filter(modifications__is_visible=True).distinct().select_related('category')
+
+    # Фильтрация по поисковому запросу
     if q:
         q_norm = q.lower()
+        # Фильтруем по группам и товарам
         groups = groups.annotate(
-            name_l=Lower("name"),
-            mod_name_l=Lower("modifications__name"),
+            name_l=Lower("name")
         ).filter(
-            Q(name_l__contains=q_norm) |
-            Q(mod_name_l__contains=q_norm)
+            Q(name_l__contains=q_norm)
         ).distinct()
 
+    # Фильтрация по тегам
     if tag:
         groups = groups.filter(tags__name=tag).distinct()
 
-        # теги для быстрых фильтров (можно ограничить, чтобы не показывать "пустые")
+    # Явная сортировка каталога по позиции в модели ProductGroup
+    groups = groups.order_by("sort_order", "id")
+
+    # Получаем список всех тегов для быстрого фильтра
     tags = (
         Tag.objects
-        .filter(productgroup__isnull=False)  # подстрой имя модели: ProductGroup
+        .filter(productgroup__isnull=False)
         .distinct()
         .order_by('name')
     )
 
-    user_discount = 0
-    if request.user.is_authenticated:
-        if getattr(request.user, "customer_id", None):
-            user_discount = int(request.user.customer.partner_discount or 0)
+    # Получаем скидку пользователя (если он авторизован)
+    user_discount = int(customer.partner_discount or 0) if customer else 0
 
     group_cards = []
 
     for group in groups:
+        # Получаем все модификации группы
         mods = [m for m in group.modifications.all() if m.is_visible]
         if not mods:
             continue
@@ -74,6 +89,7 @@ def catalog_view(request):
         category_discount = int(getattr(group.category, "discount", 0) or 0)
         discount_percent = min(user_discount, category_discount)  # берём меньшую скидку
 
+        # Функция для вычисления скидки на товар
         def calc_discounted(price: int) -> int:
             p = Decimal(price)
             d = Decimal(100 - discount_percent) / Decimal(100)
@@ -100,13 +116,16 @@ def catalog_view(request):
             "mods_json": json.dumps(mods_payload, ensure_ascii=False),  # <- для JS
         })
 
-    return render(request, "shop/catalog.html",
-                  {
-                      "group_cards": group_cards,
-                      "q": q,
-                      "tag": tag,
-                      "tags": tags,
-                  })
+    # Отправляем данные в шаблон
+    return render(request, "shop/catalog.html", {
+        "group_cards": group_cards,
+        "q": q,
+        "tag": tag,
+        "tags": tags,
+        "user": user,
+        "customer": customer,
+    })
+
 
 
 def product_group_detail(request, pk):
@@ -115,28 +134,46 @@ def product_group_detail(request, pk):
             'modifications__images',
             'modifications__characteristics',
             'modifications__videos',
-            'modifications__instruction_set',  # если related_name не задавали
+            'modifications__instructions',
         ),
         pk=pk
     )
 
-    modifications = group.modifications.filter(is_visible=True)
+    modifications = list(group.modifications.filter(is_visible=True))
 
     mod_id = request.GET.get('mod')
     if mod_id:
-        active_mod = modifications.filter(pk=mod_id).first()
+        active_mod = next((m for m in modifications if str(m.pk) == str(mod_id)), None)
     else:
         active_mod = None
 
     if active_mod is None:
         active_mod = group.primary_product
 
+    ordered_modifications = []
+    if active_mod:
+        ordered_modifications.append(active_mod)
+    ordered_modifications.extend(m for m in modifications if not active_mod or m.pk != active_mod.pk)
+
+    images = []
+    seen_image_ids = set()
+    for mod in ordered_modifications:
+        for image in mod.images.all():
+            if image.pk in seen_image_ids:
+                continue
+            seen_image_ids.add(image.pk)
+            images.append(image)
+
     context = {
         'group': group,
-        'active_mod': active_mod,
-        'modifications': modifications,
+        'product': active_mod,
+        'images': images,
+        'instructions': active_mod.instructions.all(),
+        'videos': active_mod.videos.all(),
+        'mods': modifications,
+        'characteristics': active_mod.characteristics.all(),
     }
-    return render(request, 'product_detail.html', context)
+    return render(request, 'shop/product_group_detail.html', context)
 
 
 def product_group_api(request, pk):
@@ -162,3 +199,6 @@ def product_group_api(request, pk):
         'primary_id': group.primary_product.id if group.primary_product else None,
     }
     return JsonResponse(data)
+
+
+

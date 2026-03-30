@@ -13,9 +13,12 @@
 @import "components/auth.css";
 @import "components/catalog_search.css";
 @import "components/cart.css";
+@import "components/cabinet.css";
+
 
 /* --- Страницы --- */
 @import "pages/catalog.css";
+@import "pages/product_group_detail.css";
 
 /* --- Утилиты --- */
 @import "utils.css";

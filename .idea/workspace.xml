@@ -5,29 +5,71 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="47d4e6ee-241e-41eb-b2e8-72ed9767b333" name="Changes" comment=".">
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/mobile_menu.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/env/amocrm_tokens.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/env/prod.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/nginx/default.conf.template" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/scripts/backup.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/scripts/certbot-init.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/scripts/certbot-renew.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/deploy/scripts/release.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/admin.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/exceptions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/factory.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/services.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/amocrm/throttling.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/apps.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/migrations/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/integrations/views.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/orders/urls.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/error.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/users/services/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/users/services/amocrm_login.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/users/services/amocrm_sync.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/partners_site/users/templates/users/cabinet.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/db.sqlite3" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/orders/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/orders/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/orders/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/services.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/orders/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/orders/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/partners_site/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/partners_site/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/partners_site/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/partners_site/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/shop/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0001_initial.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0002_alter_category_options_alter_image_options_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0003_remove_image_product_product_image.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0004_remove_product_image.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0005_alter_image_options_product_photo_alter_image_photo.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0006_remove_product_photo_image_product_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0007_alter_video_product.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0008_product_parent.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/migrations/0009_product_amo_id_alter_image_photo_and_more.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/shop/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/static/shop/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/static/shop/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/templates/shop/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/catalog.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/shop/static/shop/css/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/shop/templates/shop/catalog.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/catalog.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/shop/templates/shop/product_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/product_group_detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/shop/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/buttons.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/buttons.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/cards.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/cards.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/cart.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/cart.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/catalog_search.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/catalog_search.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/main.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/pages/catalog.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/pages/catalog.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/pages/product_detail.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/integrations/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/static/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/js/catalog_cart.js" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_cart.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/js/catalog_search.js" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_search.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/js/catalog_variants.js" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_variants.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/static/shop/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/shop/css/styles.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/partners_site/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/templates/users/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/templates/users/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,6 +99,9 @@
     &quot;accountId&quot;: &quot;06645c4d-f149-4ffe-bb05-7dbd38f8c64b&quot;
   }
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -65,20 +110,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/solom/PycharmProjects/partners_site/partners_site/static/img&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "Python.client.executor": "Run",
+    "Python.runserver.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/solom/PycharmProjects/partners_site/partners_site",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\solom\PycharmProjects\partners_site\partners_site" />
       <recent name="C:\Users\solom\PycharmProjects\partners_site\partners_site\static\img" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -86,10 +137,68 @@
       <recent name="C:\Users\solom\PycharmProjects\partners_site\partners_site\static\partners_site" />
     </key>
   </component>
+  <component name="RunManager" selected="Python.runserver">
+    <configuration name="client" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="partners_site" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/partners_site/integrations/amocrm" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/partners_site/integrations/amocrm/client.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="runserver" type="PythonConfigurationType" factoryName="Python">
+      <module name="partners_site" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.11 (partners_site)" />
+      <option name="WORKING_DIRECTORY" value="C:\Users\solom\PycharmProjects\partners_site\partners_site" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/partners_site/manage.py" />
+      <option name="PARAMETERS" value="runserver" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.runserver" />
+      <item itemvalue="Python.client" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.client" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-4e2b1448bda8-9a97661f3031-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.27397.106" />
+        <option value="bundled-python-sdk-07523f343e4f-968fe969f28a-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.28539.27" />
       </set>
     </attachedChunks>
   </component>
@@ -101,6 +210,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763975438179</updated>
+      <workItem from="1774857104633" duration="11010000" />
     </task>
     <task id="LOCAL-00001" summary=".">
       <option name="closed" value="true" />
@@ -110,11 +220,33 @@
       <option name="project" value="LOCAL" />
       <updated>1765366483064</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary=".">
+      <option name="closed" value="true" />
+      <created>1766150175286</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1766150175286</updated>
+    </task>
+    <task id="LOCAL-00003" summary=".">
+      <option name="closed" value="true" />
+      <created>1766150278558</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1766150278558</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="." />
     <option name="LAST_COMMIT_MESSAGE" value="." />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/partners_site$runserver.coverage" NAME="runserver Coverage Results" MODIFIED="1774866331871" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\solom\PycharmProjects\partners_site\partners_site" />
   </component>
 </project>

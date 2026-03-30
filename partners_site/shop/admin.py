@@ -1,16 +1,41 @@
 from django.contrib import admin
+from django import forms
 from .models import Product, Image, Video, Category, Instruction, Characteristics, ProductGroup
 
 
-from django.db import models
 # Register your models here.
 
 admin.site.register([Image, Video, Category, Instruction])
 
 
+class ImageInlineForm(forms.ModelForm):
+    class Meta:
+        model = Image
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].required = False
+        self.fields['title'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        photo = cleaned_data.get('photo') or getattr(self.instance, 'photo', None)
+        if not photo:
+            return cleaned_data
+
+        caption = Image._build_caption_from_photo(getattr(photo, 'name', ''))
+        if not (cleaned_data.get('name') or '').strip():
+            cleaned_data['name'] = caption
+        if not (cleaned_data.get('title') or '').strip():
+            cleaned_data['title'] = caption
+        return cleaned_data
+
+
 class ImageInline(admin.TabularInline):
     model = Image
     extra = 1
+    form = ImageInlineForm
 
 class VideoInline(admin.TabularInline):
     model = Video

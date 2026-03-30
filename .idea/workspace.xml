@@ -4,23 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="47d4e6ee-241e-41eb-b2e8-72ed9767b333" name="Changes" comment=".">
-      <change afterPath="$PROJECT_DIR$/partners_site/orders/templates/orders/order.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/cart.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/css/base/typography.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/css/components/cabinet.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/css/pages/error.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/css/pages/order.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/css/pages/product_group_detail.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart_delivery.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart_discount_type.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/cart_payment.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/catalog_layout.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/product_detail_variant.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/partners_site/static/js/product_group_detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="47d4e6ee-241e-41eb-b2e8-72ed9767b333" name="Changes" comment="." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -160,7 +144,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763975438179</updated>
-      <workItem from="1774857104633" duration="14347000" />
+      <workItem from="1774857104633" duration="14811000" />
     </task>
     <task id="LOCAL-00001" summary=".">
       <option name="closed" value="true" />
@@ -194,7 +178,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774871959303</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary=".">
+      <option name="closed" value="true" />
+      <created>1774882353542</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1774882353542</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

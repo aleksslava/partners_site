@@ -235,6 +235,17 @@
   cursor: pointer;
 }
 
+.cabinet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.cabinet-actions .cabinet-btn {
+  border: 0;
+}
+
 @media (max-width: 860px) {
   .cabinet-grid {
     grid-template-columns: 1fr;

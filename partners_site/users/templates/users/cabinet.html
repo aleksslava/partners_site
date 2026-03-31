@@ -150,6 +150,64 @@
         </form>
       </div>
 
+      <div class="cabinet-card">
+        <h2 class="cabinet-card__title">Быстрая сводка и действия</h2>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Последний заказ</div>
+          <div class="cabinet-row__value">
+            {% if latest_order %}
+              <a class="cabinet-order-link" href="/cart/order/{{ latest_order.id }}/">
+                {% localize off %}{{ latest_order.amo_crm_id|default:latest_order.id }}{% endlocalize %}
+              </a>
+              • {{ latest_order.total|default:0 }} руб.
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Активная корзина</div>
+          <div class="cabinet-row__value">
+            {% if active_cart %}
+              {{ active_cart_items_total }} шт. • {{ active_cart.total|default:0 }} руб.
+            {% else %}
+              Нет активной корзины
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Адрес по умолчанию</div>
+          <div class="cabinet-row__value">
+            {% if default_address %}
+              {{ default_address.city }}, {{ default_address.street }}, {{ default_address.house }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Реквизиты</div>
+          <div class="cabinet-row__value">
+            {% if default_requisites %}
+              {{ default_requisites.company_name }}
+              {% if default_requisites.inn %}(ИНН {{ default_requisites.inn }}){% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="cabinet-actions">
+          <a href="{% url 'catalog' %}" class="btn cabinet-btn">В каталог</a>
+          <a href="/cart/" class="btn cabinet-btn">В корзину</a>
+          <a href="https://t.me/+79251930861" target="_blank" rel="noopener noreferrer" class="btn cabinet-btn">Менеджер</a>
+        </div>
+      </div>
+
       <div class="cabinet-card cabinet-card--wide">
         <div class="cabinet-card__head">
           <h2 class="cabinet-card__title">Заказы</h2>

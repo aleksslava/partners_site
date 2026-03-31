@@ -231,25 +231,24 @@
 
         {% if orders %}
           {% for order in orders %}
-            <div class="cabinet-row">
-              <div class="cabinet-row__label">ID заказа</div>
-              <div class="cabinet-row__value">
+            <div class="cabinet-order-line">
+              <span class="cabinet-order-line__item">
+                <span class="cabinet-order-line__label">ID:</span>
                 <a class="cabinet-order-link" href="/cart/order/{{ order.id }}/">{% localize off %}{{ order.amo_crm_id|default:"-" }}{% endlocalize %}</a>
-              </div>
+              </span>
+              <span class="cabinet-order-line__item">
+                <span class="cabinet-order-line__label">Сумма:</span>
+                <span class="cabinet-order-line__value">{{ order.total|default:0 }} руб.</span>
+              </span>
+              <span class="cabinet-order-line__item">
+                <span class="cabinet-order-line__label">Списано:</span>
+                <span class="cabinet-order-line__value">{{ order.bonuses_spent_total|default:0 }}</span>
+              </span>
+              <span class="cabinet-order-line__item">
+                <span class="cabinet-order-line__label">Начислено:</span>
+                <span class="cabinet-order-line__value">{{ order.bonuses_append_total|default:0 }}</span>
+              </span>
             </div>
-            <div class="cabinet-row">
-              <div class="cabinet-row__label">Сумма заказа</div>
-              <div class="cabinet-row__value">{{ order.total|default:0 }} руб.</div>
-            </div>
-            <div class="cabinet-row">
-              <div class="cabinet-row__label">Списано бонусов</div>
-              <div class="cabinet-row__value">{{ order.bonuses_spent_total|default:0 }}</div>
-            </div>
-            <div class="cabinet-row">
-              <div class="cabinet-row__label">Начислено бонусов</div>
-              <div class="cabinet-row__value">{{ order.bonuses_append_total|default:0 }}</div>
-            </div>
-            {% if not forloop.last %}<hr>{% endif %}
           {% endfor %}
         {% else %}
           <div class="orders-empty">

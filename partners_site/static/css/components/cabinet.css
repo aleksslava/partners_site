@@ -80,6 +80,38 @@
   text-decoration: underline;
 }
 
+.cabinet-order-line {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  overflow-x: auto;
+}
+
+.cabinet-order-line:last-of-type {
+  border-bottom: 0;
+}
+
+.cabinet-order-line__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cabinet-order-line__label {
+  color: rgba(15, 23, 42, 0.6);
+  font-size: 13px;
+}
+
+.cabinet-order-line__value {
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
 .cabinet-kpis {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

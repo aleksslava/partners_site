@@ -5,7 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="47d4e6ee-241e-41eb-b2e8-72ed9767b333" name="Changes" comment=".">
-      <change beforePath="$PROJECT_DIR$/partners_site/shop/templates/shop/product_group_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/shop/templates/shop/product_group_detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/static/css/components/cabinet.css" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/static/css/components/cabinet.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/templates/users/cabinet.html" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/templates/users/cabinet.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/partners_site/users/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/partners_site/users/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +61,11 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/solom/PycharmProjects/partners_site/partners_site",
+    "last_opened_file_path": "C:/Users/solom/PycharmProjects/partners_site/partners_site/products",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "vue.rearranger.settings.migration": "true"
@@ -65,6 +73,8 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\solom\PycharmProjects\partners_site\partners_site\products" />
+      <recent name="C:\Users\solom\PycharmProjects\partners_site\data\media" />
       <recent name="C:\Users\solom\PycharmProjects\partners_site\partners_site" />
       <recent name="C:\Users\solom\PycharmProjects\partners_site\partners_site\static\img" />
     </key>
@@ -134,6 +144,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
+        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-PY-252.28539.27" />
         <option value="bundled-python-sdk-07523f343e4f-968fe969f28a-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.28539.27" />
       </set>
     </attachedChunks>
@@ -146,7 +157,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1763975438179</updated>
-      <workItem from="1774857104633" duration="16025000" />
+      <workItem from="1774857104633" duration="16853000" />
+      <workItem from="1774938525067" duration="3387000" />
     </task>
     <task id="LOCAL-00001" summary=".">
       <option name="closed" value="true" />
@@ -204,7 +216,31 @@
       <option name="project" value="LOCAL" />
       <updated>1774883428647</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary=".">
+      <option name="closed" value="true" />
+      <created>1774883909755</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1774883909755</updated>
+    </task>
+    <task id="LOCAL-00009" summary=".">
+      <option name="closed" value="true" />
+      <created>1774884791802</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1774884791802</updated>
+    </task>
+    <task id="LOCAL-00010" summary=".">
+      <option name="closed" value="true" />
+      <created>1774940736746</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1774940736746</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -215,6 +251,6 @@
     <option name="LAST_COMMIT_MESSAGE" value="." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/partners_site$runserver.coverage" NAME="runserver Coverage Results" MODIFIED="1774866331871" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\solom\PycharmProjects\partners_site\partners_site" />
+    <SUITE FILE_PATH="coverage/partners_site$runserver.coverage" NAME="runserver Coverage Results" MODIFIED="1774944552200" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="C:\Users\solom\PycharmProjects\partners_site\partners_site" />
   </component>
 </project>

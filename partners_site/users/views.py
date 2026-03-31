@@ -1,12 +1,15 @@
+from django.contrib import messages
 from django.contrib.auth import login as auth_login
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods
 
 from integrations.amocrm.exceptions import AmoCRMError, ContactCustomerBindingError
 from orders.models import Order
+from users.forms import CabinetCredentialsForm
 from users.models import User
 from users.services.amocrm_login import (
     extract_error_message,
@@ -55,7 +58,7 @@ class UserLoginView(LoginView):
         return redirect(self.get_success_url())
 
 
-@require_GET
+@require_http_methods(["GET", "POST"])
 @login_required
 def user_cabinet_view(request):
     user = (
@@ -64,23 +67,42 @@ def user_cabinet_view(request):
         .get(pk=request.user.pk)
     )
 
-    # Синхронизация покупателя и контакта с данными из AMOCRM
-    try:
-        sync_result = sync_user_and_customer_from_amocrm(user=user, request=request)
-        if isinstance(sync_result, HttpResponse):
-            return sync_result
-    except Exception:
-        return render(
-            request,
-            "shop/error.html",
-            {"error_message": "Не удалось синхронизировать данные, обратитесь к менеджеру"},
-        )
+    credentials_form = CabinetCredentialsForm(user=user, data=request.POST or None)
 
-    user = (
-        User.objects
-        .select_related("customer")
-        .get(pk=request.user.pk)
-    )
+    if request.method == "POST":
+        if credentials_form.is_valid():
+            username_changed, password_changed = credentials_form.save()
+
+            if password_changed:
+                update_session_auth_hash(request, user)
+
+            if username_changed and password_changed:
+                messages.success(request, "Логин и пароль обновлены.")
+            elif username_changed:
+                messages.success(request, "Логин обновлён.")
+            else:
+                messages.success(request, "Пароль обновлён.")
+
+            return redirect("users:user_cabinet")
+    else:
+        # Синхронизация данных из AMOCRM только на GET.
+        try:
+            sync_result = sync_user_and_customer_from_amocrm(user=user, request=request)
+            if isinstance(sync_result, HttpResponse):
+                return sync_result
+        except Exception:
+            return render(
+                request,
+                "shop/error.html",
+                {"error_message": "Не удалось синхронизировать данные, обратитесь к менеджеру"},
+            )
+
+        user = (
+            User.objects
+            .select_related("customer")
+            .get(pk=request.user.pk)
+        )
+        credentials_form = CabinetCredentialsForm(user=user)
 
     orders = (
         Order.objects
@@ -96,5 +118,6 @@ def user_cabinet_view(request):
         {
             "user": user,
             "orders": orders,
+            "credentials_form": credentials_form,
         },
     )

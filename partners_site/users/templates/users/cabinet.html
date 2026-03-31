@@ -8,9 +8,18 @@
   <div class="container">
     <h1 class="cabinet-title">Личный кабинет</h1>
 
+    {% if messages %}
+      <div class="cabinet-alerts">
+        {% for message in messages %}
+          <div class="cabinet-alert cabinet-alert--{{ message.tags|default:'info' }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
     <div class="cabinet-grid">
 
-      <!-- Профиль -->
       <div class="cabinet-card">
         <h2 class="cabinet-card__title">Пользователь</h2>
 
@@ -36,7 +45,6 @@
         </div>
       </div>
 
-      <!-- Бонусный аккаунт -->
       <div class="cabinet-card">
         <h2 class="cabinet-card__title">Бонусный аккаунт</h2>
 
@@ -79,7 +87,69 @@
         {% endwith %}
       </div>
 
-      <!-- Заказы -->
+      <div class="cabinet-card">
+        <h2 class="cabinet-card__title">Доступ к сайту</h2>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Текущий логин</div>
+          <div class="cabinet-row__value">{{ user.username }}</div>
+        </div>
+
+        <form method="post" class="cabinet-auth-form">
+          {% csrf_token %}
+
+          {% if credentials_form.non_field_errors %}
+            <div class="cabinet-form-error">
+              {% for error in credentials_form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if credentials_form.can_change_username %}
+            <label class="cabinet-auth-form__label" for="{{ credentials_form.new_username.id_for_label }}">
+              Новый логин
+            </label>
+            {{ credentials_form.new_username }}
+            {% if credentials_form.new_username.errors %}
+              <div class="cabinet-field-error">{{ credentials_form.new_username.errors }}</div>
+            {% endif %}
+          {% else %}
+            <div class="cabinet-auth-form__hint">
+              Логин уже установлен и недоступен для изменения.
+            </div>
+          {% endif %}
+
+          {% if user.has_usable_password %}
+            <label class="cabinet-auth-form__label" for="{{ credentials_form.current_password.id_for_label }}">
+              Текущий пароль
+            </label>
+            {{ credentials_form.current_password }}
+            {% if credentials_form.current_password.errors %}
+              <div class="cabinet-field-error">{{ credentials_form.current_password.errors }}</div>
+            {% endif %}
+          {% endif %}
+
+          <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password1.id_for_label }}">
+            Новый пароль
+          </label>
+          {{ credentials_form.new_password1 }}
+          {% if credentials_form.new_password1.errors %}
+            <div class="cabinet-field-error">{{ credentials_form.new_password1.errors }}</div>
+          {% endif %}
+
+          <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password2.id_for_label }}">
+            Повторите пароль
+          </label>
+          {{ credentials_form.new_password2 }}
+          {% if credentials_form.new_password2.errors %}
+            <div class="cabinet-field-error">{{ credentials_form.new_password2.errors }}</div>
+          {% endif %}
+
+          <button type="submit" class="btn cabinet-btn cabinet-auth-form__submit">Сохранить</button>
+        </form>
+      </div>
+
       <div class="cabinet-card cabinet-card--wide">
         <div class="cabinet-card__head">
           <h2 class="cabinet-card__title">Заказы</h2>
@@ -113,7 +183,7 @@
             <div class="orders-empty__text">
               Когда появится модель заказов, здесь будет список с номером, статусом, датой и суммой.
             </div>
-            <a href="/products/" class="btn cabinet-btn">Перейти в каталог</a>
+            <a href="{% url 'catalog' %}" class="btn cabinet-btn">Перейти в каталог</a>
           </div>
         {% endif %}
       </div>
@@ -121,5 +191,4 @@
     </div>
   </div>
 </section>
-
 {% endblock %}

@@ -236,14 +236,28 @@
 }
 
 .cabinet-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  gap: 10px;
   margin-top: 14px;
+}
+
+.cabinet-actions__row {
+  display: grid;
+  gap: 8px;
+}
+
+.cabinet-actions__row:first-child {
+  grid-template-columns: 1fr 1fr;
+}
+
+.cabinet-actions__row--single {
+  grid-template-columns: 1fr;
 }
 
 .cabinet-actions .cabinet-btn {
   border: 0;
+  width: 100%;
+  text-align: center;
 }
 
 @media (max-width: 860px) {

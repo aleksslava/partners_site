@@ -239,25 +239,68 @@
   display: grid;
   gap: 10px;
   margin-top: 14px;
+  justify-content: center;
 }
 
 .cabinet-actions__row {
-  display: grid;
+  display: flex;
+  justify-content: center;
   gap: 8px;
 }
 
-.cabinet-actions__row:first-child {
-  grid-template-columns: 1fr 1fr;
-}
-
 .cabinet-actions__row--single {
-  grid-template-columns: 1fr;
+  justify-content: center;
 }
 
 .cabinet-actions .cabinet-btn {
   border: 0;
-  width: 100%;
+  width: auto;
+  white-space: nowrap;
   text-align: center;
+}
+
+.cabinet-btn--catalog {
+  background: #2563eb;
+}
+
+.cabinet-btn--cart {
+  background: #0ea5e9;
+}
+
+.cabinet-btn--contact {
+  min-width: 320px;
+}
+
+.cabinet-btn--telegram {
+  background: #229ed9;
+}
+
+.cabinet-btn--max {
+  background: #2f6bff;
+}
+
+.cabinet-btn--whatsapp {
+  background: #25d366;
+}
+
+.cabinet-btn--catalog:hover {
+  background: #1d4ed8;
+}
+
+.cabinet-btn--cart:hover {
+  background: #0284c7;
+}
+
+.cabinet-btn--telegram:hover {
+  background: #1c8ec3;
+}
+
+.cabinet-btn--max:hover {
+  background: #2458d4;
+}
+
+.cabinet-btn--whatsapp:hover {
+  background: #1ebc59;
 }
 
 @media (max-width: 860px) {
@@ -275,5 +318,17 @@
 
   .cabinet-title {
     font-size: 28px;
+  }
+
+  .cabinet-actions__row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cabinet-btn--contact {
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    white-space: normal;
   }
 }

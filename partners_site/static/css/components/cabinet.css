@@ -236,39 +236,42 @@
 }
 
 .cabinet-actions {
+  --actions-width: 34ch;
   display: grid;
   gap: 10px;
   margin-top: 14px;
-  justify-content: center;
+  width: min(100%, var(--actions-width));
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .cabinet-actions__row {
-  display: flex;
-  justify-content: center;
+  display: grid;
   gap: 8px;
 }
 
+.cabinet-actions__row:first-child {
+  width: 100%;
+  grid-template-columns: 1fr 1fr;
+}
+
 .cabinet-actions__row--single {
-  justify-content: center;
+  grid-template-columns: 1fr;
 }
 
 .cabinet-actions .cabinet-btn {
   border: 0;
-  width: auto;
+  width: 100%;
   white-space: nowrap;
   text-align: center;
 }
 
 .cabinet-btn--catalog {
-  background: #2563eb;
+  background: #0ea5e9;
 }
 
 .cabinet-btn--cart {
   background: #0ea5e9;
-}
-
-.cabinet-btn--contact {
-  min-width: 320px;
 }
 
 .cabinet-btn--telegram {
@@ -276,7 +279,7 @@
 }
 
 .cabinet-btn--max {
-  background: #2f6bff;
+  background: linear-gradient(180deg, #6762e8, #4b46c9);
 }
 
 .cabinet-btn--whatsapp {
@@ -284,7 +287,7 @@
 }
 
 .cabinet-btn--catalog:hover {
-  background: #1d4ed8;
+  background: #0284c7;
 }
 
 .cabinet-btn--cart:hover {
@@ -296,7 +299,7 @@
 }
 
 .cabinet-btn--max:hover {
-  background: #2458d4;
+  background: linear-gradient(180deg, #5e59da, #4340bb);
 }
 
 .cabinet-btn--whatsapp:hover {
@@ -321,14 +324,16 @@
   }
 
   .cabinet-actions__row {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
   }
 
-  .cabinet-btn--contact {
-    min-width: 0;
-    width: auto;
-    max-width: 100%;
+  .cabinet-actions {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .cabinet-actions .cabinet-btn {
     white-space: normal;
   }
 }

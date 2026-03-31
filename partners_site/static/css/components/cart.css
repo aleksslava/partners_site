@@ -1,3 +1,11 @@
+.cart:not(.order-page){
+  padding-top: 18px;
+}
+
+.cart:not(.order-page) .cart-title{
+  margin: 0 0 20px;
+}
+
 .cart-item{
   background:#fff;
   border-radius:18px;

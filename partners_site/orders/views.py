@@ -68,7 +68,7 @@ def cart_view(request):
     cart = (
         Cart.objects
         .select_related("requisites", "address")
-        .prefetch_related("items", "items__product")
+        .prefetch_related("items", "items__product", "items__product__images")
         .get(pk=cart.pk)
     )
 

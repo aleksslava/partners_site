@@ -15,6 +15,16 @@
         <div class="cart-items">
             {% for item in cart.items.all %}
                 <div class="cart-item" data-product-id="{{ item.product.id }}">
+                  <div class="cart-item__main">
+                    <div class="cart-item__media">
+                      {% with image=item.product.images.first %}
+                        {% if image %}
+                          <img src="{{ image.photo.url }}" alt="{{ item.product.name }}" class="cart-item__image">
+                        {% else %}
+                          <div class="cart-item__image-placeholder">No photo</div>
+                        {% endif %}
+                      {% endwith %}
+                    </div>
 
                   <!-- ЛЕВАЯ ЧАСТЬ -->
                   <div class="cart-item__content">
@@ -57,6 +67,7 @@
                   </div>
 
                   <!-- ПРАВАЯ ЧАСТЬ (КНОПКИ) -->
+                  </div>
                   <div class="cart-item__controls js-cart-control is-active">
 
                     <button class="btn-decrease" data-product-id="{{ item.product.id }}">−</button>
@@ -359,4 +370,3 @@
     <script src="{% static 'js/cart_payment.js' %}"></script>
     <script src="{% static 'js/cart_delivery.js' %}"></script>
 {% endblock %}
-

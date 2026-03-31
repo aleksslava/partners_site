@@ -159,11 +159,11 @@
   }
 
   .cart-item__main{
-    grid-template-columns: 84px minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .cart-item__media{
-    height:96px;
+    display:none;
   }
 
   .cart-item__image{

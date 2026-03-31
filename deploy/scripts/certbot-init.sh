@@ -34,6 +34,13 @@ if [[ ! -f data/letsencrypt/options-ssl-nginx.conf || ! -f data/letsencrypt/ssl-
   curl -fsSL https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem -o data/letsencrypt/ssl-dhparams.pem
 fi
 
+RENEWAL_CONF="data/letsencrypt/renewal/${DOMAIN}.conf"
+if [[ -d "data/letsencrypt/live/${DOMAIN}" && ! -f "${RENEWAL_CONF}" ]]; then
+  echo "[certbot] Cleanup unmanaged certificate directories for ${DOMAIN}"
+  rm -rf "data/letsencrypt/live/${DOMAIN}" "data/letsencrypt/archive/${DOMAIN}"
+  mkdir -p "data/letsencrypt/live/${DOMAIN}" "data/letsencrypt/archive/${DOMAIN}"
+fi
+
 DUMMY_CERT_DIR="data/letsencrypt/live/${DOMAIN}"
 if [[ ! -f "${DUMMY_CERT_DIR}/fullchain.pem" || ! -f "${DUMMY_CERT_DIR}/privkey.pem" ]]; then
   echo "[certbot] Create temporary self-signed certificate for nginx boot"
@@ -46,12 +53,19 @@ fi
 echo "[certbot] Start nginx for ACME challenge"
 $COMPOSE up -d web nginx
 
+if [[ ! -f "${RENEWAL_CONF}" ]]; then
+  echo "[certbot] Remove temporary certificate files before issuing Let's Encrypt cert"
+  rm -rf "data/letsencrypt/live/${DOMAIN}" "data/letsencrypt/archive/${DOMAIN}"
+  rm -f "${RENEWAL_CONF}"
+fi
+
 echo "[certbot] Request Let's Encrypt certificate"
 docker run --rm \
   -v "${ROOT_DIR}/data/letsencrypt:/etc/letsencrypt" \
   -v "${ROOT_DIR}/data/certbot-www:/var/www/certbot" \
   certbot/certbot certonly \
   --webroot -w /var/www/certbot \
+  --cert-name "${DOMAIN}" \
   -d "${DOMAIN}" \
   --email "${EMAIL}" \
   --agree-tos \

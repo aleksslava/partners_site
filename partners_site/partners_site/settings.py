@@ -170,7 +170,9 @@ SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=False)
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AMOCRM = {
-    "PATH_TO_ENV": Path(env("AMOCRM_TOKENS_ENV_PATH", default=str(BASE_DIR / ".env"))),
+    "PATH_TO_ENV": Path(
+        env("AMOCRM_TOKENS_ENV_PATH", default=str(BASE_DIR.parent / "data" / "amocrm_tokens.env"))
+    ),
     "SUBDOMAIN": env("AMOCRM_SUBDOMAIN", default=""),
     "CLIENT_ID": env("AMOCRM_CLIENT_ID", default=""),
     "CLIENT_SECRET": env("AMOCRM_CLIENT_SECRET", default=""),

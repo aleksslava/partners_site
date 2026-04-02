@@ -1,5 +1,6 @@
 ﻿import logging
 from datetime import datetime
+from pathlib import Path
 
 import dotenv
 import jwt
@@ -62,7 +63,10 @@ class AmoCRMWrapper:
             return True
 
     def _save_tokens(self, access_token: str, refresh_token: str):
-        env_path = str(self.path_to_env)
+        env_path_obj = Path(self.path_to_env)
+        env_path_obj.parent.mkdir(parents=True, exist_ok=True)
+        env_path_obj.touch(exist_ok=True)
+        env_path = str(env_path_obj)
         dotenv.set_key(env_path, "AMOCRM_ACCESS_TOKEN", access_token)
         dotenv.set_key(env_path, "AMOCRM_REFRESH_TOKEN", refresh_token)
         self.amocrm_access_token = access_token
@@ -426,3 +430,4 @@ class AmoCRMWrapper:
         print(response)
         contact_id = response.json().get("_embedded").get("contacts")[0].get("id")
         return contact_id
+

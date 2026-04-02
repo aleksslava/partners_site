@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const isTelegramBrowser = /Telegram/i.test(navigator.userAgent || '');
+    if (isTelegramBrowser) {
+        document.documentElement.classList.add('is-telegram-browser');
+    }
+
     const toggle = document.getElementById('mobileMenuToggle');
     const overlay = document.getElementById('mobileMenuOverlay');
     const closeBtn = document.getElementById('mobileMenuClose');

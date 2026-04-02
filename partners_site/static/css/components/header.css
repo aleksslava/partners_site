@@ -52,6 +52,24 @@ header {
     }
 }
 
+@media (max-width: 768px) {
+  html.is-telegram-browser {
+    --telegram-ui-top-offset: 52px;
+  }
+
+  html.is-telegram-browser body {
+    padding-top: var(--telegram-ui-top-offset);
+  }
+
+  html.is-telegram-browser header {
+    top: var(--telegram-ui-top-offset);
+  }
+
+  html.is-telegram-browser .header__inner {
+    padding-right: 54px;
+  }
+}
+
 .header__logo-image {
     height: 20px;      /* подгони под свой логотип */
     display: block;

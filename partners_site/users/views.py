@@ -24,6 +24,7 @@ from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
 class UserLoginView(LoginView):
     template_name = "users/login.html"
     redirect_authenticated_user = True
+    auth_exec_param = "auth_exec"
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -32,6 +33,15 @@ class UserLoginView(LoginView):
         identity = get_external_identity(request)
         if identity is None:
             return super().get(request, *args, **kwargs)
+
+        if request.GET.get(self.auth_exec_param) != "1":
+            auth_query_params = request.GET.copy()
+            auth_query_params[self.auth_exec_param] = "1"
+            return render(
+                request,
+                "users/login_loading.html",
+                {"auth_redirect_url": f"{request.path}?{auth_query_params.urlencode()}"},
+            )
 
         field_name, field_value = identity
         user = get_local_user_by_external_identity(field_name=field_name, field_value=field_value)

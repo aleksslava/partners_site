@@ -212,15 +212,22 @@
   flex-direction: column;
   gap: 8px;
   margin-top: 12px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 .cabinet-auth-form__label {
+  display: block;
   font-size: 13px;
   font-weight: 700;
   color: rgba(15, 23, 42, 0.75);
+  line-height: 1.25;
 }
 
 .cabinet-auth-form input {
+  display: block;
+  width: 100%;
+  min-width: 0;
   height: 42px;
   border-radius: 12px;
   border: 1px solid rgba(15, 23, 42, 0.14);
@@ -388,5 +395,11 @@
   .cabinet-order-line__value,
   .cabinet-order-line .cabinet-order-link {
     font-size: 14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .cabinet-grid {
+    grid-template-columns: 1fr;
   }
 }

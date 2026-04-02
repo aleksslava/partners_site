@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const isTelegramBrowser = /Telegram/i.test(navigator.userAgent || '');
+    const ua = navigator.userAgent || '';
+    const hasTelegramWebApp = typeof window.Telegram !== 'undefined' && !!window.Telegram.WebApp;
+    const hasTelegramProxy =
+        typeof window.TelegramWebviewProxy !== 'undefined' ||
+        typeof window.TelegramGameProxy !== 'undefined';
+    const isTelegramUserAgent = /Telegram|TgWebView|Telegram-Android|Telegram-iOS/i.test(ua);
+    const isTelegramBrowser = hasTelegramWebApp || hasTelegramProxy || isTelegramUserAgent;
+
     if (isTelegramBrowser) {
         document.documentElement.classList.add('is-telegram-browser');
     }

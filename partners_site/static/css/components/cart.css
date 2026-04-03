@@ -125,6 +125,12 @@
 .cart-item__controls .js-cart-main{
   background:transparent;
   border:0;
+  padding:0;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
   font-size:16px;
   font-weight:800;
   color:#0f172a;

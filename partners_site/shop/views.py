@@ -143,6 +143,18 @@ def product_group_detail(request, pk):
         pk=pk
     )
 
+    user = request.user
+    customer = None
+    if request.user.is_authenticated:
+        user = (
+            User.objects
+            .select_related('customer')
+            .filter(pk=request.user.pk)
+            .first()
+            or request.user
+        )
+        customer = getattr(user, "customer", None)
+
     modifications = list(group.modifications.filter(is_visible=True))
 
     mod_id = request.GET.get('mod')
@@ -168,6 +180,15 @@ def product_group_detail(request, pk):
             seen_image_ids.add(image.pk)
             images.append(image)
 
+    user_discount = int(customer.partner_discount or 0) if customer else 0
+    category_discount = int(getattr(group.category, "discount", 0) or 0)
+    discount_percent = min(user_discount, category_discount)
+
+    def calc_discounted(price: int) -> int:
+        p = Decimal(price)
+        d = Decimal(100 - discount_percent) / Decimal(100)
+        return int((p * d).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
     context = {
         'group': group,
         'product': active_mod,
@@ -176,6 +197,10 @@ def product_group_detail(request, pk):
         'videos': active_mod.videos.all(),
         'mods': modifications,
         'characteristics': active_mod.characteristics.all(),
+        'price': active_mod.price,
+        'discounted_price': calc_discounted(active_mod.price),
+        'discount_percent': discount_percent,
+        'has_discount': discount_percent > 0,
     }
     return render(request, 'shop/product_group_detail.html', context)
 

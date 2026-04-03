@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}{{ group.name }}{% endblock %}
 
@@ -55,8 +55,18 @@
           <div class="pdp-modname">{{ product.name }}</div>
 
           <div class="pdp-price">
-            <span class="pdp-price__new">{{ product.price }} ₽</span>
-            {# сюда позже можно добавить скидку/старую цену по аналогии с каталогом #}
+            <span class="pdp-price__new">
+              {% if has_discount %}
+                {{ discounted_price|localize }} ₽
+              {% else %}
+                {{ price|localize }} ₽
+              {% endif %}
+            </span>
+
+            <span class="pdp-price__old-wrap" {% if not has_discount %}style="display:none;"{% endif %}>
+              <span class="pdp-price__discount">-{{ discount_percent }}%</span>
+              <span class="pdp-price__old">{{ price|localize }} ₽</span>
+            </span>
           </div>
 
           <div class="pdp-desc">

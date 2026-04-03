@@ -605,6 +605,16 @@
     width: auto;
     min-width: 220px;
   }
+
+  .cabinet-panel--access .cabinet-auth-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cabinet-panel--access .cabinet-auth-field,
+  .cabinet-panel--access .cabinet-auth-field--hint,
+  .cabinet-panel--access .cabinet-auth-form__actions {
+    grid-column: 1;
+  }
 }
 
 @media (max-width: 1024px) {

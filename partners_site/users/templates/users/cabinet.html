@@ -87,12 +87,13 @@
         {% endwith %}
       </div>
 
-      <div class="cabinet-card">
-        <h2 class="cabinet-card__title">Доступ к сайту</h2>
-
-        <div class="cabinet-row">
-          <div class="cabinet-row__label">Текущий логин</div>
-          <div class="cabinet-row__value">{{ user.username }}</div>
+      <div class="cabinet-card cabinet-card--wide cabinet-card--access">
+        <div class="cabinet-card__head cabinet-card__head--access">
+          <h2 class="cabinet-card__title">Доступ к сайту</h2>
+          <div class="cabinet-auth-current">
+            <span class="cabinet-auth-current__label">Текущий логин</span>
+            <span class="cabinet-auth-current__value">{{ user.username }}</span>
+          </div>
         </div>
 
         <form method="post" class="cabinet-auth-form">
@@ -106,122 +107,62 @@
             </div>
           {% endif %}
 
-          {% if credentials_form.can_change_username %}
-            <label class="cabinet-auth-form__label" for="{{ credentials_form.new_username.id_for_label }}">
-              Новый логин
-            </label>
-            {{ credentials_form.new_username }}
-            {% if credentials_form.new_username.errors %}
-              <div class="cabinet-field-error">{{ credentials_form.new_username.errors }}</div>
+          <div class="cabinet-auth-form__grid">
+            {% if credentials_form.can_change_username %}
+              <div class="cabinet-auth-field">
+                <label class="cabinet-auth-form__label" for="{{ credentials_form.new_username.id_for_label }}">
+                  Новый логин
+                </label>
+                {{ credentials_form.new_username }}
+                {% if credentials_form.new_username.errors %}
+                  <div class="cabinet-field-error">{{ credentials_form.new_username.errors }}</div>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="cabinet-auth-field cabinet-auth-field--hint">
+                <div class="cabinet-auth-form__hint">
+                  Логин уже установлен и недоступен для изменения.
+                </div>
+              </div>
             {% endif %}
-          {% else %}
-            <div class="cabinet-auth-form__hint">
-              Логин уже установлен и недоступен для изменения.
+
+            {% if user.has_usable_password %}
+              <div class="cabinet-auth-field">
+                <label class="cabinet-auth-form__label" for="{{ credentials_form.current_password.id_for_label }}">
+                  Текущий пароль
+                </label>
+                {{ credentials_form.current_password }}
+                {% if credentials_form.current_password.errors %}
+                  <div class="cabinet-field-error">{{ credentials_form.current_password.errors }}</div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="cabinet-auth-field">
+              <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password1.id_for_label }}">
+                Новый пароль
+              </label>
+              {{ credentials_form.new_password1 }}
+              {% if credentials_form.new_password1.errors %}
+                <div class="cabinet-field-error">{{ credentials_form.new_password1.errors }}</div>
+              {% endif %}
             </div>
-          {% endif %}
 
-          {% if user.has_usable_password %}
-            <label class="cabinet-auth-form__label" for="{{ credentials_form.current_password.id_for_label }}">
-              Текущий пароль
-            </label>
-            {{ credentials_form.current_password }}
-            {% if credentials_form.current_password.errors %}
-              <div class="cabinet-field-error">{{ credentials_form.current_password.errors }}</div>
-            {% endif %}
-          {% endif %}
+            <div class="cabinet-auth-field">
+              <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password2.id_for_label }}">
+                Повторите пароль
+              </label>
+              {{ credentials_form.new_password2 }}
+              {% if credentials_form.new_password2.errors %}
+                <div class="cabinet-field-error">{{ credentials_form.new_password2.errors }}</div>
+              {% endif %}
+            </div>
 
-          <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password1.id_for_label }}">
-            Новый пароль
-          </label>
-          {{ credentials_form.new_password1 }}
-          {% if credentials_form.new_password1.errors %}
-            <div class="cabinet-field-error">{{ credentials_form.new_password1.errors }}</div>
-          {% endif %}
-
-          <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password2.id_for_label }}">
-            Повторите пароль
-          </label>
-          {{ credentials_form.new_password2 }}
-          {% if credentials_form.new_password2.errors %}
-            <div class="cabinet-field-error">{{ credentials_form.new_password2.errors }}</div>
-          {% endif %}
-
-          <button type="submit" class="btn cabinet-btn cabinet-auth-form__submit">Сохранить</button>
+            <div class="cabinet-auth-form__actions">
+              <button type="submit" class="btn cabinet-btn cabinet-auth-form__submit">Сохранить</button>
+            </div>
+          </div>
         </form>
-      </div>
-
-      <div class="cabinet-card">
-        <h2 class="cabinet-card__title">Быстрая сводка и действия</h2>
-
-        <div class="cabinet-row">
-          <div class="cabinet-row__label">Последний заказ</div>
-          <div class="cabinet-row__value">
-            {% if latest_order %}
-              <a class="cabinet-order-link" href="/cart/order/{{ latest_order.id }}/">
-                {% localize off %}{{ latest_order.amo_crm_id|default:latest_order.id }}{% endlocalize %}
-              </a>
-              • {{ latest_order.total|default:0 }} руб.
-            {% else %}
-              —
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="cabinet-row">
-          <div class="cabinet-row__label">Активная корзина</div>
-          <div class="cabinet-row__value">
-            {% if active_cart %}
-              {{ active_cart_items_total }} шт. • {{ active_cart.total|default:0 }} руб.
-            {% else %}
-              Нет активной корзины
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="cabinet-row">
-          <div class="cabinet-row__label">Адрес по умолчанию</div>
-          <div class="cabinet-row__value">
-            {% if default_address %}
-              {{ default_address.city }}, {{ default_address.street }}, {{ default_address.house }}
-            {% else %}
-              —
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="cabinet-row">
-          <div class="cabinet-row__label">Реквизиты</div>
-          <div class="cabinet-row__value">
-            {% if default_requisites %}
-              {{ default_requisites.company_name }}
-              {% if default_requisites.inn %}(ИНН {{ default_requisites.inn }}){% endif %}
-            {% else %}
-              —
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="cabinet-actions">
-          <div class="cabinet-actions__row">
-            <a href="{% url 'catalog' %}" class="btn cabinet-btn cabinet-btn--catalog">В каталог</a>
-            <a href="/cart/" class="btn cabinet-btn cabinet-btn--cart">В корзину</a>
-          </div>
-          <div class="cabinet-actions__row cabinet-actions__row--single">
-            <a href="https://t.me/+79251930861" target="_blank" rel="noopener noreferrer" class="btn cabinet-btn cabinet-btn--contact cabinet-btn--telegram">
-              Связаться с менеджером в Telegram
-            </a>
-          </div>
-          <div class="cabinet-actions__row cabinet-actions__row--single">
-            <a href="https://max.ru/u/f9LHodD0cOLRJPZ-Vm5lXdFA6YvPYESWoU7_n6imsgqQorxD9nvTdH9pXxU" target="_blank" rel="noopener noreferrer" class="btn cabinet-btn cabinet-btn--contact cabinet-btn--max">
-              Связаться с менеджером в MAX
-            </a>
-          </div>
-          <div class="cabinet-actions__row cabinet-actions__row--single">
-            <a href="https://wa.me/79251930861" target="_blank" rel="noopener noreferrer" class="btn cabinet-btn cabinet-btn--contact cabinet-btn--whatsapp">
-              Связаться с менеджером в Whats'app
-            </a>
-          </div>
-        </div>
       </div>
 
       <div class="cabinet-card cabinet-card--wide">

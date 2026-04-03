@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Авторизация{% endblock %}
+
+{% block content %}
+<section class="auth auth--loading">
+  <div class="container auth__container">
+    <div class="auth-card auth-card--loading" role="status" aria-live="polite">
+      <div class="auth-loader" aria-hidden="true"></div>
+      <h1 class="auth-card__title">Выполняется вход</h1>
+      <p class="auth-card__subtitle">
+        Проверяем данные и открываем кабинет. Обычно это занимает несколько секунд.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const authUrl = "{{ auth_redirect_url|escapejs }}";
+    const fallbackTimer = window.setTimeout(function () {
+      window.location.assign(authUrl);
+    }, 80);
+    window.addEventListener("beforeunload", function () {
+      window.clearTimeout(fallbackTimer);
+    });
+  })();
+</script>
+<noscript>
+  <meta http-equiv="refresh" content="0;url={{ auth_redirect_url }}">
+</noscript>
+{% endblock %}

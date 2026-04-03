@@ -300,6 +300,8 @@
 }
 
 .cabinet-auth-field--hint .cabinet-auth-form__hint {
+  display: flex;
+  align-items: center;
   height: 100%;
 }
 

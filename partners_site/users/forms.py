@@ -53,6 +53,17 @@ class CabinetCredentialsForm(forms.Form):
         self.username_validator = UnicodeUsernameValidator()
         self.can_change_username = self._is_system_username(user.username)
 
+        placeholders = {
+            "new_username": "Новый логин",
+            "current_password": "Текущий пароль",
+            "new_password1": "Новый пароль",
+            "new_password2": "Повторите пароль",
+        }
+        for field_name, placeholder in placeholders.items():
+            field = self.fields[field_name]
+            field.widget.attrs["placeholder"] = placeholder
+            field.widget.attrs["aria-label"] = placeholder
+
         if not self.can_change_username:
             self.fields["new_username"].disabled = True
             self.fields["new_username"].required = False

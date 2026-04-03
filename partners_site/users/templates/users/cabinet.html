@@ -110,9 +110,6 @@
           <div class="cabinet-auth-form__grid">
             {% if credentials_form.can_change_username %}
               <div class="cabinet-auth-field">
-                <label class="cabinet-auth-form__label" for="{{ credentials_form.new_username.id_for_label }}">
-                  Новый логин
-                </label>
                 {{ credentials_form.new_username }}
                 {% if credentials_form.new_username.errors %}
                   <div class="cabinet-field-error">{{ credentials_form.new_username.errors }}</div>
@@ -128,9 +125,6 @@
 
             {% if user.has_usable_password %}
               <div class="cabinet-auth-field">
-                <label class="cabinet-auth-form__label" for="{{ credentials_form.current_password.id_for_label }}">
-                  Текущий пароль
-                </label>
                 {{ credentials_form.current_password }}
                 {% if credentials_form.current_password.errors %}
                   <div class="cabinet-field-error">{{ credentials_form.current_password.errors }}</div>
@@ -139,9 +133,6 @@
             {% endif %}
 
             <div class="cabinet-auth-field">
-              <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password1.id_for_label }}">
-                Новый пароль
-              </label>
               {{ credentials_form.new_password1 }}
               {% if credentials_form.new_password1.errors %}
                 <div class="cabinet-field-error">{{ credentials_form.new_password1.errors }}</div>
@@ -149,9 +140,6 @@
             </div>
 
             <div class="cabinet-auth-field">
-              <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password2.id_for_label }}">
-                Повторите пароль
-              </label>
               {{ credentials_form.new_password2 }}
               {% if credentials_form.new_password2.errors %}
                 <div class="cabinet-field-error">{{ credentials_form.new_password2.errors }}</div>

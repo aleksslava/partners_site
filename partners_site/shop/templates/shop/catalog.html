@@ -37,8 +37,9 @@
     {% endif %}
 
       <div class="catalog-filters" id="catalog-filters">
-          <form class="catalog-search" action="" onsubmit="return false;">
+          <form class="catalog-search" action="" onsubmit="return false;" role="search" aria-label="Поиск по каталогу">
             <div class="catalog-search__inner">
+              <label for="catalog-search-input" class="sr-only">Поиск по товарам</label>
               <input
                 id="catalog-search-input"
                 type="search"
@@ -47,8 +48,9 @@
                 class="catalog-search__input"
                 placeholder="Поиск по товарам…"
                 autocomplete="off"
+                aria-controls="catalog-results"
               >
-              <button type="button" class="catalog-search__clear" id="catalog-search-clear" aria-label="Сбросить поиск">✕</button>
+              <button type="button" class="catalog-search__clear" id="catalog-search-clear" aria-label="Сбросить поиск" aria-controls="catalog-results">✕</button>
             </div>
           </form>
 
@@ -68,8 +70,9 @@
       <div class="catalog-loading" id="catalog-loading" hidden aria-hidden="true">
         <div class="catalog-loading__bar"></div>
       </div>
+      <p id="catalog-results-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
 
-      <div id="catalog-results">
+      <div id="catalog-results" aria-busy="false">
         <div class="catalog-grid">
           {% for item in group_cards %}
             {% with group=item.group product=item.product mods=item.mods price=item.price discounted_price=item.discounted_price discount_percent=item.discount_percent has_discount=item.has_discount %}

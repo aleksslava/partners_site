@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const results = document.getElementById('catalog-results');
   const tagsWrap = document.getElementById('catalog-tags');
   const loadingEl = document.getElementById('catalog-loading');
+  const statusEl = document.getElementById('catalog-results-status');
 
   if (!input || !results || !clearBtn) return;
 
@@ -12,9 +13,32 @@ document.addEventListener('DOMContentLoaded', () => {
   let requestSeq = 0;
   const DEBOUNCE_MS = 300;
 
+  function announceStatus(message) {
+    if (!statusEl) return;
+    statusEl.textContent = '';
+    window.setTimeout(() => {
+      statusEl.textContent = message;
+    }, 0);
+  }
+
+  function getResultsCount(root = results) {
+    return root ? root.querySelectorAll('.js-product-card').length : 0;
+  }
+
+  function announceResults(root = results) {
+    const count = getResultsCount(root);
+    if (count > 0) {
+      announceStatus(`Найдено товаров: ${count}.`);
+      return;
+    }
+    announceStatus('Товары не найдены.');
+  }
+
   function setLoading(isLoading) {
     if (loadingEl) loadingEl.hidden = !isLoading;
     results.classList.toggle('is-loading', isLoading);
+    results.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    if (isLoading) announceStatus('Загружаем результаты поиска.');
   }
 
   function setClearVisible() {
@@ -53,7 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const html = await resp.text();
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const newResults = doc.getElementById('catalog-results');
-      if (newResults) results.innerHTML = newResults.innerHTML;
+      if (newResults) {
+        results.innerHTML = newResults.innerHTML;
+        announceResults(results);
+      }
 
       window.history.replaceState({}, '', url.toString());
 
@@ -76,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     timer = setTimeout(() => {
       fetchAndReplace({ q, tag }).catch((err) => {
         if (err && err.name === 'AbortError') return;
+        announceStatus('Не удалось обновить результаты. Попробуйте снова.');
         console.error(err);
       });
     }, DEBOUNCE_MS);
@@ -105,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const q = input.value.trim();
       fetchAndReplace({ q, tag }).catch((err) => {
         if (err && err.name === 'AbortError') return;
+        announceStatus('Не удалось обновить результаты. Попробуйте снова.');
         console.error(err);
       });
     });
@@ -113,4 +142,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setClearVisible();
   const currentTag = new URL(window.location.href).searchParams.get('tag') || '';
   setActiveTag(currentTag);
+  announceResults(results);
 });

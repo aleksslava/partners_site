@@ -13,21 +13,38 @@
         <div class="catalog-partner-badges">
           <div class="catalog-partner-badge">
             <span class="catalog-partner-badge__label">
-              <span class="catalog-partner-badge__icon">S</span>
+              <span class="catalog-partner-badge__icon" aria-hidden="true">
+                <svg class="catalog-partner-badge__icon-svg" viewBox="0 0 24 24">
+                  <path d="M12 3l7 3v6c0 5-3.4 7.8-7 9-3.6-1.2-7-4-7-9V6l7-3z"></path>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg>
+              </span>
               Статус партнёра
             </span>
             <strong class="catalog-partner-badge__value">{{ customer.get_partner_status_display }}</strong>
           </div>
           <div class="catalog-partner-badge">
             <span class="catalog-partner-badge__label">
-              <span class="catalog-partner-badge__icon">%</span>
+              <span class="catalog-partner-badge__icon" aria-hidden="true">
+                <svg class="catalog-partner-badge__icon-svg" viewBox="0 0 24 24">
+                  <path d="M19 5 5 19"></path>
+                  <circle cx="7" cy="7" r="2"></circle>
+                  <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+              </span>
               Скидка партнёра
             </span>
             <strong class="catalog-partner-badge__value">{{ customer.partner_discount|localize }} %</strong>
           </div>
           <div class="catalog-partner-badge">
             <span class="catalog-partner-badge__label">
-              <span class="catalog-partner-badge__icon">B</span>
+              <span class="catalog-partner-badge__icon" aria-hidden="true">
+                <svg class="catalog-partner-badge__icon-svg" viewBox="0 0 24 24">
+                  <rect x="3.5" y="6.5" width="17" height="11" rx="2"></rect>
+                  <path d="M3.5 10h17"></path>
+                  <circle cx="16.5" cy="14" r="1.5"></circle>
+                </svg>
+              </span>
               Бонусов на балансе
             </span>
             <strong class="catalog-partner-badge__value">{{ customer.bonuses|localize }}</strong>

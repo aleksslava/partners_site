@@ -119,12 +119,34 @@
                   {% if mods|length > 1 %}
                     <!-- Выпадающий список модификаций -->
                     <div class="product-variant product-variant--custom js-variant">
-                    <!-- Нативный select остаётся основным доступным контролом -->
-                        <select class="product-variant__native js-variant-select" aria-label="Выбор модификации для {{ group.name }}">
+                    <!-- Скрытый нативный select (для логики/доступности) -->
+                        <select class="product-variant__native js-variant-select" aria-hidden="true" tabindex="-1">
                             {% for m in mods %}
                                 <option value="{{ m.id }}" {% if m.id == product.id %}selected{% endif %}>{{ m.name }}</option>
                             {% endfor %}
                         </select>
+
+                        <!-- Видимая “кнопка” -->
+                        <button type="button"
+                                class="product-variant__button js-variant-button"
+                                aria-haspopup="listbox"
+                                aria-expanded="false">
+                            <span class="product-variant__label js-variant-label">{{ product.name }}</span>
+                            <span class="product-variant__chevron" aria-hidden="true"></span>
+                        </button>
+
+                      <!-- Выпадающий список -->
+                    <div class="product-variant__menu js-variant-menu" role="listbox">
+                        {% for m in mods %}
+                            <button type="button"
+                                    class="product-variant__option js-variant-option {% if m.id == product.id %}is-active{% endif %}"
+                                    data-value="{{ m.id }}"
+                                    role="option"
+                                    aria-selected="{% if m.id == product.id %}true{% else %}false{% endif %}">
+                            {{ m.name }}
+                            </button>
+                        {% endfor %}
+                    </div>
                     </div>
                   {% endif %}
 

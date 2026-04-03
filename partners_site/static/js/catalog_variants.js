@@ -138,8 +138,8 @@
     const imgEl = card.querySelector('.js-product-image');
     const detailsLinks = card.querySelectorAll('.js-details-link');
 
-    const select = card.querySelector('.js-variant-select');
     const dropdown = card.querySelector('.js-variant');
+    const select = card.querySelector('.js-variant-select');
     const btn = card.querySelector('.js-variant-button');
     const label = card.querySelector('.js-variant-label');
 
@@ -167,7 +167,7 @@
       label,
     };
 
-    if (!select) {
+    if (!dropdown || !select || !btn || !label) {
       applyToCard({ ...ctxBase, label: null, select: null }, mods[0]);
       if (window.syncCatalogCardRows) window.syncCatalogCardRows(document);
       return;
@@ -180,8 +180,6 @@
     });
 
     select.dispatchEvent(new Event('change', { bubbles: true }));
-
-    if (!dropdown || !btn || !label) return;
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -209,11 +207,10 @@
   }
 
   window.initCatalogVariants = function initCatalogVariants(rootEl) {
+    ensurePortal();
+    initGlobalListeners();
+
     const root = rootEl || document;
-    if (root.querySelector('.js-variant-button')) {
-      ensurePortal();
-      initGlobalListeners();
-    }
     root.querySelectorAll('.js-product-card').forEach(initCard);
   };
 

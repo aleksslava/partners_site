@@ -16,7 +16,11 @@
       idx = Math.max(0, Math.min(slides.length - 1, i));
       track.style.transform = `translateX(${-idx * 100}%)`;
 
-      thumbs.forEach(t => t.classList.toggle('is-active', Number(t.dataset.index) === idx));
+      thumbs.forEach(t => {
+        const isActive = Number(t.dataset.index) === idx;
+        t.classList.toggle('is-active', isActive);
+        t.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
     }
 
     if (prev) prev.addEventListener('click', () => setIndex(idx - 1));

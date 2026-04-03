@@ -20,7 +20,9 @@
           <div class="pdp-carousel__track js-carousel-track">
             {% for img in images %}
               <div class="pdp-carousel__slide">
-                <img src="{{ img.photo.url }}" alt="{{ product.name }}" class="pdp-image">
+                <img src="{{ img.photo.url }}"
+                     alt="{{ img.title|default:product.name }} — фото {{ forloop.counter }}"
+                     class="pdp-image">
               </div>
             {% empty %}
               <div class="pdp-carousel__slide pdp-carousel__slide--empty">
@@ -30,17 +32,30 @@
           </div>
 
           {% if images|length > 1 %}
-            <button class="pdp-carousel__nav pdp-carousel__nav--prev js-carousel-prev" type="button">‹</button>
-            <button class="pdp-carousel__nav pdp-carousel__nav--next js-carousel-next" type="button">›</button>
+            <button class="pdp-carousel__nav pdp-carousel__nav--prev js-carousel-prev"
+                    type="button"
+                    aria-label="Предыдущее фото">
+              ‹
+            </button>
+            <button class="pdp-carousel__nav pdp-carousel__nav--next js-carousel-next"
+                    type="button"
+                    aria-label="Следующее фото">
+              ›
+            </button>
           {% endif %}
         </div>
 
         {% if images|length > 1 %}
-          <div class="pdp-thumbs js-thumbs">
+          <div class="pdp-thumbs js-thumbs" aria-label="Миниатюры галереи">
             {% for img in images %}
               <button type="button" class="pdp-thumb js-thumb {% if forloop.first %}is-active{% endif %}"
-                      data-index="{{ forloop.counter0 }}">
-                <img src="{{ img.photo.url }}" alt="{{ product.name }}">
+                      data-index="{{ forloop.counter0 }}"
+                      aria-label="Фото {{ forloop.counter }}: {{ img.title|default:product.name }}"
+                      aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                      title="Фото {{ forloop.counter }}">
+                <img src="{{ img.photo.url }}"
+                     alt="{{ img.title|default:product.name }} — миниатюра {{ forloop.counter }}">
+                <span class="sr-only">Открыть фото {{ forloop.counter }}</span>
               </button>
             {% endfor %}
           </div>

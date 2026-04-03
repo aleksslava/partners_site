@@ -1,54 +1,57 @@
 .catalog {
-    padding: 40px 0 70px;
+    padding: 28px 0 56px;
     background: #f5f7fb;
 }
 
 .catalog-title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
-    margin-bottom: 30px;
-    text-align: center;
+    margin-bottom: 14px;
+    text-align: left;
     color: #111827;
+    line-height: 1.25;
 }
 
 /* Плотная сетка, ровные карточки по центру */
 .catalog-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 26px;
+    gap: 18px;
 }
 
 
 .catalog-partner-info {
-  margin: 0 0 18px;
-  padding: 14px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  border-radius: 12px;
+  box-shadow: none;
 }
 
 .catalog-partner-info__title {
-  margin: 0 0 10px;
-  color: #0f172a;
-  font-size: 15px;
-  font-weight: 700;
+  margin: 0 0 8px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .catalog-partner-badges {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .catalog-partner-badge {
   display: grid;
   gap: 4px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid rgba(15, 23, 42, 0.08);
-  background: #f8fafc;
-  min-height: 76px;
+  background: #ffffff;
+  min-height: 0;
   align-content: space-between;
 }
 
@@ -63,7 +66,7 @@
 
 .catalog-partner-badge__value {
   color: #0f172a;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.3;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -124,5 +127,9 @@
   }
   .catalog-partner-badge {
     min-height: 0;
+  }
+  .catalog-title {
+    font-size: 21px;
+    margin-bottom: 12px;
   }
 }

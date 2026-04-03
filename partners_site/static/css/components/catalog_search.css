@@ -1,6 +1,6 @@
 
 .catalog-search {
-  margin: 16px 0 22px;
+  margin: 12px 0 18px;
 }
 
 .catalog-search__inner {
@@ -10,14 +10,15 @@
 
 .catalog-search__input {
   width: 100%;
-  height: 44px;
+  height: 42px;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(15, 23, 42, 0.12);
   padding: 0 44px 0 16px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   outline: none;
   transition: box-shadow .18s ease, border-color .18s ease;
+  background: #ffffff;
 }
 
 .catalog-search__input:focus {
@@ -61,15 +62,16 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:16px;
-  margin: 16px 0 22px;
+  gap:12px;
+  margin: 10px 0 16px;
   position: sticky;
-  top: 80px;
+  top: 76px;
   z-index: 25;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(245, 247, 251, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(6px);
 }
 
@@ -82,7 +84,7 @@
 .catalog-tags{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
   flex: 0 0 auto;
   flex-wrap:wrap;
   justify-content:flex-end;
@@ -98,12 +100,12 @@
 }
 
 .tag-chip{
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
   color: #334155;
   border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 7px 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
@@ -117,7 +119,7 @@
 
 .tag-chip.is-active{
   background: #ffffff;
-  border-color: rgba(15, 23, 42, 0.34);
+  border-color: rgba(15, 23, 42, 0.24);
   color: #0f172a;
   font-weight: 700;
 }
@@ -129,7 +131,7 @@
     align-items: stretch;
     justify-content: flex-start;
     top: 72px;
-    padding: 10px;
+    padding: 9px;
   }
   .catalog-search{
     flex: 0 0 auto;

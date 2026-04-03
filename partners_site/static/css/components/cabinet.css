@@ -588,7 +588,7 @@
   }
 
   .cabinet-auth-field--hint {
-    grid-column: span 6;
+    grid-column: span 3;
   }
 
   .cabinet-auth-form__actions {

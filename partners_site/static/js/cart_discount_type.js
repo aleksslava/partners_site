@@ -232,5 +232,12 @@ function applyCartRecalc(data) {
 
     const priceOld = document.getElementById('item-price-base-' + pid);
     if (priceOld) priceOld.textContent = it.price;
+
+    const discountPercent = Number(it.discount_percent || 0);
+    const discountPercentEl = document.getElementById('item-discount-percent-' + pid);
+    if (discountPercentEl) discountPercentEl.textContent = discountPercent;
+
+    const oldPriceWrap = document.getElementById('item-old-price-wrap-' + pid);
+    if (oldPriceWrap) oldPriceWrap.style.display = discountPercent > 0 ? '' : 'none';
   });
 }

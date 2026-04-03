@@ -35,14 +35,17 @@
                     <div class="cart-line__calc">
                       <span>
                         <span id="cart-item-qty-{{ item.product.id }}">{{ item.qty }}</span> шт.
-                        по {{ item.current_unit_price_discounted }} ₽
+                        по <span id="item-price-discounted-{{ item.product.id }}">{{ item.current_unit_price_discounted }}</span> ₽
                       </span>
 
-                      {% if item.discount_percent %}
-                        <span class="cart-old-price">
-                          ({{ item.current_unit_price }} ₽ − {{ item.discount_percent }}%)
-                        </span>
-                      {% endif %}
+                      <span
+                        class="cart-old-price"
+                        id="item-old-price-wrap-{{ item.product.id }}"
+                        {% if not item.discount_percent %}style="display:none"{% endif %}
+                      >
+                        (<span id="item-price-base-{{ item.product.id }}">{{ item.current_unit_price }}</span> ₽ −
+                        <span id="item-discount-percent-{{ item.product.id }}">{{ item.discount_percent }}</span>%)
+                      </span>
 
                       <span class="cart-line__sum">
                         = <a id="item-line-total-{{ item.product.id }}">{{ item.line_total }}</a>
@@ -366,7 +369,7 @@
 
 {% block extra_js %}
     <script src="{% static 'js/cart.js' %}?v=2"></script>
-    <script src="{% static 'js/cart_discount_type.js' %}"></script>
+    <script src="{% static 'js/cart_discount_type.js' %}?v=20260403-1"></script>
     <script src="{% static 'js/cart_payment.js' %}"></script>
     <script src="{% static 'js/cart_delivery.js' %}"></script>
 {% endblock %}

@@ -63,14 +63,6 @@
             {{ product.title|linebreaksbr }}
           </div>
 
-          <div class="pdp-actions">
-            <button type="button"
-                    class="btn btn-cart js-pdp-add-to-cart"
-                    data-product-id="{{ product.id }}">
-              В корзину
-            </button>
-          </div>
-
           <!-- (опционально) переключатель модификаций: можно добавить позже -->
           {% if mods and mods|length > 1 %}
             <div class="pdp-variant js-pdp-variant product-variant--custom">

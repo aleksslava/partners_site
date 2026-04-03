@@ -4,12 +4,11 @@
 {% block title %}Личный кабинет{% endblock %}
 
 {% block content %}
-<section class="cabinet">
+{% with customer=user.customer %}
+<section class="cabinet cabinet--status-{{ customer.partner_status|default:'neutral' }}">
   <div class="container">
-    <h1 class="cabinet-title">Личный кабинет</h1>
-
     {% if messages %}
-      <div class="cabinet-alerts">
+      <div class="cabinet-alerts" aria-live="polite">
         {% for message in messages %}
           <div class="cabinet-alert cabinet-alert--{{ message.tags|default:'info' }}">
             {{ message }}
@@ -18,78 +17,85 @@
       </div>
     {% endif %}
 
-    <div class="cabinet-grid">
+    <div class="cabinet-overview">
+      <div class="cabinet-overview__intro">
+        <p class="cabinet-overview__eyebrow">Партнёрский кабинет</p>
+        <h1 class="cabinet-title">Личный кабинет</h1>
 
-      <div class="cabinet-card">
-        <h2 class="cabinet-card__title">Пользователь</h2>
+        <div class="cabinet-overview__status-line">
+          <span class="cabinet-status">
+            Статус: {{ customer.get_partner_status_display|default:customer.partner_status|default:"Не назначен" }}
+          </span>
+          <span class="cabinet-overview__account">
+            {{ customer.name|default:"Партнёрский аккаунт не привязан" }}
+          </span>
+        </div>
+
+        <div class="cabinet-overview__actions">
+          <a href="{% url 'catalog' %}" class="btn cabinet-btn cabinet-btn--ghost">Каталог</a>
+          <a href="#cabinet-orders" class="btn cabinet-btn">К заказам</a>
+        </div>
+      </div>
+
+      <div class="cabinet-overview__kpis" aria-label="Ключевые показатели кабинета">
+        <div class="cabinet-overview-kpi">
+          <div class="cabinet-overview-kpi__label">Бонусы на балансе</div>
+          <div class="cabinet-overview-kpi__value">{{ customer.bonuses|default:0 }}</div>
+        </div>
+        <div class="cabinet-overview-kpi">
+          <div class="cabinet-overview-kpi__label">Скидка покупателя</div>
+          <div class="cabinet-overview-kpi__value">{{ customer.partner_discount|default:0 }} %</div>
+        </div>
+        <div class="cabinet-overview-kpi">
+          <div class="cabinet-overview-kpi__label">Сумма покупок</div>
+          <div class="cabinet-overview-kpi__value">{{ customer.total_buyout|default:0 }} ₽</div>
+        </div>
+        <div class="cabinet-overview-kpi">
+          <div class="cabinet-overview-kpi__label">За прошлый квартал</div>
+          <div class="cabinet-overview-kpi__value">{{ customer.buyout_per_quater|default:0 }} ₽</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cabinet-grid">
+      <section class="cabinet-panel">
+        <h2 class="cabinet-panel__title">Профиль</h2>
 
         <div class="cabinet-row">
           <div class="cabinet-row__label">ФИО</div>
-          <div class="cabinet-row__value">
-            {{ user.first_name }} {{ user.last_name }}
-          </div>
+          <div class="cabinet-row__value">{{ user.first_name }} {{ user.last_name }}</div>
         </div>
 
         <div class="cabinet-row">
           <div class="cabinet-row__label">Телефон</div>
-          <div class="cabinet-row__value">
-            {{ user.phone|default:"—" }}
-          </div>
+          <div class="cabinet-row__value">{{ user.phone|default:"—" }}</div>
         </div>
 
         <div class="cabinet-row">
           <div class="cabinet-row__label">Email</div>
+          <div class="cabinet-row__value">{{ user.email|default:"—" }}</div>
+        </div>
+      </section>
+
+      <section class="cabinet-panel">
+        <h2 class="cabinet-panel__title">Бонусный аккаунт</h2>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Аккаунт</div>
+          <div class="cabinet-row__value">{{ customer.name|default:"—" }}</div>
+        </div>
+
+        <div class="cabinet-row">
+          <div class="cabinet-row__label">Статус партнёра</div>
           <div class="cabinet-row__value">
-            {{ user.email|default:"—" }}
+            {{ customer.get_partner_status_display|default:customer.partner_status|default:"—" }}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="cabinet-card">
-        <h2 class="cabinet-card__title">Бонусный аккаунт</h2>
-
-        {% with c=user.customer %}
-          <div class="cabinet-row">
-            <div class="cabinet-row__label">Аккаунт</div>
-            <div class="cabinet-row__value">
-              {{ c.name|default:"—" }}
-            </div>
-          </div>
-
-          <div class="cabinet-row">
-            <div class="cabinet-row__label">Статус партнёра</div>
-            <div class="cabinet-row__value">
-              {{ c.get_partner_status_display|default:c.partner_status|default:"—" }}
-            </div>
-          </div>
-
-          <div class="cabinet-kpis">
-            <div class="kpi">
-              <div class="kpi__label">Бонусы на балансе</div>
-              <div class="kpi__value">{{ c.bonuses|default:0 }}</div>
-            </div>
-
-            <div class="kpi">
-              <div class="kpi__label">Сумма покупок</div>
-              <div class="kpi__value">{{ c.total_buyout|default:0 }} ₽</div>
-            </div>
-
-            <div class="kpi">
-              <div class="kpi__label">За прошлый квартал</div>
-              <div class="kpi__value">{{ c.buyout_per_quater|default:0 }} ₽</div>
-            </div>
-
-            <div class="kpi">
-              <div class="kpi__label">Скидка покупателя</div>
-              <div class="kpi__value">{{ c.partner_discount|default:0 }} %</div>
-            </div>
-          </div>
-        {% endwith %}
-      </div>
-
-      <div class="cabinet-card cabinet-card--wide cabinet-card--access">
-        <div class="cabinet-card__head cabinet-card__head--access">
-          <h2 class="cabinet-card__title">Доступ к сайту</h2>
+      <section class="cabinet-panel cabinet-panel--wide cabinet-panel--access">
+        <div class="cabinet-panel__head">
+          <h2 class="cabinet-panel__title">Доступ к сайту</h2>
           <div class="cabinet-auth-current">
             <span class="cabinet-auth-current__label">Текущий логин</span>
             <span class="cabinet-auth-current__value">{{ user.username }}</span>
@@ -100,20 +106,27 @@
           {% csrf_token %}
 
           {% if credentials_form.non_field_errors %}
-            <div class="cabinet-form-error">
+            <div class="cabinet-alert cabinet-alert--error cabinet-alert--inline" role="alert">
               {% for error in credentials_form.non_field_errors %}
                 <div>{{ error }}</div>
               {% endfor %}
             </div>
           {% endif %}
 
+          <p class="cabinet-auth-form__helper">
+            Чтобы изменить пароль, введите текущий пароль и дважды новый.
+          </p>
+
           <div class="cabinet-auth-form__grid">
             {% if credentials_form.can_change_username %}
               <div class="cabinet-auth-field">
+                <label class="cabinet-auth-form__label" for="{{ credentials_form.new_username.id_for_label }}">
+                  Новый логин
+                </label>
                 {{ credentials_form.new_username }}
-                {% if credentials_form.new_username.errors %}
-                  <div class="cabinet-field-error">{{ credentials_form.new_username.errors }}</div>
-                {% endif %}
+                {% for error in credentials_form.new_username.errors %}
+                  <div class="cabinet-field-error" role="alert">{{ error }}</div>
+                {% endfor %}
               </div>
             {% else %}
               <div class="cabinet-auth-field cabinet-auth-field--hint">
@@ -125,25 +138,34 @@
 
             {% if user.has_usable_password %}
               <div class="cabinet-auth-field">
+                <label class="cabinet-auth-form__label" for="{{ credentials_form.current_password.id_for_label }}">
+                  Текущий пароль
+                </label>
                 {{ credentials_form.current_password }}
-                {% if credentials_form.current_password.errors %}
-                  <div class="cabinet-field-error">{{ credentials_form.current_password.errors }}</div>
-                {% endif %}
+                {% for error in credentials_form.current_password.errors %}
+                  <div class="cabinet-field-error" role="alert">{{ error }}</div>
+                {% endfor %}
               </div>
             {% endif %}
 
             <div class="cabinet-auth-field">
+              <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password1.id_for_label }}">
+                Новый пароль
+              </label>
               {{ credentials_form.new_password1 }}
-              {% if credentials_form.new_password1.errors %}
-                <div class="cabinet-field-error">{{ credentials_form.new_password1.errors }}</div>
-              {% endif %}
+              {% for error in credentials_form.new_password1.errors %}
+                <div class="cabinet-field-error" role="alert">{{ error }}</div>
+              {% endfor %}
             </div>
 
             <div class="cabinet-auth-field">
+              <label class="cabinet-auth-form__label" for="{{ credentials_form.new_password2.id_for_label }}">
+                Повторите пароль
+              </label>
               {{ credentials_form.new_password2 }}
-              {% if credentials_form.new_password2.errors %}
-                <div class="cabinet-field-error">{{ credentials_form.new_password2.errors }}</div>
-              {% endif %}
+              {% for error in credentials_form.new_password2.errors %}
+                <div class="cabinet-field-error" role="alert">{{ error }}</div>
+              {% endfor %}
             </div>
 
             <div class="cabinet-auth-form__actions">
@@ -151,46 +173,55 @@
             </div>
           </div>
         </form>
-      </div>
+      </section>
 
-      <div class="cabinet-card cabinet-card--wide">
-        <div class="cabinet-card__head">
-          <h2 class="cabinet-card__title">Заказы</h2>
+      <section class="cabinet-panel cabinet-panel--wide" id="cabinet-orders">
+        <div class="cabinet-panel__head">
+          <h2 class="cabinet-panel__title">Заказы</h2>
+          <span class="cabinet-panel__hint">История списаний и начислений по заказам</span>
         </div>
 
         {% if orders %}
-          {% for order in orders %}
-            <div class="cabinet-order-line">
-              <span class="cabinet-order-line__item">
-                <span class="cabinet-order-line__label">ID:</span>
-                <a class="cabinet-order-link" href="/cart/order/{{ order.id }}/">{% localize off %}{{ order.amo_crm_id|default:"-" }}{% endlocalize %}</a>
-              </span>
-              <span class="cabinet-order-line__item">
-                <span class="cabinet-order-line__label">Сумма:</span>
-                <span class="cabinet-order-line__value">{{ order.total|default:0 }} руб.</span>
-              </span>
-              <span class="cabinet-order-line__item">
-                <span class="cabinet-order-line__label">Списано:</span>
-                <span class="cabinet-order-line__value">{{ order.bonuses_spent_total|default:0 }}</span>
-              </span>
-              <span class="cabinet-order-line__item">
-                <span class="cabinet-order-line__label">Начислено:</span>
-                <span class="cabinet-order-line__value">{{ order.bonuses_append_total|default:0 }}</span>
-              </span>
+          <div class="cabinet-orders-table">
+            <div class="cabinet-orders-table__head" aria-hidden="true">
+              <span>Заказ</span>
+              <span>Дата</span>
+              <span>Статус</span>
+              <span>Сумма</span>
+              <span>Бонусы</span>
             </div>
-          {% endfor %}
+
+            {% for order in orders %}
+              <article class="cabinet-order-row">
+                <div class="cabinet-order-row__cell" data-label="Заказ">
+                  <a class="cabinet-order-link" href="/cart/order/{{ order.id }}/">
+                    # {% localize off %}{{ order.amo_crm_id|default:order.id }}{% endlocalize %}
+                  </a>
+                </div>
+                <div class="cabinet-order-row__cell" data-label="Дата">{{ order.time_created|date:"d.m.Y" }}</div>
+                <div class="cabinet-order-row__cell" data-label="Статус">{{ order.get_status_display|default:"—" }}</div>
+                <div class="cabinet-order-row__cell" data-label="Сумма">
+                  {% localize off %}{{ order.total|default:0 }}{% endlocalize %} ₽
+                </div>
+                <div class="cabinet-order-row__cell cabinet-order-row__bonuses" data-label="Бонусы">
+                  <span class="cabinet-order-row__bonus">-{{ order.bonuses_spent_total|default:0 }}</span>
+                  <span class="cabinet-order-row__bonus cabinet-order-row__bonus--plus">+{{ order.bonuses_append_total|default:0 }}</span>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
         {% else %}
           <div class="orders-empty">
             <div class="orders-empty__title">Пока заказов нет</div>
             <div class="orders-empty__text">
-              Когда появится модель заказов, здесь будет список с номером, статусом, датой и суммой.
+              Новый заказ сразу появится в этом разделе с датой, статусом и итоговой суммой.
             </div>
             <a href="{% url 'catalog' %}" class="btn cabinet-btn">Перейти в каталог</a>
           </div>
         {% endif %}
-      </div>
-
+      </section>
     </div>
   </div>
 </section>
+{% endwith %}
 {% endblock %}

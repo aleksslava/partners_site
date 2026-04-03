@@ -47,33 +47,12 @@ header {
     .header-nav {
         display: none;
     }
-    .header__inner {
-        padding-right: 72px;
-    }
     .mobile-toggle {
         display: block;
         margin-left: auto;
         position: relative;
         z-index: 2;
     }
-}
-
-@media (max-width: 768px) {
-  html.is-telegram-browser {
-    --telegram-ui-top-offset: 56px;
-  }
-
-  html.is-telegram-browser body {
-    padding-top: var(--telegram-ui-top-offset);
-  }
-
-  html.is-telegram-browser header {
-    top: var(--telegram-ui-top-offset);
-  }
-
-  html.is-telegram-browser .header__inner {
-    padding-right: 112px;
-  }
 }
 
 .header__logo-image {

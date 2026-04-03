@@ -137,19 +137,6 @@
                             <span class="product-variant__label js-variant-label">{{ product.name }}</span>
                             <span class="product-variant__chevron" aria-hidden="true"></span>
                         </button>
-
-                      <!-- Выпадающий список -->
-                    <div class="product-variant__menu js-variant-menu" role="listbox">
-                        {% for m in mods %}
-                            <button type="button"
-                                    class="product-variant__option js-variant-option {% if m.id == product.id %}is-active{% endif %}"
-                                    data-value="{{ m.id }}"
-                                    role="option"
-                                    aria-selected="{% if m.id == product.id %}true{% else %}false{% endif %}">
-                            {{ m.name }}
-                            </button>
-                        {% endfor %}
-                    </div>
                     </div>
                   {% endif %}
 

@@ -88,7 +88,7 @@ class CartInline(admin.TabularInline):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("id", "amo_id_customer", "partner_status", "partner_discount", "bonuses", "total_buyout")
+    list_display = ("name", "amo_id_customer", "partner_status", "partner_discount", "bonuses", "total_buyout")
     list_filter = ("partner_status",)
     search_fields = ("amo_id_customer",)
     readonly_fields = ("partner_discount", "time_created", "time_updated", "cart_records")

@@ -86,6 +86,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+    align-items: center;
     justify-content: space-between;
     width: 100%;
 }
@@ -302,19 +303,12 @@
 .product-prices {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 12px;
+  justify-content: center;
 }
 
 .product-price--discount {
   font-weight: 800;
-}
-
-.product-prices {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  justify-content: center;
 }
 
 /* новая цена */
@@ -359,14 +353,6 @@
   border-radius: 999px;
   line-height: 1;
   white-space: nowrap;
-}
-
-/* product-actions: две колонки - Подробнее и блок корзины */
-.product-actions{
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* РєРѕСЂР·РёРЅР° Р·Р°РЅРёРјР°РµС‚ СЃС‚РѕР»СЊРєРѕ Р¶Рµ, СЃРєРѕР»СЊРєРѕ СЂР°РЅСЊС€Рµ Р·Р°РЅРёРјР°Р»Р° РєРЅРѕРїРєР° */
-  gap: 14px;
-  align-items: center;
 }
 
 .product-actions .btn-details {

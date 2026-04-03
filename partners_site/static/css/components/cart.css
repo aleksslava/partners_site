@@ -94,8 +94,8 @@
 
 .cart-item__controls{
   display:grid;
-  grid-template-columns: 42px 60px 42px;
-  gap:8px;
+  grid-template-columns: 36px 52px 36px;
+  gap:6px;
   align-items:center;
   align-content:center;
   padding:18px 0;
@@ -104,27 +104,28 @@
 /* + и - */
 .cart-item__controls .js-cart-dec,
 .cart-item__controls .js-cart-inc,
-.btn-increase .btn-decrease{
-  width:42px;
-  height:42px;
+.cart-item__controls .btn-decrease,
+.cart-item__controls .btn-increase{
+  width:36px;
+  height:36px;
   border-radius:999px;
   border:0;
   background:#10b981;
   color:#fff;
-  font-size:20px;
+  font-size:18px;
   font-weight:700;
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 8px 18px rgba(16,185,129,.22);
+  box-shadow:0 6px 14px rgba(16,185,129,.18);
 }
 
 /* количество */
 .cart-item__controls .js-cart-main{
   background:transparent;
   border:0;
-  font-size:18px;
+  font-size:16px;
   font-weight:800;
   color:#0f172a;
   text-align:center;

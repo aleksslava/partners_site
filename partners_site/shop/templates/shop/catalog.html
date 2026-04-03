@@ -86,9 +86,26 @@
                  data-base-href="{% url 'product_group_detail' group.pk %}">
                 {% with img=product.images.first %}
                   {% if img %}
-                    <img src="{{ img.photo.url }}" alt="{{ product.name }}" class="product-image js-product-image">
+                    <img
+                      src="{{ img.photo.url }}"
+                      alt="{{ product.name }}"
+                      class="product-image js-product-image"
+                      loading="lazy"
+                      decoding="async"
+                      width="520"
+                      height="260"
+                    >
                   {% else %}
-                    <img src="" alt="{{ product.name }}" class="product-image js-product-image" style="display:none;">
+                    <img
+                      src=""
+                      alt="{{ product.name }}"
+                      class="product-image js-product-image"
+                      loading="lazy"
+                      decoding="async"
+                      width="520"
+                      height="260"
+                      style="display:none;"
+                    >
                   {% endif %}
                 {% endwith %}
               </a>

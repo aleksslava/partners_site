@@ -107,6 +107,7 @@
   border-radius: 24px;
   border: 1px solid var(--cabinet-ring);
   background: var(--cabinet-surface);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
   padding: 24px;
   overflow: hidden;
   animation: cabinet-rise 0.45s ease both;
@@ -188,17 +189,19 @@
   padding: 10px 16px;
   border-radius: 999px;
   border: 1px solid transparent;
-  background: var(--cabinet-accent);
+  background: linear-gradient(135deg, #005bff, #0ea5e9);
+  box-shadow: 0 16px 40px rgba(11, 98, 255, 0.22);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
-  transition: transform 0.16s ease, filter 0.18s ease, box-shadow 0.2s ease;
+  transition: transform 0.16s ease, opacity 0.18s ease, box-shadow 0.2s ease;
 }
 
 .cabinet-btn:hover {
-  filter: brightness(1.03);
   transform: translateY(-1px);
+  opacity: 0.95;
+  box-shadow: 0 20px 50px rgba(11, 98, 255, 0.26);
 }
 
 .cabinet-btn:active {
@@ -214,6 +217,7 @@
   background: rgba(255, 255, 255, 0.86);
   border-color: var(--cabinet-ring);
   color: var(--cabinet-contrast);
+  box-shadow: none;
 }
 
 .cabinet-overview__kpis {
@@ -273,6 +277,7 @@
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.09);
   background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
   padding: 18px;
 }
 

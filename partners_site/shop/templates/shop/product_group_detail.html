@@ -8,7 +8,7 @@
   <div class="container">
 
     <div class="pdp-head">
-      <a class="pdp-back" href="/">← Назад в каталог</a>
+      <a class="pdp-back" href="{% url 'catalog' %}">← Назад в каталог</a>
       <h1 class="pdp-title">{{ group.name }}</h1>
     </div>
 
@@ -137,11 +137,13 @@
           <h2 class="pdp-card__title">Инструкции</h2>
 
           <div class="pdp-files">
-            {% for inst in instructions %}
-              <a class="pdp-file" href="{{ inst.institution.url }}" target="_blank" rel="noopener">
+            {% for item in instruction_items %}
+              <a class="pdp-file" href="{{ item.instruction.institution.url }}" target="_blank" rel="noopener">
                 <span class="pdp-file__icon">📄</span>
-                <span class="pdp-file__name">{{ inst.name }}</span>
-                <span class="pdp-file__meta">PDF/файл</span>
+                <span class="pdp-file__name">{{ item.instruction.name }}</span>
+                <span class="pdp-file__meta">
+                  {{ item.file_ext }}{% if item.file_size %} • {{ item.file_size }}{% endif %}
+                </span>
               </a>
             {% empty %}
               <div class="pdp-empty">Инструкций пока нет</div>

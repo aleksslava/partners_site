@@ -47,12 +47,10 @@
 
           select.value = opt.value;
           label.textContent = opt.textContent;
+          closePortal();
 
-          // Переход на выбранную модификацию
-          const base = select.dataset.groupUrl || window.location.pathname;
-          const url = new URL(base, window.location.origin);
-          url.searchParams.set('mod', opt.value);
-          window.location.href = url.toString();
+          // Единая точка редиректа: обработчик change в product_group_detail.js
+          select.dispatchEvent(new Event('change', { bubbles: true }));
         });
 
         portal.appendChild(b);

@@ -194,10 +194,17 @@
 function applyCartRecalc(data) {
   if (!data || !data.success) return;
 
+  const moneyFormatter = new Intl.NumberFormat('ru-RU');
+  const formatMoney = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    return moneyFormatter.format(Math.round(num));
+  };
+
   // totals
   const setText = (id, v) => {
     const el = document.getElementById(id);
-    if (el && v != null) el.textContent = v;
+    if (el && v != null) el.textContent = formatMoney(v);
   };
 
   setText('cart-total', data.total);
@@ -218,7 +225,7 @@ function applyCartRecalc(data) {
     if (btnQtyEl) btnQtyEl.textContent = it.qty;
 
     const lineTotalEl = document.getElementById('item-line-total-' + pid);
-    if (lineTotalEl) lineTotalEl.textContent = it.line_total;
+    if (lineTotalEl) lineTotalEl.textContent = formatMoney(it.line_total);
 
     const ba = document.getElementById('item-bonuses-append-' + pid);
     if (ba) ba.textContent = it.bonuses_append;
@@ -228,10 +235,10 @@ function applyCartRecalc(data) {
 
     // если хочешь обновлять цены в карточке:
     const priceNew = document.getElementById('item-price-discounted-' + pid);
-    if (priceNew) priceNew.textContent = it.price_discounted;
+    if (priceNew) priceNew.textContent = formatMoney(it.price_discounted);
 
     const priceOld = document.getElementById('item-price-base-' + pid);
-    if (priceOld) priceOld.textContent = it.price;
+    if (priceOld) priceOld.textContent = formatMoney(it.price);
 
     const discountPercent = Number(it.discount_percent || 0);
     const discountPercentEl = document.getElementById('item-discount-percent-' + pid);

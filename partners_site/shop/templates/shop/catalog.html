@@ -72,7 +72,7 @@
       <div id="catalog-results">
         <div class="catalog-grid">
           {% for item in group_cards %}
-            {% with group=item.group product=item.product mods=item.mods %}
+            {% with group=item.group product=item.product mods=item.mods price=item.price discounted_price=item.discounted_price discount_percent=item.discount_percent has_discount=item.has_discount %}
             <article class="product-card js-product-card"
                      data-group-id="{{ group.id }}"
                      style="--card-index: {{ forloop.counter0 }}">
@@ -94,11 +94,17 @@
                 <h2 class="product-name">{{ group.name }}</h2>
 
                 <div class="product-prices">
-                  <span class="product-price product-price--new js-product-price-discount"></span>
+                  <span class="product-price product-price--new js-product-price-discount">
+                    {% if has_discount %}
+                      {{ discounted_price|localize }} ₽
+                    {% else %}
+                      {{ price|localize }} ₽
+                    {% endif %}
+                  </span>
 
-                  <span class="product-price-old-wrap js-old-wrap">
-                    <span class="product-discount-sup js-discount-badge"></span>
-                    <span class="product-price product-price--old js-product-price"></span>
+                  <span class="product-price-old-wrap js-old-wrap" {% if not has_discount %}style="display:none;"{% endif %}>
+                    <span class="product-discount-sup js-discount-badge">{% if has_discount %}-{{ discount_percent }}%{% endif %}</span>
+                    <span class="product-price product-price--old js-product-price">{{ price|localize }} ₽</span>
                   </span>
                 </div>
 

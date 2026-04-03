@@ -113,6 +113,10 @@ def catalog_view(request):
             "group": group,
             "product": primary,
             "mods": mods,  # <- для <select>
+            "price": primary.price,
+            "discounted_price": calc_discounted(primary.price),
+            "discount_percent": discount_percent,
+            "has_discount": discount_percent > 0,
             "mods_json": json.dumps(mods_payload, ensure_ascii=False),  # <- для JS
         })
 

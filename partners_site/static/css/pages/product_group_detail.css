@@ -13,24 +13,8 @@
 .pdp-card{
   background:#fff;
   border-radius:18px;
-  border:1px solid rgba(15,23,42,.08);
-  box-shadow:0 8px 26px rgba(15,23,42,.08);
+  box-shadow:0 10px 40px rgba(15,23,42,.10);
   padding:18px;
-}
-.pdp-card--hero{
-  position: sticky;
-  top: 88px;
-  padding:22px;
-  border-color: rgba(148,163,184,.35);
-  background:
-    radial-gradient(120% 120% at 100% 0%, rgba(16,185,129,.20) 0%, rgba(16,185,129,0) 48%),
-    linear-gradient(155deg, #0f172a 0%, #111827 56%, #1f2937 100%);
-  box-shadow: 0 22px 52px rgba(15,23,42,.34);
-}
-.pdp-card--section{
-  background:#fff;
-  border:1px solid rgba(15,23,42,.10);
-  box-shadow:0 6px 20px rgba(15,23,42,.06);
 }
 
 .pdp-gallery{ display:flex; flex-direction:column; gap:12px; }
@@ -114,13 +98,9 @@
 
 .pdp-subtitle{ color: rgba(15,23,42,.55); font-weight:700; font-size:12px; }
 .pdp-modname{ font-weight:900; font-size:20px; color:#0f172a; margin-top:6px; }
-.pdp-card--hero .pdp-subtitle{ color:rgba(226,232,240,.78); letter-spacing:.03em; text-transform:uppercase; }
-.pdp-card--hero .pdp-modname{ color:#f8fafc; font-size:26px; line-height:1.2; }
 
 .pdp-price{ margin-top:10px; display:flex; align-items:baseline; gap:10px; }
 .pdp-price__new{ font-size:18px; font-weight:800; color:#0f172a; }
-.pdp-card--hero .pdp-price{ margin-top:14px; }
-.pdp-card--hero .pdp-price__new{ font-size:32px; color:#fff; line-height:1.1; }
 .pdp-price__old-wrap{
   position: relative;
   display: inline-flex;
@@ -148,52 +128,12 @@
   line-height:1;
   white-space:nowrap;
 }
-.pdp-card--hero .pdp-price__old{ color:rgba(226,232,240,.65); }
-.pdp-card--hero .pdp-price__discount{
-  color:#9f1239;
-  background:#ffe4e6;
-  border-color:#fecdd3;
-}
 
 .pdp-desc{
   margin-top:12px;
   color: rgba(15,23,42,.70);
   line-height:1.55;
   font-size:14px;
-}
-.pdp-card--hero .pdp-desc{
-  margin-top:14px;
-  color:rgba(226,232,240,.9);
-}
-
-.pdp-why{
-  margin-top:16px;
-  padding:12px 14px;
-  border-radius:14px;
-  border:1px solid rgba(226,232,240,.22);
-  background:rgba(255,255,255,.05);
-}
-.pdp-why__title{
-  margin:0 0 8px;
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.03em;
-  text-transform:uppercase;
-  color:#cbd5e1;
-}
-.pdp-why__list{
-  margin:0;
-  padding-left:18px;
-  list-style: disc;
-  display:grid;
-  gap:6px;
-  color:#f1f5f9;
-  font-size:13px;
-  line-height:1.4;
-}
-
-.pdp-card--hero .product-variant--custom{
-  margin-top:16px;
 }
 
 .pdp-actions{ margin-top:14px; display:flex; gap:12px; }
@@ -242,13 +182,10 @@
 
 @media (max-width: 980px){
   .pdp-grid{ grid-template-columns: 1fr; }
-  .pdp-card--hero{ position:static; top:auto; }
 }
 @media (max-width: 520px){
   .pdp-title{ font-size:28px; }
   .pdp-thumb{ width:64px; height:64px; }
-  .pdp-card--hero .pdp-modname{ font-size:22px; }
-  .pdp-card--hero .pdp-price__new{ font-size:28px; }
 }
 
 .pdp-info{

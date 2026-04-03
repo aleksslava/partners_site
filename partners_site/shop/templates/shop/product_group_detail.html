@@ -50,7 +50,7 @@
 
       <!-- Инфо -->
       <div class="pdp-info">
-        <div class="pdp-card pdp-card--hero">
+        <div class="pdp-card">
           <div class="pdp-subtitle">Выбранная модификация</div>
           <div class="pdp-modname">{{ product.name }}</div>
 
@@ -71,19 +71,6 @@
 
           <div class="pdp-desc">
             {{ product.title|linebreaksbr }}
-          </div>
-
-          <div class="pdp-why">
-            <div class="pdp-why__title">Почему сейчас</div>
-            <ul class="pdp-why__list">
-              {% if has_discount %}
-                <li>Партнёрская цена уже применена: экономия {{ discount_percent }}%.</li>
-              {% else %}
-                <li>Цена актуальна для выбранной модификации.</li>
-              {% endif %}
-              <li>Характеристики для сравнения: {{ characteristics|length }}.</li>
-              <li>Материалы по товару: инструкции {{ instructions|length }}, видео {{ videos|length }}.</li>
-            </ul>
           </div>
 
           <!-- (опционально) переключатель модификаций: можно добавить позже -->
@@ -115,7 +102,7 @@
         </div>
 
         <!-- Характеристики -->
-        <div class="pdp-card pdp-card--section">
+        <div class="pdp-card">
           <h2 class="pdp-card__title">Характеристики</h2>
 
           <div class="pdp-specs">
@@ -131,7 +118,7 @@
         </div>
 
         <!-- Инструкции -->
-        <div class="pdp-card pdp-card--section">
+        <div class="pdp-card">
           <h2 class="pdp-card__title">Инструкции</h2>
 
           <div class="pdp-files">
@@ -148,7 +135,7 @@
         </div>
 
         <!-- Видео -->
-        <div class="pdp-card pdp-card--section">
+        <div class="pdp-card">
           <h2 class="pdp-card__title">Видео</h2>
 
           <div class="pdp-videos">

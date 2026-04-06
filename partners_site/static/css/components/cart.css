@@ -1,5 +1,9 @@
 .cart:not(.order-page){
   padding-top: 18px;
+  --cart-btn-bg: linear-gradient(135deg, #005bff, #0ea5e9);
+  --cart-btn-shadow: 0 6px 14px rgba(11, 98, 255, 0.22);
+  --cart-btn-shadow-soft: 0 4px 10px rgba(11, 98, 255, 0.22);
+  --cart-btn-ring: rgba(37, 99, 235, 0.24);
 }
 
 .cart:not(.order-page) .cart-title{
@@ -110,7 +114,7 @@
   height:36px;
   border-radius:999px;
   border:0;
-  background:#10b981;
+  background:var(--cart-btn-bg);
   color:#fff;
   font-size:18px;
   font-weight:700;
@@ -118,7 +122,7 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 6px 14px rgba(16,185,129,.18);
+  box-shadow:var(--cart-btn-shadow);
 }
 
 /* количество */
@@ -168,6 +172,38 @@
 
 .cart-remove:hover{
   background:#e5e7eb;
+}
+
+.cart .btn{
+  background:var(--cart-btn-bg);
+  color:#fff;
+  box-shadow:var(--cart-btn-shadow-soft);
+}
+
+.cart .btn:hover{
+  opacity:1;
+  filter:brightness(0.97);
+}
+
+.cart .product-variant__button{
+  background:var(--cart-btn-bg);
+  border-color:transparent;
+  color:#fff;
+  box-shadow:var(--cart-btn-shadow-soft);
+}
+
+.cart .product-variant__button:hover{
+  border-color:transparent;
+}
+
+.cart .product-variant__button:focus{
+  border-color:transparent;
+  box-shadow:0 0 0 4px var(--cart-btn-ring);
+}
+
+.cart .product-variant__chevron{
+  border-right-color:rgba(255, 255, 255, 0.9);
+  border-bottom-color:rgba(255, 255, 255, 0.9);
 }
 
 .cart-layout{

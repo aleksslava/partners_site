@@ -454,3 +454,15 @@
   outline: none;
 }
 
+/* Catalog cart controls use the same blue accent as cabinet primary buttons. */
+.product-actions .btn-cart {
+  background: linear-gradient(135deg, #005bff, #0ea5e9);
+  box-shadow: 0 4px 10px rgba(11, 98, 255, 0.22);
+}
+
+.js-cart-control.is-active .js-cart-dec,
+.js-cart-control.is-active .js-cart-inc {
+  background: linear-gradient(135deg, #005bff, #0ea5e9);
+  box-shadow: 0 4px 10px rgba(11, 98, 255, 0.22);
+}
+

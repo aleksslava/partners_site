@@ -4,13 +4,40 @@
     if (!track) return;
 
     const slides = Array.from(track.children);
-    if (slides.length <= 1) return;
-
     const prev = root.querySelector('.js-carousel-prev');
     const next = root.querySelector('.js-carousel-next');
-    const thumbs = Array.from(document.querySelectorAll('.js-thumb'));
+    const thumbsRoot = root.closest('.pdp-gallery') || document;
+    const thumbs = Array.from(thumbsRoot.querySelectorAll('.js-thumb'));
 
     let idx = 0;
+    let resizeTimer = null;
+
+    function updateHeight() {
+      const activeSlide = slides[idx];
+      if (!activeSlide) return;
+
+      const img = activeSlide.querySelector('.pdp-image');
+      if (!img) {
+        root.style.removeProperty('height');
+        return;
+      }
+
+      const carouselWidth = root.clientWidth;
+      if (!carouselWidth) return;
+
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        const nextHeight = Math.round((carouselWidth * img.naturalHeight) / img.naturalWidth);
+        if (nextHeight > 0) root.style.height = `${nextHeight}px`;
+        return;
+      }
+
+      const renderedHeight = Math.round(img.getBoundingClientRect().height);
+      if (renderedHeight > 0) root.style.height = `${renderedHeight}px`;
+    }
+
+    function requestHeightUpdate() {
+      window.requestAnimationFrame(updateHeight);
+    }
 
     function setIndex(i){
       idx = Math.max(0, Math.min(slides.length - 1, i));
@@ -21,6 +48,8 @@
         t.classList.toggle('is-active', isActive);
         t.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
+
+      requestHeightUpdate();
     }
 
     if (prev) prev.addEventListener('click', () => setIndex(idx - 1));
@@ -28,6 +57,18 @@
 
     thumbs.forEach(t => {
       t.addEventListener('click', () => setIndex(Number(t.dataset.index)));
+    });
+
+    slides.forEach((slide) => {
+      const img = slide.querySelector('.pdp-image');
+      if (!img) return;
+      if (img.complete) return;
+      img.addEventListener('load', requestHeightUpdate, { once: true });
+    });
+
+    window.addEventListener('resize', () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(requestHeightUpdate, 60);
     });
 
     setIndex(0);

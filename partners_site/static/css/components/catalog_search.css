@@ -27,6 +27,7 @@
 }
 
 .catalog-search__clear {
+  display: none;
   position: absolute;
   right: 10px;
   top: 50%;

@@ -54,17 +54,17 @@
                     {% endif %}
 
                     <div class="order-item__meta">
-                      {{ item.qty }} шт. × {% localize off %}{{ item.current_unit_price_discounted }}{% endlocalize %} ₽
+                      {{ item.qty }} шт. × {{ item.current_unit_price_discounted }} ₽
                       {% if item.current_unit_price > item.current_unit_price_discounted %}
                         <span class="order-item__old-price">
-                          {% localize off %}{{ item.current_unit_price }}{% endlocalize %} ₽
+                          {{ item.current_unit_price }} ₽
                         </span>
                       {% endif %}
                     </div>
                   </div>
 
                   <div class="order-item__sum">
-                    {% localize off %}{{ item.line_total }}{% endlocalize %} ₽
+                    {{ item.line_total }} ₽
                   </div>
                 </li>
               {% endfor %}
@@ -140,41 +140,41 @@
           <dl class="order-summary__list">
             <div class="order-summary__row">
               <dt>Товары</dt>
-              <dd>{% localize off %}{{ order.items_subtotal|default:0 }}{% endlocalize %} ₽</dd>
+              <dd>{{ order.items_subtotal|default:0 }} ₽</dd>
             </div>
 
             <div class="order-summary__row">
               <dt>Скидка</dt>
               <dd>
                 {% if order.discount_total|default:0 %}
-                  -{% localize off %}{{ order.discount_total|default:0 }}{% endlocalize %} ₽
+                  {{ order.discount_total|default:0 }} ₽
                 {% else %}
-                  {% localize off %}{{ order.discount_total|default:0 }}{% endlocalize %} ₽
+                  {{ order.discount_total|default:0 }} ₽
                 {% endif %}
               </dd>
             </div>
 
             <div class="order-summary__row">
               <dt>Скидка по заказу</dt>
-              <dd>{% localize off %}{{ order.order_discount_percent|default:0 }}{% endlocalize %} %</dd>
+              <dd>{{ order.order_discount_percent|default:0 }} %</dd>
             </div>
 
             <div class="order-summary__row">
               <dt>Доставка</dt>
-              <dd>{% localize off %}{{ order.delivery_price|default:0 }}{% endlocalize %} ₽</dd>
+              <dd>{{ order.delivery_price|default:0 }} ₽</dd>
             </div>
 
             <div class="order-summary__row">
               <dt>Списано бонусов</dt>
               <dd class="order-summary__value order-summary__value--minus">
-                -{% localize off %}{{ order.bonuses_spent_total|default:0 }}{% endlocalize %}
+                {{ order.bonuses_spent_total|default:0 }}
               </dd>
             </div>
 
             <div class="order-summary__row">
               <dt>Начислено бонусов</dt>
               <dd class="order-summary__value order-summary__value--plus">
-                +{% localize off %}{{ order.bonuses_append_total|default:0 }}{% endlocalize %}
+                {{ order.bonuses_append_total|default:0 }}
               </dd>
             </div>
           </dl>
@@ -183,7 +183,7 @@
 
           <div class="order-summary__total">
             <span>К оплате</span>
-            <strong>{% localize off %}{{ order.total|default:0 }}{% endlocalize %} ₽</strong>
+            <strong>{{ order.total|default:0 }} ₽</strong>
           </div>
         </article>
       </aside>

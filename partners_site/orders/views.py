@@ -601,30 +601,9 @@ def api_cart_delivery_save_address(request):
     if recipient_phone and not _PHONE_RE.match(recipient_phone):
         return JsonResponse({"success": False, "error": "invalid_phone"}, status=400)
 
-    cart_addr = _get_or_create_cart_address(cart, request.user)
-    cart_addr.label = label
-    cart_addr.city = city
-    cart_addr.street = street
-    cart_addr.house = house
-    cart_addr.recipient_name = recipient_name
-    cart_addr.recipient_phone = recipient_phone
-    cart_addr.delivery_address_text = _compose_delivery_address_text(city, street, house)
-    cart_addr.save(update_fields=[
-        "label",
-        "city",
-        "street",
-        "house",
-        "recipient_name",
-        "recipient_phone",
-        "delivery_address_text",
-        "time_updated",
-    ])
-
     saved_addr = (
         Address.objects
-        .filter(user=request.user)
-        .exclude(pk=cart_addr.id)
-        .filter(label__iexact=label)
+        .filter(user=request.user, label__iexact=label)
         .order_by("-time_updated")
         .first()
     )
@@ -660,21 +639,25 @@ def api_cart_delivery_save_address(request):
             is_default=False,
         )
 
-    cart.save(update_fields=["time_updated"])
+    if cart.address_id != saved_addr.id:
+        cart.address = saved_addr
+        cart.save(update_fields=["address", "time_updated"])
+    else:
+        cart.save(update_fields=["time_updated"])
     cart = recalculate_cart(cart)
 
     return JsonResponse({
         "success": True,
         "saved_address_id": saved_addr.id,
         "address": {
-            "id": cart_addr.id,
-            "label": cart_addr.label or "",
-            "city": cart_addr.city or "",
-            "street": cart_addr.street or "",
-            "house": cart_addr.house or "",
-            "recipient_name": cart_addr.recipient_name or "",
-            "recipient_phone": cart_addr.recipient_phone or "",
-            "delivery_address_text": cart_addr.delivery_address_text or "",
+            "id": saved_addr.id,
+            "label": saved_addr.label or "",
+            "city": saved_addr.city or "",
+            "street": saved_addr.street or "",
+            "house": saved_addr.house or "",
+            "recipient_name": saved_addr.recipient_name or "",
+            "recipient_phone": saved_addr.recipient_phone or "",
+            "delivery_address_text": saved_addr.delivery_address_text or "",
         },
         "items_subtotal": cart.items_subtotal,
         "discount_total": cart.discount_total,

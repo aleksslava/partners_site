@@ -185,27 +185,6 @@
   filter:brightness(0.97);
 }
 
-.cart .product-variant__button{
-  background:var(--cart-btn-bg);
-  border-color:transparent;
-  color:#fff;
-  box-shadow:var(--cart-btn-shadow-soft);
-}
-
-.cart .product-variant__button:hover{
-  border-color:transparent;
-}
-
-.cart .product-variant__button:focus{
-  border-color:transparent;
-  box-shadow:0 0 0 4px var(--cart-btn-ring);
-}
-
-.cart .product-variant__chevron{
-  border-right-color:rgba(255, 255, 255, 0.9);
-  border-bottom-color:rgba(255, 255, 255, 0.9);
-}
-
 .cart-layout{
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;

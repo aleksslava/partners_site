@@ -44,6 +44,12 @@ class AmoCRMWrapper:
         self.amocrm_refresh_token = amocrm_refresh_token
         self.amocrm_secret_code = amocrm_secret_code
 
+    def _get_env_path(self) -> Path:
+        env_path = Path(self.path_to_env).expanduser()
+        if not env_path.is_absolute():
+            env_path = env_path.resolve()
+        return env_path
+
     @staticmethod
     def _is_expire(token: str | None) -> bool:
         if not token:
@@ -63,23 +69,43 @@ class AmoCRMWrapper:
             return True
 
     def _save_tokens(self, access_token: str, refresh_token: str):
-        env_path_obj = Path(self.path_to_env)
+        env_path_obj = self._get_env_path()
         env_path_obj.parent.mkdir(parents=True, exist_ok=True)
         env_path_obj.touch(exist_ok=True)
         env_path = str(env_path_obj)
-        dotenv.set_key(env_path, "AMOCRM_ACCESS_TOKEN", access_token)
-        dotenv.set_key(env_path, "AMOCRM_REFRESH_TOKEN", refresh_token)
+
+        try:
+            dotenv.set_key(env_path, "AMOCRM_ACCESS_TOKEN", access_token, quote_mode="never")
+            dotenv.set_key(env_path, "AMOCRM_REFRESH_TOKEN", refresh_token, quote_mode="never")
+            persisted_values = dotenv.dotenv_values(env_path)
+        except Exception as error:
+            logger.exception("Failed to write AMO tokens to %s", env_path)
+            raise AmoServerError(f"Не удалось сохранить токены AMO в {env_path}: {error}") from error
+
+        persisted_access = persisted_values.get("AMOCRM_ACCESS_TOKEN")
+        persisted_refresh = persisted_values.get("AMOCRM_REFRESH_TOKEN")
+        if persisted_access != access_token or persisted_refresh != refresh_token:
+            logger.error(
+                "AMO token write verification failed for %s: access_match=%s refresh_match=%s",
+                env_path,
+                persisted_access == access_token,
+                persisted_refresh == refresh_token,
+            )
+            raise AmoServerError(f"Не удалось сохранить токены AMO в {env_path}: данные не прошли проверку")
+
         self.amocrm_access_token = access_token
         self.amocrm_refresh_token = refresh_token
+        logger.info("AMO tokens saved to %s", env_path)
 
     def _get_access_token(self):
         return self.amocrm_access_token
 
     def _reload_tokens_from_env(self) -> bool:
+        env_path = self._get_env_path()
         try:
-            env_values = dotenv.dotenv_values(str(self.path_to_env))
+            env_values = dotenv.dotenv_values(str(env_path))
         except Exception as error:
-            logger.warning("Failed to reload AMO tokens from .env: %s", error)
+            logger.warning("Failed to reload AMO tokens from %s: %s", env_path, error)
             return False
 
         access_token = env_values.get("AMOCRM_ACCESS_TOKEN")
@@ -95,13 +121,13 @@ class AmoCRMWrapper:
             updated = True
 
         if updated:
-            logger.info("AMO tokens reloaded from .env")
+            logger.info("AMO tokens reloaded from %s", env_path)
 
         return updated
 
     def _get_new_tokens(self):
-        if not self.amocrm_refresh_token:
-            self._reload_tokens_from_env()
+        # Before refresh call always resync from file to avoid stale in-memory refresh token.
+        self._reload_tokens_from_env()
 
         if not self.amocrm_refresh_token:
             raise AmoServerError("Не удалось обновить токены AMO: refresh token отсутствует")
@@ -140,7 +166,7 @@ class AmoCRMWrapper:
             raise AmoServerError(f"Не удалось обновить токены AMO: {details}")
 
         self._save_tokens(access_token, refresh_token)
-        logger.info("AMO tokens refreshed and saved to .env")
+        logger.info("AMO tokens refreshed and saved to token env file")
 
     def init_oauth2(self):
         data = {
@@ -165,7 +191,7 @@ class AmoCRMWrapper:
         if not self._is_expire(self._get_access_token()):
             return
 
-        logger.info("AMO access token missing/expired. Trying .env reload before refresh.")
+        logger.info("AMO access token missing/expired. Trying token env reload before refresh.")
         self._reload_tokens_from_env()
 
         if self._is_expire(self._get_access_token()):

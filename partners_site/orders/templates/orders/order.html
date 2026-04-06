@@ -8,52 +8,185 @@
 {% endblock %}
 
 {% block content %}
-<section class="cart order-page">
+<section class="order-page">
   <div class="container">
-    <h1 class="cart-title order-title">
-      Заказ № {% localize off %}{{ order.amo_crm_id|default:order.id }}{% endlocalize %} от {{ order.time_created|date:"d.m.Y" }}
-    </h1>
+    <header class="order-hero" aria-label="Шапка заказа">
+      <a href="{% url 'users:user_cabinet' %}#cabinet-orders" class="order-back-link">← К заказам</a>
 
-    <div class="cart-box">
-      <h3 class="cart-box__title">Данные заказа</h3>
-      <div class="order-line"><span>Тип оплаты</span><strong>{{ order.get_payment_type_display }}</strong></div>
-      <div class="order-line"><span>Бонусов списано</span><strong>{{ order.bonuses_spent_total }}</strong></div>
-      <div class="order-line"><span>Бонусов начислено</span><strong>{{ order.bonuses_append_total }}</strong></div>
-      <div class="order-line"><span>Скидка по заказу</span><strong>{{ order.order_discount_percent }}</strong></div>
-      <div class="order-line"><span>Сумма заказа</span><strong>{{ order.total }} руб.</strong></div>
-    </div>
+      <div class="order-hero__head">
+        <h1 class="order-title">
+          Заказ № {% localize off %}{{ order.amo_crm_id|default:order.id }}{% endlocalize %}
+        </h1>
 
-    <div class="cart-box">
-      <h3 class="cart-box__title">Данные доставки</h3>
-      <div class="order-line"><span>Тип доставки</span><strong>{{ order.get_delivery_type_display }}</strong></div>
-      <div class="order-line"><span>Адрес доставки</span><strong>{{ order.address.delivery_address_text|default:"-" }}</strong></div>
-    </div>
-
-    <div class="cart-box">
-      <h3 class="cart-box__title">Товары</h3>
-
-      {% if order_items %}
-        <div class="order-products">
-          {% for item in order_items %}
-            <div class="order-product">
-              {% with image=item.product.images.first %}
-                {% if image %}
-                  <img src="{{ image.photo.url }}" alt="{{ item.product.name }}" class="order-product__image">
-                {% else %}
-                  <div class="order-product__placeholder">Нет фото</div>
-                {% endif %}
-              {% endwith %}
-
-              <div>
-                <div class="order-product__title">{{ item.product.name }}</div>
-                <div>{{ item.qty }} шт. по {{ item.current_unit_price_discounted }} руб. = {{ item.line_total }} руб.</div>
-              </div>
-            </div>
-          {% endfor %}
+        <div class="order-hero__meta">
+          <span class="order-status-badge order-status-badge--{{ order.status }}">{{ order.get_status_display }}</span>
+          <span class="order-date">от {{ order.time_created|date:"d.m.Y" }}</span>
         </div>
-      {% else %}
-        <p>В заказе нет товаров.</p>
-      {% endif %}
+      </div>
+    </header>
+
+    <div class="order-layout">
+      <div class="order-main">
+        <article class="order-panel">
+          <h2 class="order-panel__title">Товары</h2>
+
+          {% if order_items %}
+            <ul class="order-items" role="list">
+              {% for item in order_items %}
+                <li class="order-item">
+                  {% with image=item.product.images.first %}
+                    {% if image %}
+                      <img src="{{ image.photo.url }}" alt="{{ item.product.name }}" class="order-item__image">
+                    {% else %}
+                      <div class="order-item__placeholder" role="img" aria-label="Изображение товара отсутствует">
+                        Нет фото
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+
+                  <div class="order-item__body">
+                    {% if item.product.group_id %}
+                      <a href="{% url 'product_group_detail' item.product.group_id %}" class="order-item__title order-item__title--link">
+                        {{ item.product.name }}
+                      </a>
+                    {% else %}
+                      <div class="order-item__title">{{ item.product.name }}</div>
+                    {% endif %}
+
+                    <div class="order-item__meta">
+                      {{ item.qty }} шт. × {% localize off %}{{ item.current_unit_price_discounted }}{% endlocalize %} ₽
+                      {% if item.current_unit_price > item.current_unit_price_discounted %}
+                        <span class="order-item__old-price">
+                          {% localize off %}{{ item.current_unit_price }}{% endlocalize %} ₽
+                        </span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="order-item__sum">
+                    {% localize off %}{{ item.line_total }}{% endlocalize %} ₽
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="order-empty">
+              В заказе нет товаров.
+            </div>
+          {% endif %}
+        </article>
+
+        <article class="order-panel">
+          <h2 class="order-panel__title">Доставка и оплата</h2>
+
+          <dl class="order-details">
+            <div class="order-details__row">
+              <dt>Тип оплаты</dt>
+              <dd>{{ order.get_payment_type_display }}</dd>
+            </div>
+
+            <div class="order-details__row">
+              <dt>Тип доставки</dt>
+              <dd>{{ order.get_delivery_type_display }}</dd>
+            </div>
+
+            <div class="order-details__row">
+              <dt>Адрес доставки</dt>
+              <dd>{{ order.address.delivery_address_text|default:"Адрес не указан" }}</dd>
+            </div>
+
+            {% if order.delivery_service %}
+              <div class="order-details__row">
+                <dt>Служба доставки</dt>
+                <dd>{{ order.delivery_service }}</dd>
+              </div>
+            {% endif %}
+
+            {% if order.delivery_tariff %}
+              <div class="order-details__row">
+                <dt>Тариф доставки</dt>
+                <dd>{{ order.delivery_tariff }}</dd>
+              </div>
+            {% endif %}
+
+            {% if order.comment %}
+              <div class="order-details__row">
+                <dt>Комментарий</dt>
+                <dd>{{ order.comment }}</dd>
+              </div>
+            {% endif %}
+
+            <div class="order-details__row">
+              <dt>Реквизиты</dt>
+              <dd>
+                {% if order.requisites %}
+                  {{ order.requisites.company_name }}
+                  {% if order.requisites.inn %}
+                    <span class="order-details__muted">· ИНН {{ order.requisites.inn }}</span>
+                  {% endif %}
+                {% else %}
+                  Не указаны
+                {% endif %}
+              </dd>
+            </div>
+          </dl>
+        </article>
+      </div>
+
+      <aside class="order-sidebar" aria-label="Итоги заказа">
+        <article class="order-panel order-summary">
+          <h2 class="order-panel__title">Итог по заказу</h2>
+
+          <dl class="order-summary__list">
+            <div class="order-summary__row">
+              <dt>Товары</dt>
+              <dd>{% localize off %}{{ order.items_subtotal|default:0 }}{% endlocalize %} ₽</dd>
+            </div>
+
+            <div class="order-summary__row">
+              <dt>Скидка</dt>
+              <dd>
+                {% if order.discount_total|default:0 %}
+                  -{% localize off %}{{ order.discount_total|default:0 }}{% endlocalize %} ₽
+                {% else %}
+                  {% localize off %}{{ order.discount_total|default:0 }}{% endlocalize %} ₽
+                {% endif %}
+              </dd>
+            </div>
+
+            <div class="order-summary__row">
+              <dt>Скидка по заказу</dt>
+              <dd>{% localize off %}{{ order.order_discount_percent|default:0 }}{% endlocalize %} %</dd>
+            </div>
+
+            <div class="order-summary__row">
+              <dt>Доставка</dt>
+              <dd>{% localize off %}{{ order.delivery_price|default:0 }}{% endlocalize %} ₽</dd>
+            </div>
+
+            <div class="order-summary__row">
+              <dt>Списано бонусов</dt>
+              <dd class="order-summary__value order-summary__value--minus">
+                -{% localize off %}{{ order.bonuses_spent_total|default:0 }}{% endlocalize %}
+              </dd>
+            </div>
+
+            <div class="order-summary__row">
+              <dt>Начислено бонусов</dt>
+              <dd class="order-summary__value order-summary__value--plus">
+                +{% localize off %}{{ order.bonuses_append_total|default:0 }}{% endlocalize %}
+              </dd>
+            </div>
+          </dl>
+
+          <div class="order-summary__divider"></div>
+
+          <div class="order-summary__total">
+            <span>К оплате</span>
+            <strong>{% localize off %}{{ order.total|default:0 }}{% endlocalize %} ₽</strong>
+          </div>
+        </article>
+      </aside>
     </div>
   </div>
 </section>

@@ -528,7 +528,24 @@ def api_cart_delivery_draft(request):
     if cart.delivery_type == Cart.DeliveryType.SELF_PICKUP:
         return JsonResponse({"success": False, "error": "self_pickup_locked"}, status=400)
 
-    addr = _get_or_create_cart_address(cart, request.user)
+    # Serialize draft/save address requests for the same user to avoid race duplicates.
+    User.objects.select_for_update().only("id").get(pk=request.user.pk)
+
+    incoming_label = (data.get("label") or "").strip()
+    addr = None
+    if incoming_label:
+        addr = (
+            Address.objects
+            .filter(user=request.user, label__iexact=incoming_label)
+            .order_by("id")
+            .first()
+        )
+        if addr and cart.address_id != addr.id:
+            cart.address = addr
+            cart.save(update_fields=["address", "time_updated"])
+
+    if not addr:
+        addr = _get_or_create_cart_address(cart, request.user)
 
     phone = _normalize_phone(data.get("recipient_phone", addr.recipient_phone) or "")
     if phone and not _PHONE_RE.match(phone):
@@ -589,6 +606,9 @@ def api_cart_delivery_save_address(request):
     if cart.delivery_type == Cart.DeliveryType.SELF_PICKUP:
         return JsonResponse({"success": False, "error": "self_pickup_locked"}, status=400)
 
+    # Serialize draft/save address requests for the same user to avoid race duplicates.
+    User.objects.select_for_update().only("id").get(pk=request.user.pk)
+
     label = (data.get("label") or "").strip()
     if not label:
         return JsonResponse({"success": False, "error": "address_label required"}, status=400)
@@ -604,7 +624,7 @@ def api_cart_delivery_save_address(request):
     saved_addr = (
         Address.objects
         .filter(user=request.user, label__iexact=label)
-        .order_by("-time_updated")
+        .order_by("id")
         .first()
     )
 

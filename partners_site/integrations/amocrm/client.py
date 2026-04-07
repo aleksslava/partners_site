@@ -1,4 +1,5 @@
 ﻿import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -75,8 +76,13 @@ class AmoCRMWrapper:
         env_path = str(env_path_obj)
 
         try:
-            dotenv.set_key(env_path, "AMOCRM_ACCESS_TOKEN", access_token, quote_mode="never")
-            dotenv.set_key(env_path, "AMOCRM_REFRESH_TOKEN", refresh_token, quote_mode="never")
+            # Write both tokens in one pass to avoid partial updates/races between two set_key calls.
+            # Direct write is more predictable for bind-mounted files in containers.
+            with open(env_path, "w", encoding="utf-8", newline="\n") as env_file:
+                env_file.write(f"AMOCRM_ACCESS_TOKEN={access_token}\n")
+                env_file.write(f"AMOCRM_REFRESH_TOKEN={refresh_token}\n")
+                env_file.flush()
+                os.fsync(env_file.fileno())
             persisted_values = dotenv.dotenv_values(env_path)
         except Exception as error:
             logger.exception("Failed to write AMO tokens to %s", env_path)
@@ -456,4 +462,3 @@ class AmoCRMWrapper:
         print(response)
         contact_id = response.json().get("_embedded").get("contacts")[0].get("id")
         return contact_id
-

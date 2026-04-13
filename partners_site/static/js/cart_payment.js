@@ -167,6 +167,12 @@
     const paymentSelect = paymentBox?.querySelector('.js-cart-payment-select');
     const paymentBtn = paymentBox?.querySelector('.js-cart-payment-button');
     const paymentLabel = paymentBox?.querySelector('.js-cart-payment-label');
+    const cardHint = document.querySelector('.js-cart-payment-card-hint');
+
+    function toggleCardHint(value) {
+      if (!cardHint) return;
+      cardHint.style.display = value === 'card' ? '' : 'none';
+    }
 
     // invoice UI
     const invoiceWrap = document.querySelector('.js-invoice-fields');
@@ -227,12 +233,14 @@
             // optimistic
             paymentSelect.value = value;
             paymentLabel.textContent = text;
+            toggleCardHint(value);
             toggleInvoiceFields();
             closePortal();
 
             try {
               const data = await apiPost('/api/cart/payment-type/', { payment_type: value });
               if (data?.payment_type_label) paymentLabel.textContent = data.payment_type_label;
+              toggleCardHint(data?.payment_type ?? value);
               applyCartRecalc(data);
             } catch (err) {
               console.error(err);

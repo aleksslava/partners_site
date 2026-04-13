@@ -9,7 +9,7 @@
     display: flex;
     flex-direction: column;
     height: 100%; /* выравнивание высоты карточек */
-    max-width: 300px;
+    max-width: 290px;
 
     /* анимация появления при загрузке */
     opacity: 0;

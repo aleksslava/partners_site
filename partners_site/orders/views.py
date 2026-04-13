@@ -388,6 +388,21 @@ def api_cart_payment_type(request):
     cart.save(update_fields=["payment_type", "time_updated"])
 
     cart = recalculate_cart(cart)
+    cart.refresh_from_db()
+
+    items_payload = []
+    for it in cart.items.all():
+        qty = int(it.qty or 0)
+        items_payload.append({
+            "product_id": it.product_id,
+            "qty": qty,
+            "discount_percent": int(it.discount_percent or 0),
+            "price": int(it.current_unit_price or 0),
+            "price_discounted": int(it.current_unit_price_discounted or 0),
+            "line_total": int(it.current_unit_price_discounted or 0) * qty,
+            "bonuses_append": int(it.bonuses_append or 0),
+            "bonuses_spent": int(it.bonuses_spent or 0),
+        })
 
     return JsonResponse({
         "success": True,
@@ -399,6 +414,7 @@ def api_cart_payment_type(request):
         "bonuses_append_total": cart.bonuses_append_total,
         "delivery_price": cart.delivery_price,
         "total": cart.total,
+        "items": items_payload,
     })
 
 @require_GET

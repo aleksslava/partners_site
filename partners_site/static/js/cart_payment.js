@@ -68,11 +68,18 @@
     return r.json();
   }
 
+  const moneyFormatter = new Intl.NumberFormat('ru-RU');
+  function formatMoney(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    return moneyFormatter.format(Math.round(num));
+  }
+
   function applyTotals(data) {
     if (!data || !data.success) return;
     const setText = (id, v) => {
       const el = document.getElementById(id);
-      if (el && v != null) el.textContent = v;
+      if (el && v != null) el.textContent = formatMoney(v);
     };
     setText('cart-total', data.total);
     setText('cart-subtotal', data.items_subtotal);
@@ -226,7 +233,7 @@
             try {
               const data = await apiPost('/api/cart/payment-type/', { payment_type: value });
               if (data?.payment_type_label) paymentLabel.textContent = data.payment_type_label;
-              applyTotals(data);
+              applyCartRecalc(data);
             } catch (err) {
               console.error(err);
               location.reload();

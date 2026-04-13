@@ -156,10 +156,10 @@
                 <button type="button"
                         class="product-variant__button js-cart-payment-button"
                         aria-expanded="false">
-                  <span style="display:inline-flex;align-items:center;gap:6px;">
-                    <span class="product-variant__label js-cart-payment-label">{{ cart.get_payment_type_display }}</span>
-                    <span class="js-cart-payment-card-hint" style="color:red;{% if cart.payment_type != 'card' %}display:none;{% endif %}">(Скидка меньше на 2%)</span>
+                  <span class="product-variant__label js-cart-payment-label">
+                    {{ cart.get_payment_type_display }}
                   </span>
+                  <span class="js-cart-payment-card-hint" style="color:red;{% if cart.payment_type != 'card' %}display:none;{% endif %}">(Скидка меньше на 2%)</span>
                   <span class="product-variant__chevron" aria-hidden="true"></span>
                 </button>
               </div>

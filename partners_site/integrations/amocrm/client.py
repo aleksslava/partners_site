@@ -1,9 +1,6 @@
 ﻿import logging
-import os
 from datetime import datetime
-from pathlib import Path
 
-import dotenv
 import jwt
 import requests
 from pydantic import json
@@ -27,7 +24,6 @@ class AmoCRMWrapper:
 
     def __init__(
         self,
-        path: str,
         amocrm_subdomain: str,
         amocrm_client_id: str,
         amocrm_client_secret: str,
@@ -36,7 +32,6 @@ class AmoCRMWrapper:
         amocrm_refresh_token: str | None,
         amocrm_secret_code: str,
     ):
-        self.path_to_env = path
         self.amocrm_subdomain = amocrm_subdomain
         self.amocrm_client_id = amocrm_client_id
         self.amocrm_client_secret = amocrm_client_secret
@@ -44,12 +39,6 @@ class AmoCRMWrapper:
         self.amocrm_access_token = amocrm_access_token
         self.amocrm_refresh_token = amocrm_refresh_token
         self.amocrm_secret_code = amocrm_secret_code
-
-    def _get_env_path(self) -> Path:
-        env_path = Path(self.path_to_env).expanduser()
-        if not env_path.is_absolute():
-            env_path = env_path.resolve()
-        return env_path
 
     @staticmethod
     def _is_expire(token: str | None) -> bool:
@@ -70,70 +59,51 @@ class AmoCRMWrapper:
             return True
 
     def _save_tokens(self, access_token: str, refresh_token: str):
-        env_path_obj = self._get_env_path()
-        env_path_obj.parent.mkdir(parents=True, exist_ok=True)
-        env_path_obj.touch(exist_ok=True)
-        env_path = str(env_path_obj)
-
+        from integrations.models import AmoCRMToken
         try:
-            # Write both tokens in one pass to avoid partial updates/races between two set_key calls.
-            # Direct write is more predictable for bind-mounted files in containers.
-            with open(env_path, "w", encoding="utf-8", newline="\n") as env_file:
-                env_file.write(f"AMOCRM_ACCESS_TOKEN={access_token}\n")
-                env_file.write(f"AMOCRM_REFRESH_TOKEN={refresh_token}\n")
-                env_file.flush()
-                os.fsync(env_file.fileno())
-            persisted_values = dotenv.dotenv_values(env_path)
-        except Exception as error:
-            logger.exception("Failed to write AMO tokens to %s", env_path)
-            raise AmoServerError(f"Не удалось сохранить токены AMO в {env_path}: {error}") from error
-
-        persisted_access = persisted_values.get("AMOCRM_ACCESS_TOKEN")
-        persisted_refresh = persisted_values.get("AMOCRM_REFRESH_TOKEN")
-        if persisted_access != access_token or persisted_refresh != refresh_token:
-            logger.error(
-                "AMO token write verification failed for %s: access_match=%s refresh_match=%s",
-                env_path,
-                persisted_access == access_token,
-                persisted_refresh == refresh_token,
+            AmoCRMToken.objects.update_or_create(
+                pk=1,
+                defaults={"access_token": access_token, "refresh_token": refresh_token},
             )
-            raise AmoServerError(f"Не удалось сохранить токены AMO в {env_path}: данные не прошли проверку")
+        except Exception as error:
+            logger.exception("Failed to save AMO tokens to DB")
+            raise AmoServerError(f"Не удалось сохранить токены AMO в БД: {error}") from error
 
         self.amocrm_access_token = access_token
         self.amocrm_refresh_token = refresh_token
-        logger.info("AMO tokens saved to %s", env_path)
+        logger.info("AMO tokens saved to database")
 
     def _get_access_token(self):
         return self.amocrm_access_token
 
-    def _reload_tokens_from_env(self) -> bool:
-        env_path = self._get_env_path()
+    def _reload_tokens_from_db(self) -> bool:
+        from integrations.models import AmoCRMToken
         try:
-            env_values = dotenv.dotenv_values(str(env_path))
+            db_token = AmoCRMToken.objects.filter(pk=1).first()
         except Exception as error:
-            logger.warning("Failed to reload AMO tokens from %s: %s", env_path, error)
+            logger.warning("Failed to reload AMO tokens from DB: %s", error)
             return False
 
-        access_token = env_values.get("AMOCRM_ACCESS_TOKEN")
-        refresh_token = env_values.get("AMOCRM_REFRESH_TOKEN")
+        if not db_token:
+            return False
 
         updated = False
-        if access_token and access_token != self.amocrm_access_token:
-            self.amocrm_access_token = access_token
+        if db_token.access_token and db_token.access_token != self.amocrm_access_token:
+            self.amocrm_access_token = db_token.access_token
             updated = True
 
-        if refresh_token and refresh_token != self.amocrm_refresh_token:
-            self.amocrm_refresh_token = refresh_token
+        if db_token.refresh_token and db_token.refresh_token != self.amocrm_refresh_token:
+            self.amocrm_refresh_token = db_token.refresh_token
             updated = True
 
         if updated:
-            logger.info("AMO tokens reloaded from %s", env_path)
+            logger.info("AMO tokens reloaded from database")
 
         return updated
 
     def _get_new_tokens(self):
-        # Before refresh call always resync from file to avoid stale in-memory refresh token.
-        self._reload_tokens_from_env()
+        # Before refresh always resync from DB to avoid stale in-memory refresh token.
+        self._reload_tokens_from_db()
 
         if not self.amocrm_refresh_token:
             raise AmoServerError("Не удалось обновить токены AMO: refresh token отсутствует")
@@ -197,8 +167,8 @@ class AmoCRMWrapper:
         if not self._is_expire(self._get_access_token()):
             return
 
-        logger.info("AMO access token missing/expired. Trying token env reload before refresh.")
-        self._reload_tokens_from_env()
+        logger.info("AMO access token missing/expired. Trying DB reload before refresh.")
+        self._reload_tokens_from_db()
 
         if self._is_expire(self._get_access_token()):
             logger.info("Token still invalid after .env reload. Requesting new tokens via refresh flow.")
@@ -258,8 +228,8 @@ class AmoCRMWrapper:
         if response.status_code != 401:
             return response
 
-        logger.warning("AMO request returned 401. 401 -> reload from .env")
-        self._reload_tokens_from_env()
+        logger.warning("AMO request returned 401. Reloading tokens from DB.")
+        self._reload_tokens_from_db()
         response = self._send_request(
             req_type=req_type,
             endpoint=endpoint,

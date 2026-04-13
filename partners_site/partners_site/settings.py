@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'shop.apps.ShopConfig',
     'taggit',
     'users.apps.UsersConfig',
-    'orders'
+    'orders',
+    'integrations',
 ]
 
 MIDDLEWARE = [

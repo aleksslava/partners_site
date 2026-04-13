@@ -18,9 +18,6 @@ services:
       - ./data/media:/var/www/media
       - ./data/static:/var/www/static
       - ./data/amocrm_tokens.env:/app/runtime/amocrm_tokens.env
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             gunicorn partners_site.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --access-logfile - --error-logfile -"
     restart: unless-stopped
     healthcheck:
       test:

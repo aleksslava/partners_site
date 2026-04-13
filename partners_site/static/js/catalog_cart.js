@@ -30,6 +30,14 @@
     return r.json(); // {product_id, qty}
   }
 
+  function updateCartBadge() {
+    const badge = document.getElementById('cart-badge');
+    if (!badge) return;
+    const total = Object.values(window.__cartQty || {}).reduce((s, v) => s + Number(v), 0);
+    badge.textContent = total;
+    badge.hidden = total === 0;
+  }
+
   function setControlState(control, qty) {
     const mainBtn = control.querySelector('.js-cart-main');
     control.classList.toggle('is-active', qty > 0);
@@ -85,6 +93,7 @@
         window.__cartQty[String(pid)] = qty;
 
         setControlState(control, qty);
+        updateCartBadge();
       }
 
       if (mainBtn) {
@@ -121,6 +130,7 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     window.__cartQty = await apiGetQuantities();
+    updateCartBadge();
     initCartControls(document);
   });
 })();

@@ -26,7 +26,10 @@
             <ul class="nav-list">
                 <li><a href="{% url 'catalog' %}" class="nav-item">Каталог</a></li>
                 <li><a href="{% url 'users:user_cabinet' %}" class="nav-item">Личный кабинет</a></li>
-                <li><a href="{% url 'cart' %}" class="nav-item">Корзина</a></li>
+                <li class="cart-nav-item">
+                    <a href="{% url 'cart' %}" class="nav-item">Корзина</a>
+                    <span class="cart-badge" id="cart-badge" hidden>0</span>
+                </li>
 
                 <li>
                     {% if user.is_authenticated %}

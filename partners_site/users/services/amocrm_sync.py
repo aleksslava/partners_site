@@ -72,7 +72,7 @@ def _map_partner_status(value: str | None) -> str | None:
         "старт": Customer.PartnerStatus.Start,
         "база": Customer.PartnerStatus.Base,
         "бронза": Customer.PartnerStatus.Bronze,
-        "серебо": Customer.PartnerStatus.Silver,
+        "серебро": Customer.PartnerStatus.Silver,
         "золото": Customer.PartnerStatus.Gold,
         "платина": Customer.PartnerStatus.Platina,
         "бизнес": Customer.PartnerStatus.Business,

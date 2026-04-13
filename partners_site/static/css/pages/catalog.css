@@ -15,7 +15,7 @@
 /* Плотная сетка, ровные карточки по центру */
 .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 360px));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 18px;
 }
 

@@ -239,7 +239,8 @@
   .cart-item__controls{
     grid-area: controls;
     padding: 0;
-    align-content: start;
+    align-self: center;
+    align-content: center;
     justify-content: start;
     justify-self: end;
     row-gap: 8px;
@@ -249,6 +250,7 @@
     grid-template-columns: 34px max-content 34px;
     justify-content: start;
     column-gap: 8px;
+    width: max-content;
   }
 
   .cart-item__controls.js-cart-control.is-active .js-cart-main{
@@ -257,7 +259,9 @@
 
   .cart-remove{
     margin-top: 2px;
-    justify-self: start;
+    width: 100%;
+    justify-self: stretch;
+    text-align: center;
   }
 
   .cart-line__calc{

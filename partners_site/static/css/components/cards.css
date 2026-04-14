@@ -190,10 +190,17 @@
   width: 10px;
   height: 10px;
   transform: translateY(-50%) rotate(45deg);
-  border-right: 2px solid rgba(15, 23, 42, 0.45);
-  border-bottom: 2px solid rgba(15, 23, 42, 0.45);
+  color: rgba(15, 23, 42, 0.45);
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
   pointer-events: none;
   transition: transform 0.18s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .product-variant__chevron {
+    color: rgba(226, 232, 240, 0.92);
+  }
 }
 
 /* меню */

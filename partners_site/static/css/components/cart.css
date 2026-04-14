@@ -200,26 +200,75 @@
 
 @media (max-width: 640px), (max-aspect-ratio: 4/5){
   .cart-item{
-    grid-template-columns: 1fr;
-    padding:18px 20px;
-    align-items:center;
+    grid-template-columns: 108px minmax(0, 1fr);
+    grid-template-areas:
+      "media title"
+      "media controls"
+      "calc calc"
+      "bonuses bonuses";
+    gap: 10px 12px;
+    padding: 0 14px 14px 0;
+    align-items: start;
+    overflow: hidden;
   }
 
-  .cart-item__main{
-    grid-template-columns: 1fr;
+  .cart-item__main,
+  .cart-item__content{
+    display: contents;
   }
 
   .cart-item__media{
-    display:none;
+    grid-area: media;
+    display: block;
+    align-self: start;
+    height: 122px;
   }
 
-  .cart-item__image{
-    max-height:100%;
+  .cart-item__image,
+  .cart-item__image-placeholder{
+    width: 100%;
+    height: 100%;
+    border-radius: 18px 0 12px 0;
   }
 
-  .cart-item__content,
+  .cart-line__title{
+    grid-area: title;
+    padding-top: 12px;
+    padding-right: 2px;
+  }
+
   .cart-item__controls{
-    padding:0;
+    grid-area: controls;
+    padding: 0;
+    align-content: start;
+    justify-content: start;
+    justify-self: start;
+    row-gap: 8px;
+  }
+
+  .cart-item__controls.js-cart-control.is-active{
+    grid-template-columns: 34px max-content 34px;
+    justify-content: start;
+    column-gap: 8px;
+  }
+
+  .cart-item__controls.js-cart-control.is-active .js-cart-main{
+    min-width: 22px;
+  }
+
+  .cart-remove{
+    margin-top: 2px;
+    justify-self: start;
+  }
+
+  .cart-line__calc{
+    grid-area: calc;
+    padding: 0 14px;
+  }
+
+  .cart-bonuses{
+    grid-area: bonuses;
+    padding: 0 14px;
   }
 }
 

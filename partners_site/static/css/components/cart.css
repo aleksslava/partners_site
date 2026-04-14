@@ -200,12 +200,11 @@
 
 @media (max-width: 640px), (max-aspect-ratio: 4/5){
   .cart-item{
-    grid-template-columns: 108px minmax(0, 1fr);
+    grid-template-columns: 108px minmax(0, 1fr) auto;
     grid-template-areas:
-      "media title"
-      "media controls"
-      "calc calc"
-      "bonuses bonuses";
+      "media title controls"
+      "calc calc calc"
+      "bonuses bonuses bonuses";
     gap: 10px 12px;
     padding: 0 14px 14px 0;
     align-items: start;
@@ -242,7 +241,7 @@
     padding: 0;
     align-content: start;
     justify-content: start;
-    justify-self: start;
+    justify-self: end;
     row-gap: 8px;
   }
 

@@ -19,6 +19,16 @@
     gap: 18px;
 }
 
+@media (max-width: 570px) {
+  .catalog-grid {
+    justify-items: center;
+  }
+
+  .catalog-grid .product-card {
+    width: 100%;
+  }
+}
+
 
 .catalog-partner-info {
   margin: 0 0 12px;

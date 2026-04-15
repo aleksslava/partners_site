@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import update_session_auth_hash
@@ -19,6 +21,8 @@ from users.services.amocrm_login import (
     resolve_user_via_amocrm,
 )
 from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
+
+logger = logging.getLogger(__name__)
 
 
 class UserLoginView(LoginView):
@@ -50,12 +54,22 @@ class UserLoginView(LoginView):
             try:
                 user = resolve_user_via_amocrm(field_name=field_name, field_value=field_value)
             except (AmoCRMError, ContactCustomerBindingError) as error:
+                logger.exception(
+                    "AMO auth flow failed for %s=%s",
+                    field_name,
+                    field_value,
+                )
                 return render(
                     request,
                     "shop/error.html",
                     {"error_message": extract_error_message(error, "Произошла ошибка")},
                 )
             except Exception:
+                logger.exception(
+                    "Unexpected error during AMO auth flow for %s=%s",
+                    field_name,
+                    field_value,
+                )
                 return render(
                     request,
                     "shop/error.html",
@@ -102,6 +116,10 @@ def user_cabinet_view(request):
             if isinstance(sync_result, HttpResponse):
                 return sync_result
         except Exception:
+            logger.exception(
+                "Failed to sync user and customer from amoCRM for user_id=%s",
+                request.user.id,
+            )
             return render(
                 request,
                 "shop/error.html",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -12,6 +13,8 @@ from integrations.amocrm.exceptions import ContactCustomerBindingError
 from integrations.amocrm.factory import get_amocrm_client
 from integrations.amocrm.services import get_customer_from_contact
 from users.models import Customer, User
+
+logger = logging.getLogger(__name__)
 
 
 def _get_custom_field_entries(custom_fields_values: list[dict[str, Any]], field_id: int) -> list[dict[str, Any]]:
@@ -221,6 +224,11 @@ def sync_user_and_customer_from_amocrm(user: User, request: HttpRequest) -> dict
         try:
             customer_response = _get_amo_api().get_customer_by_id(customer_id=customer_id)
         except Exception:
+            logger.exception(
+                "Failed to fetch customer from amoCRM for user_id=%s customer_id=%s",
+                user.id,
+                customer_id,
+            )
             return _render_error("Не удалось получить данные покупателя, обратитесь к менеджеру")
 
         customer_api_payload = _extract_customer_payload(customer_response)

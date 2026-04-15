@@ -123,11 +123,19 @@ class AmoCRMWrapper:
                 timeout=20,
             )
         except Exception as error:
+            logger.exception(
+                "AMO token refresh request failed for subdomain=%s",
+                self.amocrm_subdomain,
+            )
             raise AmoServerError(f"Не удалось обновить токены AMO: {error}") from error
 
         try:
             response_data = response.json()
         except ValueError as error:
+            logger.exception(
+                "AMO token refresh returned invalid JSON (status=%s)",
+                response.status_code,
+            )
             raise AmoServerError("Не удалось обновить токены AMO: некорректный ответ сервера") from error
 
         access_token = response_data.get("access_token")
@@ -138,6 +146,11 @@ class AmoCRMWrapper:
                 or response_data.get("title")
                 or response_data.get("hint")
                 or "в ответе отсутствуют access_token/refresh_token"
+            )
+            logger.error(
+                "AMO token refresh failed (status=%s, details=%s)",
+                response.status_code,
+                details,
             )
             raise AmoServerError(f"Не удалось обновить токены AMO: {details}")
 
@@ -294,8 +307,9 @@ class AmoCRMWrapper:
                 customer = self._base_request(endpoint=url, type="get_param", parameters=query)
             else:
                 customer = self._base_request(endpoint=url, type="get")
-        except Exception:
-            raise AmoServerError()
+        except Exception as error:
+            logger.exception("AMO get_customer_by_id request failed for customer_id=%s", customer_id)
+            raise AmoServerError() from error
         if customer.status_code == 200:
             return True, customer.json()
         if customer.status_code == 204:

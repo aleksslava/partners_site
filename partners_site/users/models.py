@@ -29,6 +29,10 @@ class Customer(models.Model):
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
 
     def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+
         if self.partner_status == self.PartnerStatus.Start:
             self.partner_discount = 15
         elif self.partner_status == self.PartnerStatus.Base:
@@ -45,6 +49,11 @@ class Customer(models.Model):
             self.partner_discount = 40
         elif self.partner_status == self.PartnerStatus.Exclusive:
             self.partner_discount = 0
+
+        if update_fields is not None and "partner_status" in update_fields:
+            update_fields.add("partner_discount")
+            kwargs["update_fields"] = list(update_fields)
+
         super().save(*args, **kwargs)
 
     class Meta:

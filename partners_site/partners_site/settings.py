@@ -170,6 +170,28 @@ SECURE_HSTS_PRELOAD = env.bool("DJANGO_SECURE_HSTS_PRELOAD", default=False)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOG_LEVEL = env("DJANGO_LOG_LEVEL", default="INFO").upper()
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+}
+
 AMOCRM = {
     "PATH_TO_ENV": Path(
         env("AMOCRM_TOKENS_ENV_PATH", default=str(BASE_DIR.parent / "data" / "amocrm_tokens.env"))

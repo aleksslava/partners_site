@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import Prefetch
 
 from .models import Cart, CartItem
+from shop.discounts import get_category_discount_limit, get_item_discount_percent
 
 
 def _money_round(x: Decimal) -> int:
@@ -34,7 +35,9 @@ def recalculate_cart(cart: Cart) -> Cart:
         .prefetch_related(
             Prefetch(
                 "items",
-                queryset=CartItem.objects.select_related("product", "product__group__category")
+                queryset=CartItem.objects.select_related(
+                    "product", "product__group__category"
+                ).prefetch_related("product__group__category__status_caps"),
             )
         )
         .select_for_update()
@@ -60,10 +63,12 @@ def recalculate_cart(cart: Cart) -> Cart:
     # --- скидка покупателя (partner) ---
     partner_discount = 0
     customer_bonuses = 0
+    partner_status = None
 
     if cart.user_id and getattr(cart.user, "customer_id", None):
         partner_discount = int(cart.user.customer.partner_discount or 0)
         customer_bonuses = int(cart.user.customer.bonuses or 0)
+        partner_status = cart.user.customer.partner_status
 
     # Оплата картой => -2% для всех расчётов
     effective_partner_discount = max(0, partner_discount - (2 if cart.payment_type == Cart.PaymentType.CARD else 0))
@@ -98,8 +103,8 @@ def recalculate_cart(cart: Cart) -> Cart:
         if qty <= 0:
             qty = 1
 
-        # скидка категории
-        cat_discount = int(getattr(it.product.group.category, "discount", 0) or 0)
+        category = it.product.group.category
+        item_discount_limit = get_category_discount_limit(category, partner_status)
 
         # базовые значения
         it.current_unit_price = base_unit_price
@@ -111,9 +116,13 @@ def recalculate_cart(cart: Cart) -> Cart:
         line_subtotal = base_unit_price * qty
         items_subtotal += line_subtotal
 
-        # --- BONUSES: скидок нет, начисляем бонусы по min(partner, category) ---
+        # --- BONUSES: скидок нет, начисляем бонусы по допустимому проценту ---
         if cart.discount_type == Cart.DiscountType.BONUSES:
-            item_bonus_percent = min(effective_partner_discount, cat_discount)
+            item_bonus_percent = get_item_discount_percent(
+                effective_partner_discount,
+                category,
+                partner_status,
+            )
             # начисление бонусов: percent% от базовой цены
             it.bonuses_append = _calc_amount_by_percent(line_subtotal, item_bonus_percent)
             bonuses_append_total += it.bonuses_append
@@ -121,9 +130,13 @@ def recalculate_cart(cart: Cart) -> Cart:
             # списание бонусов запрещено
             it.bonuses_spent = 0
 
-        # --- DISCOUNT: скидка на товары min(partner, category), бонусы начислять нельзя, но можно списывать ---
+        # --- DISCOUNT: скидка на товары по допустимому проценту ---
         elif cart.discount_type == Cart.DiscountType.DISCOUNT:
-            item_discount_percent = min(effective_partner_discount, cat_discount)
+            item_discount_percent = get_item_discount_percent(
+                effective_partner_discount,
+                category,
+                partner_status,
+            )
             it.discount_percent = item_discount_percent
 
             discounted_unit = _money_round(Decimal(base_unit_price) * (Decimal(100 - item_discount_percent) / Decimal(100)))
@@ -142,7 +155,7 @@ def recalculate_cart(cart: Cart) -> Cart:
         # --- SEMI_BONUSES: скидка по заказу + бонусы начисляем по разнице ---
         elif cart.discount_type == Cart.DiscountType.SEMI_BONUSES:
             order_disc = int(cart.order_discount_percent or 0)
-            item_discount_percent = min(order_disc, cat_discount)
+            item_discount_percent = min(order_disc, item_discount_limit)
             it.discount_percent = item_discount_percent
 
             discounted_unit = _money_round(Decimal(base_unit_price) * (Decimal(100 - item_discount_percent) / Decimal(100)))
@@ -157,7 +170,10 @@ def recalculate_cart(cart: Cart) -> Cart:
 
             # начисление бонусов:
             # base_price * max(0, min( (partner - order_disc), (cat_disc - order_disc) ))
-            bonus_percent = min(effective_partner_discount - order_disc, cat_discount - order_disc)
+            bonus_percent = min(
+                effective_partner_discount - order_disc,
+                item_discount_limit - order_disc,
+            )
             bonus_percent = max(0, int(bonus_percent))
 
             it.bonuses_append = _calc_amount_by_percent(line_subtotal, bonus_percent)

@@ -15,6 +15,7 @@ from taggit.models import Tag
 
 from shop.models import Product, ProductGroup
 from users.models import User
+from .discounts import get_item_discount_percent
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -47,7 +48,12 @@ def catalog_view(request):
         customer = getattr(user, "customer", None)
 
     # Начинаем с группы товаров
-    groups = ProductGroup.objects.filter(modifications__is_visible=True).distinct().select_related('category')
+    groups = (
+        ProductGroup.objects.filter(modifications__is_visible=True)
+        .distinct()
+        .select_related('category')
+        .prefetch_related('category__status_caps')
+    )
 
     # Фильтрация по поисковому запросу
     if q:
@@ -76,6 +82,7 @@ def catalog_view(request):
 
     # Получаем скидку пользователя (если он авторизован)
     user_discount = int(customer.partner_discount or 0) if customer else 0
+    partner_status = getattr(customer, "partner_status", None)
 
     group_cards = []
 
@@ -87,8 +94,7 @@ def catalog_view(request):
 
         primary = next((m for m in mods if m.is_primary), None) or mods[0]
 
-        category_discount = int(getattr(group.category, "discount", 0) or 0)
-        discount_percent = min(user_discount, category_discount)  # берём меньшую скидку
+        discount_percent = get_item_discount_percent(user_discount, group.category, partner_status)
 
         # Функция для вычисления скидки на товар
         def calc_discounted(price: int) -> int:
@@ -135,7 +141,10 @@ def catalog_view(request):
 
 def product_group_detail(request, pk):
     group = get_object_or_404(
-        ProductGroup.objects.prefetch_related(
+        ProductGroup.objects
+        .select_related('category')
+        .prefetch_related(
+            'category__status_caps',
             'modifications__images',
             'modifications__characteristics',
             'modifications__videos',
@@ -182,8 +191,8 @@ def product_group_detail(request, pk):
             images.append(image)
 
     user_discount = int(customer.partner_discount or 0) if customer else 0
-    category_discount = int(getattr(group.category, "discount", 0) or 0)
-    discount_percent = min(user_discount, category_discount)
+    partner_status = getattr(customer, "partner_status", None)
+    discount_percent = get_item_discount_percent(user_discount, group.category, partner_status)
 
     def calc_discounted(price: int) -> int:
         p = Decimal(price)

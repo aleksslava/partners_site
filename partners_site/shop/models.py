@@ -1,18 +1,30 @@
 from django.db import models
 from django.db.models import Q
 from django.core.files.base import ContentFile
+from django.core.validators import MaxValueValidator, MinValueValidator
 from taggit.managers import TaggableManager
 from pathlib import Path
 from io import BytesIO
 from PIL import Image as PilImage, ImageOps
+from users.models import Customer
 
 
 
 
 
 class Category(models.Model):
+    class DiscountPolicy(models.TextChoices):
+        STANDARD = "standard", "Обычная"
+        STATUS_CAPPED = "status_capped", "Лимит по статусу партнера"
+
     name = models.CharField(max_length=255, verbose_name='Название')
     discount =models.IntegerField(verbose_name='Скидка на категорию')
+    discount_policy = models.CharField(
+        max_length=20,
+        choices=DiscountPolicy.choices,
+        default=DiscountPolicy.STANDARD,
+        verbose_name="Тип расчета скидки",
+    )
     time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
 
@@ -22,6 +34,37 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class CategoryStatusDiscountCap(models.Model):
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.CASCADE,
+        related_name="status_caps",
+        verbose_name="Категория",
+    )
+    partner_status = models.CharField(
+        max_length=255,
+        choices=Customer.PartnerStatus.choices,
+        verbose_name="Статус партнера",
+    )
+    max_discount = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="Максимальная скидка (%)",
+    )
+
+    class Meta:
+        verbose_name = "Лимит скидки по статусу"
+        verbose_name_plural = "Лимиты скидки по статусам"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["category", "partner_status"],
+                name="unique_category_partner_status_discount_cap",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.category} / {self.get_partner_status_display()}: {self.max_discount}%"
 
 
 class ProductGroup(models.Model):

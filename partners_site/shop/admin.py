@@ -1,11 +1,34 @@
 from django.contrib import admin
 from django import forms
-from .models import Product, Image, Video, Category, Instruction, Characteristics, ProductGroup
+from .models import (
+    Product,
+    Image,
+    Video,
+    Category,
+    CategoryStatusDiscountCap,
+    Instruction,
+    Characteristics,
+    ProductGroup,
+)
 
 
 # Register your models here.
 
-admin.site.register([Image, Video, Category, Instruction])
+admin.site.register([Image, Video, Instruction])
+
+
+class CategoryStatusDiscountCapInline(admin.TabularInline):
+    model = CategoryStatusDiscountCap
+    extra = 0
+    fields = ("partner_status", "max_discount")
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "discount_policy", "discount")
+    list_filter = ("discount_policy",)
+    search_fields = ("name",)
+    inlines = [CategoryStatusDiscountCapInline]
 
 
 class ImageInlineForm(forms.ModelForm):

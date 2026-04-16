@@ -53,6 +53,8 @@ class CustomFiedsData:
     def get_discount(self): # Заполнение поля скидка в заказе
 
         discount_percent = self.order.order_discount_percent
+        if self.order.payment_type == 'card':
+            discount_percent += 2
         return str(discount_percent)
 
     def get_delivery_type(self):
@@ -263,6 +265,8 @@ def create_note_for_lead(order: Order, order_items: list[OrderItem]):
                  f'Адрес: {order.requisites.legal_address}\n'
                  f'Бик: {order.requisites.bik}\n'
                  f'Р\с: {order.requisites.settlement_account}\n\n')
+
+    text += f'Что делать с бонусами: {order.get_discount_type_display}'
 
     text += (f'Тип доставки: {order.get_delivery_type_display()}\n'
              f'Адрес доставки: {order.address.delivery_address_text}')

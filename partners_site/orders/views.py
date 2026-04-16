@@ -1003,17 +1003,19 @@ def api_cart_checkout(request):
         else:
             order.save(update_fields=["amo_crm_id"])
 
+    success_redirect_url = "/cabinet/?checkout_success=1"
+
     if expects_json:
         payload = {
             "success": True,
             "order_id": order.id,
-            "redirect_url": "/cabinet/",
+            "redirect_url": success_redirect_url,
         }
         if amocrm_lead_id is not None:
             payload["amocrm_lead_id"] = amocrm_lead_id
         return JsonResponse(payload)
 
-    return redirect("/cabinet/")
+    return redirect(success_redirect_url)
 
 
 

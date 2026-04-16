@@ -150,3 +150,20 @@
 </section>
 {% endwith %}
 {% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('checkout_success') !== '1') {
+      return;
+    }
+
+    alert('Заказ успешно передан на оформление.');
+    url.searchParams.delete('checkout_success');
+    const nextSearch = url.searchParams.toString();
+    const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ''}${url.hash}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  })();
+</script>
+{% endblock %}

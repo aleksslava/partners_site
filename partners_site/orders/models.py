@@ -174,6 +174,7 @@ class Order(models.Model):
     payment_type = models.CharField(max_length=20, choices=PaymentType.choices, default=PaymentType.SBP)
 
     comment = models.TextField(blank=True, verbose_name="Комментарий к заказу")
+    need_help = models.BooleanField(default=False)
     amo_crm_id = models.IntegerField(blank=True, null=True, verbose_name="ID сделки в AMO")
 
     items_subtotal = models.PositiveIntegerField(default=0, verbose_name="Сумма товаров (без доставки)")

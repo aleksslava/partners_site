@@ -81,6 +81,14 @@ class CustomFiedsData:
                  }
         return data
 
+    def get_need_manager_data(self):
+        data = {"field_id": self.custom_fields.get('need_manager_checkbox'),  # Поле склад
+                "values": [
+                    {"value": self.order.need_help},
+                ]
+                }
+        return data
+
     def get_delivery_adress_data(self):
         data = {"field_id": self.custom_fields.get('delivery_adress'),  # Поле адрес доставки
                  "values": [
@@ -185,6 +193,7 @@ class CustomFiedsData:
         custom_fields_data.append(self.get_project_name_data())
         custom_fields_data.append(self.get_appeal_type())
         custom_fields_data.append(self.get_lead_target_data())
+        custom_fields_data.append(self.get_need_manager_data())
         return custom_fields_data
 
     def get_lead_tags(self):

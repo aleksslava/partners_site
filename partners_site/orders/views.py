@@ -912,6 +912,7 @@ def api_cart_checkout(request):
         delivery_price=cart.delivery_price,
         payment_type=cart.payment_type,
         comment=cart.comment,
+        need_help=cart.need_help,
         items_subtotal=cart.items_subtotal,
         discount_total=cart.discount_total,
         bonuses_spent_total=cart.bonuses_spent_total,

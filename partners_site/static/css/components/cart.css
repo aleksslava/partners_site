@@ -330,11 +330,13 @@
 
 .cart-summary__help .cart-check{
   margin:0;
+  align-items:center;
 }
 
 .cart-summary__help .cart-check__input{
   accent-color:#0b62ff;
   cursor:pointer;
+  margin-top:0;
 }
 
 .cart-summary__help .cart-check__label{

@@ -353,6 +353,18 @@
                 </button>
               </form>
 
+              <div class="cart-summary__help">
+                <label class="cart-check" for="cart-need-help">
+                  <input
+                    id="cart-need-help"
+                    class="cart-check__input js-cart-need-help"
+                    type="checkbox"
+                    {% if cart.need_help %}checked{% endif %}
+                  >
+                  <span class="cart-check__label">Нужна помощь с заказом</span>
+                </label>
+              </div>
+
               <p class="cart-summary__note">
                 Бонусов начислится: <strong id="cart-bonuses-append">{{ cart.bonuses_append_total }}</strong>
               </p>
@@ -369,7 +381,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/cart.js' %}?v=2"></script>
+    <script src="{% static 'js/cart.js' %}?v=20260416-1"></script>
     <script src="{% static 'js/cart_discount_type.js' %}?v=20260403-2"></script>
     <script src="{% static 'js/cart_payment.js' %}"></script>
     <script src="{% static 'js/cart_delivery.js' %}"></script>

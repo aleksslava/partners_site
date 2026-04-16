@@ -11,6 +11,7 @@ urlpatterns = [
     path('discount_type/', views.api_cart_discount_type, name='api_cart_discount_type'),
     path('set_bonuses_spend/', views.api_cart_set_bonuses_spend, name='api_cart_set_bonuses_spend'),
     path('set_order_discount/', views.api_cart_set_order_discount, name='api_cart_set_order_discount'),
+    path('set_need_help/', views.api_cart_set_need_help, name='api_cart_set_need_help'),
     path('payment-type/', views.api_cart_payment_type, name='api_cart_payment_type'),
     path('requisites/search/',views.api_requisites_search, name='api_cart_search'),
     path('addresses/', views.api_addresses_list, name='api_addresses_list'),

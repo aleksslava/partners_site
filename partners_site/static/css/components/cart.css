@@ -322,6 +322,25 @@
   text-align:center;
 }
 
+.cart-summary__help{
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid rgba(15,23,42,.08);
+}
+
+.cart-summary__help .cart-check{
+  margin:0;
+}
+
+.cart-summary__help .cart-check__input{
+  accent-color:#0b62ff;
+  cursor:pointer;
+}
+
+.cart-summary__help .cart-check__label{
+  font-weight:600;
+}
+
 .cart-summary__note{
   margin:10px 0 0;
   font-size:12px;

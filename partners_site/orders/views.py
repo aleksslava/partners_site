@@ -369,6 +369,42 @@ def api_cart_set_order_discount(request):
         "items": items_payload,
     })
 
+
+@require_POST
+@login_required
+@transaction.atomic
+def api_cart_set_need_help(request):
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        data = {}
+
+    raw_value = data.get("need_help", False)
+    if isinstance(raw_value, bool):
+        need_help = raw_value
+    elif isinstance(raw_value, (int, float)):
+        need_help = bool(raw_value)
+    elif isinstance(raw_value, str):
+        normalized = raw_value.strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            need_help = True
+        elif normalized in {"0", "false", "no", "off", ""}:
+            need_help = False
+        else:
+            return JsonResponse({"success": False, "error": "invalid need_help"}, status=400)
+    else:
+        return JsonResponse({"success": False, "error": "invalid need_help"}, status=400)
+
+    cart, _ = Cart.objects.get_or_create(user=request.user, status=Cart.Status.ACTIVE)
+    cart.need_help = need_help
+    cart.save(update_fields=["need_help", "time_updated"])
+
+    return JsonResponse({
+        "success": True,
+        "need_help": cart.need_help,
+    })
+
+
 @require_POST
 @login_required
 @transaction.atomic
@@ -912,6 +948,7 @@ def api_cart_checkout(request):
     cart.delivery_price = 0
     cart.payment_type = Cart.PaymentType.SBP
     cart.comment = ""
+    cart.need_help = False
     cart.items_subtotal = 0
     cart.discount_total = 0
     cart.bonuses_spent_total = 0
@@ -929,6 +966,7 @@ def api_cart_checkout(request):
         "delivery_price",
         "payment_type",
         "comment",
+        "need_help",
         "items_subtotal",
         "discount_total",
         "bonuses_spent_total",

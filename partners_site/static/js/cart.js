@@ -59,6 +59,38 @@
         });
     }
 
+    const needHelpCheckbox = document.querySelector('.js-cart-need-help');
+    if (needHelpCheckbox) {
+        needHelpCheckbox.addEventListener('change', function () {
+            const nextValue = this.checked;
+            this.disabled = true;
+
+            fetch('/api/cart/set_need_help/', {
+                method: 'POST',
+                body: JSON.stringify({need_help: nextValue}),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(response => response.json().then(data => ({ok: response.ok, data})))
+                .then(({ok, data}) => {
+                    if (!ok || !data.success) {
+                        throw new Error((data && data.error) || 'save failed');
+                    }
+                    needHelpCheckbox.checked = Boolean(data.need_help);
+                })
+                .catch(() => {
+                    needHelpCheckbox.checked = !nextValue;
+                    alert('Не удалось сохранить параметр "Нужна помощь с заказом"');
+                })
+                .finally(() => {
+                    needHelpCheckbox.disabled = false;
+                });
+        });
+    }
+
     function updateCartItem(productId, delta) {
         fetch('/api/cart/update_item/', {
             method: 'POST',

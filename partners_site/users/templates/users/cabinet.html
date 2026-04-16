@@ -33,7 +33,6 @@
 
         <div class="cabinet-overview__actions">
           <a href="{% url 'catalog' %}" class="btn cabinet-btn cabinet-btn--ghost">Каталог</a>
-          <a href="#cabinet-orders" class="btn cabinet-btn">К заказам</a>
         </div>
       </div>
 
@@ -145,54 +144,6 @@
             </div>
           </div>
         </form>
-      </section>
-
-      <section class="cabinet-panel cabinet-panel--wide" id="cabinet-orders">
-        <div class="cabinet-panel__head">
-          <h2 class="cabinet-panel__title">Заказы</h2>
-          <span class="cabinet-panel__hint">История списаний и начислений по заказам</span>
-        </div>
-
-        {% if orders %}
-          <div class="cabinet-orders-table">
-            <div class="cabinet-orders-table__head" aria-hidden="true">
-              <span>Заказ</span>
-              <span>Дата</span>
-              <span>Скидка</span>
-              <span>Сумма</span>
-              <span>Бонусы</span>
-            </div>
-
-            {% for order in orders %}
-              <article class="cabinet-order-row">
-                <div class="cabinet-order-row__cell" data-label="Заказ">
-                  <a class="cabinet-order-link" href="/cart/order/{{ order.id }}/">
-                    # {% localize off %}{{ order.amo_crm_id|default:order.id }}{% endlocalize %}
-                  </a>
-                </div>
-                <div class="cabinet-order-row__cell" data-label="Дата">{{ order.time_created|date:"d.m.Y" }}</div>
-                <div class="cabinet-order-row__cell" data-label="Скидка">
-                  {{ order.order_discount_percent|default:0 }} %
-                </div>
-                <div class="cabinet-order-row__cell" data-label="Сумма">
-                  {% localize off %}{{ order.total|default:0 }}{% endlocalize %} ₽
-                </div>
-                <div class="cabinet-order-row__cell cabinet-order-row__bonuses" data-label="Бонусы">
-                  <span class="cabinet-order-row__bonus">-{{ order.bonuses_spent_total|default:0 }}</span>
-                  <span class="cabinet-order-row__bonus cabinet-order-row__bonus--plus">+{{ order.bonuses_append_total|default:0 }}</span>
-                </div>
-              </article>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="orders-empty">
-            <div class="orders-empty__title">Пока заказов нет</div>
-            <div class="orders-empty__text">
-              Новый заказ сразу появится в этом разделе с датой, статусом и итоговой суммой.
-            </div>
-            <a href="{% url 'catalog' %}" class="btn cabinet-btn">Перейти в каталог</a>
-          </div>
-        {% endif %}
       </section>
     </div>
   </div>

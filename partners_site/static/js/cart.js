@@ -42,16 +42,25 @@
                     'X-Requested-With': 'XMLHttpRequest',
                 },
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
+                .then(async response => {
+                    const contentType = response.headers.get('Content-Type') || '';
+                    let data = null;
+
+                    if (contentType.includes('application/json')) {
+                        data = await response.json();
+                    } else if (response.redirected && response.url) {
+                        window.location.href = response.url;
                         return;
                     }
-                    alert(data.error || 'Не удалось оформить заказ');
+
+                    if (!response.ok || !data || !data.success) {
+                        throw new Error((data && data.error) || 'Не удалось оформить заказ');
+                    }
+
+                    window.location.href = data.redirect_url || '/cabinet/';
                 })
-                .catch(() => {
-                    alert('Ошибка при оформлении заказа');
+                .catch(error => {
+                    alert(error.message || 'Ошибка при оформлении заказа');
                 })
                 .finally(() => {
                     checkoutButton.disabled = false;

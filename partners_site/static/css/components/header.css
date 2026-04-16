@@ -38,9 +38,29 @@ header {
 
 .mobile-toggle {
     display: none;
-    font-size: 28px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: white;
     cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-toggle__icon {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mobile-toggle__line {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
 }
 
 @media (max-width: 768px) {
@@ -48,10 +68,22 @@ header {
         display: none;
     }
     .mobile-toggle {
-        display: block;
+        display: inline-flex;
         margin-left: auto;
         position: relative;
         z-index: 2;
+    }
+
+    html.is-telegram-mobile .mobile-toggle {
+        position: fixed;
+        top: calc(72px + env(safe-area-inset-top, 0px) + 10px);
+        right: 12px;
+        margin-left: 0;
+        border-radius: 50%;
+        background: var(--color-dark);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.32);
+        z-index: 70;
     }
 }
 

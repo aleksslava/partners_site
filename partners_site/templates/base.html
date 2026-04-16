@@ -8,7 +8,7 @@
     <title>{% block title %}HiTE PRO{% endblock %}</title>
 
     <link rel="icon" href="{% static 'img/favicon.jpg' %}?v=20260406-1" type="image/jpeg">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=20260403-4">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=20260416-1">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -46,7 +46,13 @@
 
 
         <!-- ВАЖНО: id="mobileMenuToggle" -->
-        <div class="mobile-toggle" id="mobileMenuToggle">☰</div>
+        <button type="button" class="mobile-toggle" id="mobileMenuToggle" aria-label="Open menu">
+            <span class="mobile-toggle__icon" aria-hidden="true">
+                <span class="mobile-toggle__line"></span>
+                <span class="mobile-toggle__line"></span>
+                <span class="mobile-toggle__line"></span>
+            </span>
+        </button>
 
     </div>
 </header>
@@ -75,7 +81,7 @@
 
 {% block extra_js %}{% endblock %}
 
-<script src="{% static 'js/mobile_menu.js' %}?v=20260402-4"></script>
+<script src="{% static 'js/mobile_menu.js' %}?v=20260416-1"></script>
 
 </body>
 </html>

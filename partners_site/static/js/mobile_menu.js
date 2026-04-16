@@ -1,15 +1,29 @@
 document.addEventListener('DOMContentLoaded', function () {
     const ua = navigator.userAgent || '';
-    const hasTelegramWebApp = typeof window.Telegram !== 'undefined' && !!window.Telegram.WebApp;
+    const telegramObject = window.Telegram || window.telegram;
+    const hasTelegramObject = typeof telegramObject !== 'undefined' && telegramObject !== null;
+    const hasTelegramWebApp = !!(telegramObject && telegramObject.WebApp);
     const hasTelegramProxy =
         typeof window.TelegramWebviewProxy !== 'undefined' ||
         typeof window.TelegramGameProxy !== 'undefined';
     const isTelegramUserAgent = /Telegram|TgWebView|Telegram-Android|Telegram-iOS/i.test(ua);
     const isTelegramBrowser = hasTelegramWebApp || hasTelegramProxy || isTelegramUserAgent;
+    const isMobilePhoneUserAgent = /Android|iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 
-    if (isTelegramBrowser) {
-        document.documentElement.classList.add('is-telegram-browser');
+    function isMobilePhoneViewport() {
+        return window.matchMedia('(max-width: 768px)').matches && window.matchMedia('(pointer: coarse)').matches;
     }
+
+    function syncTelegramClasses() {
+        document.documentElement.classList.toggle('is-telegram-browser', isTelegramBrowser);
+        document.documentElement.classList.toggle(
+            'is-telegram-mobile',
+            hasTelegramObject && (isMobilePhoneUserAgent || isMobilePhoneViewport())
+        );
+    }
+
+    syncTelegramClasses();
+    window.addEventListener('resize', syncTelegramClasses);
 
     const toggle = document.getElementById('mobileMenuToggle');
     const overlay = document.getElementById('mobileMenuOverlay');

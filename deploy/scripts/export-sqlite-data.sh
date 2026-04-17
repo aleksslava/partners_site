@@ -36,7 +36,6 @@ echo "[export] Dump SQLite data to ${DUMP_PATH}"
 $COMPOSE exec -T web \
   python manage.py dumpdata \
   --natural-foreign \
-  --natural-primary \
   --exclude contenttypes \
   --exclude auth.permission \
   --exclude admin.logentry \

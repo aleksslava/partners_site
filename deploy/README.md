@@ -59,6 +59,20 @@ docker compose --env-file deploy/env/prod.env exec web python manage.py check --
 
 ## SQLite -> PostgreSQL migration runbook (short downtime)
 
+### Fast path (one command retry)
+
+If you already had a failed import and need a safe retry end-to-end:
+
+```bash
+bash deploy/scripts/retry-sqlite-to-postgres.sh
+```
+
+Optional custom env path:
+
+```bash
+bash deploy/scripts/retry-sqlite-to-postgres.sh deploy/env/prod.env
+```
+
 ### A) Rehearsal (required)
 
 1. Keep production on SQLite (`DB_ENGINE=sqlite`).

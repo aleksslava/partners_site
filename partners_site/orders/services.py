@@ -28,7 +28,10 @@ def recalculate_cart(cart: Cart) -> Cart:
       - агрегаты Cart: items_subtotal, discount_total, bonuses_*_total, total
     """
 
-    # Подтянем нужные связи одним пакетом
+    # PostgreSQL не поддерживает FOR UPDATE на nullable стороне LEFT JOIN.
+    # Поэтому сначала лочим только строку корзины, затем отдельным запросом читаем связи.
+    Cart.objects.select_for_update().only("id").get(pk=cart.pk)
+
     cart = (
         Cart.objects
         .select_related("user", "user__customer")
@@ -40,7 +43,6 @@ def recalculate_cart(cart: Cart) -> Cart:
                 ).prefetch_related("product__group__category__status_caps"),
             )
         )
-        .select_for_update()
         .get(pk=cart.pk)
     )
 

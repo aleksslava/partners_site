@@ -877,14 +877,23 @@ def api_cart_checkout(request):
     is_json_request = "application/json" in (request.content_type or "")
     expects_json = is_ajax or is_json_request
 
-    cart = (
+    # Лочим корзину отдельным запросом без JOIN'ов (совместимо с PostgreSQL).
+    locked_cart = (
         Cart.objects
         .select_for_update()
-        .select_related("user", "address", "requisites")
-        .prefetch_related("items", "items__product")
+        .only("id")
         .filter(user=request.user, status=Cart.Status.ACTIVE)
         .first()
     )
+
+    cart = None
+    if locked_cart:
+        cart = (
+            Cart.objects
+            .select_related("user", "address", "requisites")
+            .prefetch_related("items", "items__product")
+            .get(pk=locked_cart.pk)
+        )
 
     if not cart:
         if expects_json:

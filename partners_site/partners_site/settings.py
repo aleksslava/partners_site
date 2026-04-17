@@ -90,12 +90,29 @@ WSGI_APPLICATION = 'partners_site.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': Path(env("SQLITE_PATH", default=str(BASE_DIR / "db.sqlite3"))),
+DB_ENGINE = env("DB_ENGINE", default="sqlite").strip().lower()
+
+if DB_ENGINE == "postgres":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env("POSTGRES_DB", default="partners_site"),
+            "USER": env("POSTGRES_USER", default="partners_site"),
+            "PASSWORD": env("POSTGRES_PASSWORD", default="partners_site"),
+            "HOST": env("POSTGRES_HOST", default="db"),
+            "PORT": env("POSTGRES_PORT", default="5432"),
+            "CONN_MAX_AGE": env.int("POSTGRES_CONN_MAX_AGE", default=60),
+        }
     }
-}
+elif DB_ENGINE == "sqlite":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": Path(env("SQLITE_PATH", default=str(BASE_DIR / "db.sqlite3"))),
+        }
+    }
+else:
+    raise RuntimeError("Unsupported DB_ENGINE. Use 'sqlite' or 'postgres'.")
 
 AUTH_USER_MODEL = "users.User"
 # Password validation

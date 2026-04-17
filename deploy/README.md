@@ -1,4 +1,4 @@
-# VDS deployment (Ubuntu 24.04, Docker Compose, SQLite)
+# VDS deployment (Ubuntu 24.04, Docker Compose, SQLite/PostgreSQL)
 
 ## 1) Prepare server
 
@@ -20,33 +20,33 @@ cd /opt/partners_site
 
 cp deploy/env/prod.env.example deploy/env/prod.env
 cp deploy/env/amocrm_tokens.env.example data/amocrm_tokens.env
-mkdir -p data/db data/media data/static data/certbot-www data/letsencrypt
+mkdir -p data/db data/postgres data/media data/static data/certbot-www data/letsencrypt
 ```
 
-Edit `deploy/env/prod.env` and set real values (`DOMAIN`, Django secret, amoCRM credentials).
+Edit `deploy/env/prod.env` and set real values (`DOMAIN`, Django secret, amoCRM credentials, DB settings).
 
-## 3) Copy current data
+## 3) First release (SQLite or PostgreSQL)
 
-```bash
-# copy SQLite and media from current environment
-cp /path/from/current/server/db.sqlite3 data/db/db.sqlite3
-rsync -a /path/from/current/server/products/ data/media/
-```
+- For SQLite keep:
+  - `DB_ENGINE=sqlite`
+  - `SQLITE_PATH=/app/data/db.sqlite3`
 
-## 4) First release
+- For PostgreSQL set:
+  - `DB_ENGINE=postgres`
+  - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST=db`, `POSTGRES_PORT=5432`
 
 ```bash
 bash deploy/scripts/release.sh
 ```
 
-## 5) Issue TLS certificate
+## 4) Issue TLS certificate
 
 ```bash
 bash deploy/scripts/certbot-init.sh example.com admin@example.com
 bash deploy/scripts/release.sh
 ```
 
-## 6) Verify
+## 5) Verify
 
 ```bash
 docker compose --env-file deploy/env/prod.env ps
@@ -55,7 +55,149 @@ curl -I https://example.com
 docker compose --env-file deploy/env/prod.env exec web python manage.py check --deploy
 ```
 
-## 7) Backup and renew tasks (cron)
+---
+
+## SQLite -> PostgreSQL migration runbook (short downtime)
+
+### A) Rehearsal (required)
+
+1. Keep production on SQLite (`DB_ENGINE=sqlite`).
+2. Copy prod SQLite to a rehearsal environment.
+3. Run full dry run: export JSON -> migrate PostgreSQL -> import JSON -> reset sequences -> checks.
+4. Record timing for each step.
+
+### B) Prepare before cutover window
+
+```bash
+cd /opt/partners_site
+mkdir -p backups/sqlite backups/migration
+```
+
+1. Temporarily pause cron jobs for deploy/backup.
+2. Backup SQLite file and checksum:
+
+```bash
+TS=$(date +%Y%m%d_%H%M%S)
+cp data/db/db.sqlite3 backups/sqlite/db_${TS}.sqlite3
+sha256sum backups/sqlite/db_${TS}.sqlite3 > backups/sqlite/db_${TS}.sqlite3.sha256
+```
+
+3. Save row counts before cutover:
+
+```bash
+bash deploy/scripts/report-table-counts.sh backups/migration/counts_before_$(date +%Y%m%d_%H%M%S).tsv
+```
+
+### C) Freeze writes
+
+```bash
+docker compose --env-file deploy/env/prod.env stop web
+# optional (if you want full maintenance page / strict freeze)
+docker compose --env-file deploy/env/prod.env stop nginx
+```
+
+### D) Export data from SQLite
+
+1. Ensure `deploy/env/prod.env` still has `DB_ENGINE=sqlite`.
+2. Start only web for export:
+
+```bash
+docker compose --env-file deploy/env/prod.env up -d web
+```
+
+3. Export fixtures:
+
+```bash
+bash deploy/scripts/export-sqlite-data.sh
+# optional custom output path:
+# bash deploy/scripts/export-sqlite-data.sh backups/migration/sqlite_dump_manual.json
+```
+
+4. Stop web again before final switch:
+
+```bash
+docker compose --env-file deploy/env/prod.env stop web
+```
+
+### E) Switch config to PostgreSQL
+
+Edit `deploy/env/prod.env`:
+
+- `DB_ENGINE=postgres`
+- set valid `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST=db`, `POSTGRES_PORT=5432`
+
+### F) Import into PostgreSQL
+
+```bash
+# Start DB and wait until healthy
+docker compose --env-file deploy/env/prod.env up -d db
+
+# Load fixtures into PostgreSQL
+LATEST_DUMP=$(ls -1t backups/migration/sqlite_dump_*.json | head -n1)
+bash deploy/scripts/import-postgres-data.sh "$LATEST_DUMP"
+```
+
+Re-run release once data is imported:
+
+```bash
+bash deploy/scripts/release.sh
+```
+
+### G) Verification after cutover
+
+```bash
+# infrastructure
+docker compose --env-file deploy/env/prod.env ps
+
+# migrations
+docker compose --env-file deploy/env/prod.env exec web python manage.py showmigrations
+
+# deploy checks
+docker compose --env-file deploy/env/prod.env exec web python manage.py check --deploy
+```
+
+Compare row counts for critical tables before/after cutover:
+
+- `users_user`
+- `users_customer`
+- `orders_order`
+- `orders_cart`
+- `shop_product`
+
+```bash
+bash deploy/scripts/report-table-counts.sh backups/migration/counts_after_$(date +%Y%m%d_%H%M%S).tsv
+```
+
+Run smoke tests:
+
+- admin login
+- catalog view
+- order create/update flow
+- media/static availability
+
+### H) Rollback (if validation fails)
+
+1. Set `DB_ENGINE=sqlite` back in `deploy/env/prod.env`.
+2. Ensure original file exists: `data/db/db.sqlite3` (or restore from `backups/sqlite`).
+3. Run release:
+
+```bash
+bash deploy/scripts/release.sh
+```
+
+Leave PostgreSQL data as-is for investigation (`data/postgres`).
+
+---
+
+## Backups and renew tasks (cron)
+
+`deploy/scripts/backup.sh` now does:
+
+- SQLite file backup (kept 14 days, for rollback safety)
+- PostgreSQL `pg_dump` backup when `DB_ENGINE=postgres` (kept 14 days)
+- media backup (kept 30 days)
+
+Recommended cron:
 
 ```bash
 # daily backups

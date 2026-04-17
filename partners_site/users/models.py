@@ -18,7 +18,7 @@ class Customer(models.Model):
 
     name = models.CharField(verbose_name='Наименование партнёра')
 
-    amo_id_customer = models.IntegerField(blank=True, unique=True, null=True, verbose_name='ID покупателя в AMO')
+    amo_id_customer = models.BigIntegerField(blank=True, unique=True, null=True, verbose_name='ID покупателя в AMO')
     partner_status = models.CharField(max_length=255, default=PartnerStatus.Start,
                                       choices=PartnerStatus.choices, verbose_name='Статус партнёра')
     partner_discount = models.DecimalField(max_digits=2, default=0, decimal_places=0, verbose_name='Скидка покупателя')
@@ -77,9 +77,9 @@ class User(AbstractUser):
                                  null=True, blank=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.CUSTOMER, verbose_name='Тип пользователя')
     phone = models.CharField(max_length=32, blank=True, unique=True, null=True, verbose_name='Номер телефона')
-    amo_id_contact = models.IntegerField(blank=True, null=True, verbose_name='ID контакта в AMO')
-    telegram_id = models.IntegerField(blank=True, null=True, verbose_name='Телеграм ID')
-    max_id = models.IntegerField(blank=True, null=True, verbose_name='MAX ID')
+    amo_id_contact = models.BigIntegerField(blank=True, null=True, verbose_name='ID контакта в AMO')
+    telegram_id = models.BigIntegerField(blank=True, null=True, verbose_name='Телеграм ID')
+    max_id = models.BigIntegerField(blank=True, null=True, verbose_name='MAX ID')
     email = models.EmailField(blank=True, null=True, verbose_name='E-mail')
     time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')

@@ -175,7 +175,7 @@ class Order(models.Model):
 
     comment = models.TextField(blank=True, verbose_name="Комментарий к заказу")
     need_help = models.BooleanField(default=False)
-    amo_crm_id = models.IntegerField(blank=True, null=True, verbose_name="ID сделки в AMO")
+    amo_crm_id = models.BigIntegerField(blank=True, null=True, verbose_name="ID сделки в AMO")
 
     items_subtotal = models.PositiveIntegerField(default=0, verbose_name="Сумма товаров (без доставки)")
     discount_total = models.PositiveIntegerField(default=0, verbose_name="Скидка всего")

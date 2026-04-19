@@ -190,7 +190,7 @@
   width: 10px;
   height: 10px;
   transform: translateY(-50%) rotate(45deg);
-  color: rgba(15, 23, 42, 0.45);
+  color: #0f172a;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   pointer-events: none;

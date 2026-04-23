@@ -266,7 +266,7 @@ def create_note_for_lead(order: Order, order_items: list[OrderItem]):
                  f'Бик: {order.requisites.bik}\n'
                  f'Р\с: {order.requisites.settlement_account}\n\n')
 
-    text += f'Что делать с бонусами: {order.get_discount_type_display}'
+    text += f'Что делать с бонусами: {order.get_discount_type_display()}\n'
 
     text += (f'Тип доставки: {order.get_delivery_type_display()}\n'
              f'Адрес доставки: {order.address.delivery_address_text}')

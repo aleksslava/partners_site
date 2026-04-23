@@ -29,7 +29,11 @@
                   <!-- ЛЕВАЯ ЧАСТЬ -->
                   <div class="cart-item__content">
                     <div class="cart-line__title">
-                      {{ item.product.name }}
+                      {% if item.product.group_id %}
+                        <a href="{% url 'product_group_detail' item.product.group_id %}">{{ item.product.name }}</a>
+                      {% else %}
+                        {{ item.product.name }}
+                      {% endif %}
                     </div>
 
                     <div class="cart-line__calc">
@@ -348,6 +352,17 @@
 
               <form method="post" action="/api/cart/checkout/" class="cart-summary__cta-form">
                 {% csrf_token %}
+                <label class="cart-check cart-check--terms js-cart-terms-check" for="cart-terms-accepted">
+                  <input
+                    id="cart-terms-accepted"
+                    class="cart-check__input js-cart-terms-input"
+                    type="checkbox"
+                  >
+                  <span class="cart-check__label">
+                    Я подтверждаю, что товары из заказа не будут продаваться ниже розничных цен сайта hite-pro.ru, и принимаю
+                    <a href="https://profi.hite-pro.ru/terms" target="_blank" rel="noopener noreferrer">условия сотрудничества</a>.
+                  </span>
+                </label>
                 <button type="submit" class="btn btn-cart btn-checkout cart-summary__cta js-checkout">
                   Оформить заказ
                 </button>

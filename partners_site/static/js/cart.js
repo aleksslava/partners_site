@@ -27,10 +27,45 @@
 
     const checkoutButton = document.querySelector('.js-checkout');
     const checkoutForm = checkoutButton ? checkoutButton.closest('form') : null;
+    const termsCheckbox = document.querySelector('.js-cart-terms-input');
+    const termsCheck = document.querySelector('.js-cart-terms-check');
+
+    function setTermsHighlight(isError) {
+        if (!termsCheck) {
+            return;
+        }
+        termsCheck.classList.toggle('cart-check--error', isError);
+    }
+
+    function syncCheckoutState() {
+        if (!checkoutButton || !termsCheckbox) {
+            return;
+        }
+        const canCheckout = termsCheckbox.checked;
+        checkoutButton.classList.toggle('is-disabled', !canCheckout);
+        checkoutButton.setAttribute('aria-disabled', String(!canCheckout));
+    }
+
+    if (termsCheckbox) {
+        syncCheckoutState();
+        termsCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                setTermsHighlight(false);
+            }
+            syncCheckoutState();
+        });
+    }
 
     if (checkoutForm && checkoutButton) {
         checkoutForm.addEventListener('submit', function (event) {
+            if (termsCheckbox && !termsCheckbox.checked) {
+                event.preventDefault();
+                setTermsHighlight(true);
+                return;
+            }
+
             event.preventDefault();
+            setTermsHighlight(false);
             checkoutButton.disabled = true;
 
             fetch('/api/cart/checkout/', {
@@ -64,6 +99,7 @@
                 })
                 .finally(() => {
                     checkoutButton.disabled = false;
+                    syncCheckoutState();
                 });
         });
     }

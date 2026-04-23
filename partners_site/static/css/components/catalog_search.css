@@ -125,6 +125,26 @@
   font-weight: 700;
 }
 
+@media (min-width: 721px){
+  .catalog-filters{
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .catalog-tags{
+    order: 1;
+    justify-content: flex-start;
+  }
+
+  .catalog-search{
+    order: 2;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 560px;
+  }
+}
+
 /* мобилки: теги под поиском */
 @media (max-width: 720px){
   .catalog-filters{

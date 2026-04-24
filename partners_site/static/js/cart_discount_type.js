@@ -227,6 +227,9 @@ function applyCartRecalc(data) {
     const lineTotalEl = document.getElementById('item-line-total-' + pid);
     if (lineTotalEl) lineTotalEl.textContent = formatMoney(it.line_total);
 
+    const mobileLineTotalEl = document.getElementById('item-line-total-mobile-' + pid);
+    if (mobileLineTotalEl) mobileLineTotalEl.textContent = formatMoney(it.line_total);
+
     const ba = document.getElementById('item-bonuses-append-' + pid);
     if (ba) ba.textContent = it.bonuses_append;
 
@@ -237,14 +240,26 @@ function applyCartRecalc(data) {
     const priceNew = document.getElementById('item-price-discounted-' + pid);
     if (priceNew) priceNew.textContent = formatMoney(it.price_discounted);
 
+    const priceNewMobile = document.getElementById('item-price-discounted-mobile-' + pid);
+    if (priceNewMobile) priceNewMobile.textContent = formatMoney(it.price_discounted);
+
     const priceOld = document.getElementById('item-price-base-' + pid);
     if (priceOld) priceOld.textContent = formatMoney(it.price);
+
+    const priceOldMobile = document.getElementById('item-price-base-mobile-' + pid);
+    if (priceOldMobile) priceOldMobile.textContent = formatMoney(it.price);
 
     const discountPercent = Number(it.discount_percent || 0);
     const discountPercentEl = document.getElementById('item-discount-percent-' + pid);
     if (discountPercentEl) discountPercentEl.textContent = discountPercent;
 
+    const discountPercentMobileEl = document.getElementById('item-discount-percent-mobile-' + pid);
+    if (discountPercentMobileEl) discountPercentMobileEl.textContent = discountPercent;
+
     const oldPriceWrap = document.getElementById('item-old-price-wrap-' + pid);
     if (oldPriceWrap) oldPriceWrap.style.display = discountPercent > 0 ? '' : 'none';
+
+    const oldPriceWrapMobile = document.getElementById('item-old-price-wrap-mobile-' + pid);
+    if (oldPriceWrapMobile) oldPriceWrapMobile.style.display = discountPercent > 0 ? '' : 'none';
   });
 }

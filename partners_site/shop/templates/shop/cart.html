@@ -11,7 +11,7 @@
         <h1 class="cart-title">Корзина</h1>
         <form class="cart-commercial-proposal-form" method="post" action="/cart/commercial-proposal/" target="_blank">
           {% csrf_token %}
-          <button class="btn btn-cart cart-commercial-proposal" type="submit">Сформировать КП</button>
+          <button class="btn btn-cart cart-commercial-proposal" type="submit">Создать КП</button>
         </form>
       </div>
     </div>
@@ -44,7 +44,7 @@
                       {% endif %}
                     </div>
 
-                    <div class="cart-line__calc">
+                    <div class="cart-line__calc cart-line__calc--desktop">
                       <span>
                         <span id="cart-item-qty-{{ item.product.id }}">{{ item.qty }}</span> шт.
                         по <span id="item-price-discounted-{{ item.product.id }}">{{ item.current_unit_price_discounted }}</span> ₽
@@ -60,37 +60,42 @@
                       </span>
 
                       <span class="cart-line__sum">
-                        = <a id="item-line-total-{{ item.product.id }}">{{ item.line_total }}</a>
-                      </span>
-                      <span class="cart-line__sum">
-                          <a> ₽ </a>
+                        = <strong id="item-line-total-{{ item.product.id }}">{{ item.line_total }}</strong> ₽
                       </span>
                     </div>
 
-                    <div class="cart-bonuses">
-                      <div>Бонусов будет начислено по позиции —
-                          <strong id="item-bonuses-append-{{ item.product.id }}">
-                          {{ item.bonuses_append }}
-                          </strong>
-                      </div>
-                      <div>Бонусов будет списано по позиции —
-                          <strong id="item-bonuses-spend-{{ item.product.id }}">
-                              {{ item.bonuses_spent }}
-                          </strong>
-                      </div>
+                    <div class="cart-line__calc cart-line__calc--mobile">
+                      <span class="cart-line__price cart-line__price--new">
+                        <span id="item-price-discounted-mobile-{{ item.product.id }}">{{ item.current_unit_price_discounted }}</span> ₽
+                      </span>
+
+                      <span
+                        class="cart-old-price cart-line__old-price-wrap"
+                        id="item-old-price-wrap-mobile-{{ item.product.id }}"
+                        {% if not item.discount_percent %}style="display:none"{% endif %}
+                      >
+                        <span class="cart-line__discount-badge">-<span id="item-discount-percent-mobile-{{ item.product.id }}">{{ item.discount_percent }}</span>%</span>
+                        <span class="cart-line__price cart-line__price--old" id="item-price-base-mobile-{{ item.product.id }}">{{ item.current_unit_price }}</span> ₽
+                      </span>
+
                     </div>
+
                   </div>
 
                   <!-- ПРАВАЯ ЧАСТЬ (КНОПКИ) -->
                   </div>
+                  <div class="cart-item__divider" aria-hidden="true"></div>
                   <div class="cart-item__controls js-cart-control is-active">
 
-                    <button class="btn-decrease" data-product-id="{{ item.product.id }}">−</button>
-                    <button class="js-cart-main" id="button-item-qty-{{ item.product.id }}">{{ item.qty }}</button>
-                    <button class="btn-increase" data-product-id="{{ item.product.id }}">+</button>
-
-                    <button class="cart-remove js-cart-remove btn-remove"
+                    <button type="button" class="btn-decrease" data-product-id="{{ item.product.id }}">−</button>
+                    <button type="button" class="js-cart-main" id="button-item-qty-{{ item.product.id }}">{{ item.qty }}</button>
+                    <button type="button" class="btn-increase" data-product-id="{{ item.product.id }}">+</button>
+                    <button type="button" class="cart-remove js-cart-remove btn-remove"
                             data-product-id="{{ item.product.id }}">Удалить</button>
+
+                  </div>
+                  <div class="cart-line__sum cart-line__sum--mobile">
+                    <strong id="item-line-total-mobile-{{ item.product.id }}">{{ item.line_total }}</strong> ₽
                   </div>
 
                 </div>
@@ -99,86 +104,107 @@
         </div>
 
         <aside class="cart-sidebar">
-            <div class="cart-box">
-              <h3 class="cart-box__title">Бонусная система</h3>
-
-              <!-- dropdown как в каталоге -->
-              <div class="product-variant product-variant--custom js-cart-discount">
-                <select class="product-variant__native js-cart-discount-select">
-                  {% for value, label in cart.DiscountType.choices %}
-                    <option value="{{ value }}" {% if cart.discount_type == value %}selected{% endif %}>{{ label }}</option>
-                  {% endfor %}
-                </select>
-
-                <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
-                  <span class="product-variant__label js-cart-discount-label">
-                    {{ cart.get_discount_type_display }}
+            <div class="cart-box cart-box--collapsible js-cart-section is-open">
+              <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
+                <span class="cart-box__heading">
+                  <span class="cart-box__title">Бонусная система</span>
+                  <span class="cart-box__summary js-cart-section-summary" data-summary-source=".js-cart-discount-label">
+                    {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}Только скидка{% else %}{{ cart.get_discount_type_display }}{% endif %}
                   </span>
-                  <span class="product-variant__chevron" aria-hidden="true"></span>
-                </button>
-              </div>
+                </span>
+                <span class="cart-box__chevron" aria-hidden="true"></span>
+              </button>
 
-              <!-- ДОП. ПОЛЯ -->
-              <div class="cart-bonus-extra">
+              <div class="cart-box__body js-cart-section-body">
+                <!-- dropdown как в каталоге -->
+                <div class="product-variant product-variant--custom js-cart-discount">
+                  <select class="product-variant__native js-cart-discount-select">
+                    {% for value, label in cart.DiscountType.choices %}
+                      {% if value != cart.DiscountType.SEMI_BONUSES %}
+                        <option value="{{ value }}" {% if cart.discount_type == value %}selected{% endif %}>{{ label }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
 
-                <!-- Только скидка => списать бонусы -->
-                <div class="cart-field js-only-discount" {% if cart.discount_type != cart.DiscountType.DISCOUNT %}style="display:none"{% endif %}>
-                  <label class="cart-field__label" for="cart-bonuses-spend">Списать бонусы</label>
-                  <input
-                    id="cart-bonuses-spend"
-                    class="cart-field__input js-bonuses-spend"
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    value="{{ cart.bonuses_spent_total|default:0 }}"
-                    placeholder="0"
-                  >
-                  <div class="cart-field__hint">Максимум ограничен правилами (сумма заказа не менее − 11 ₽ и баланс бонусов).</div>
+                  <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
+                    <span class="product-variant__label js-cart-discount-label">
+                      {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}Только скидка{% else %}{{ cart.get_discount_type_display }}{% endif %}
+                    </span>
+                    <span class="product-variant__chevron" aria-hidden="true"></span>
+                  </button>
                 </div>
 
-                <!-- Скидка и бонусы => скидка заказа -->
-                <div class="cart-field js-semi-bonuses" {% if cart.discount_type != cart.DiscountType.SEMI_BONUSES %}style="display:none"{% endif %}>
-                  <label class="cart-field__label" for="cart-order-discount">Скидка заказа (%)</label>
-                  <input
-                    id="cart-order-discount"
-                    class="cart-field__input js-order-discount"
-                    type="number"
-                    inputmode="numeric"
-                    min="0"
-                    value="{{ cart.order_discount_percent|default:0 }}"
-                    placeholder="0"
-                  >
-                  <div class="cart-field__hint">Можно от 0 до вашей партнёрской скидки (с учётом оплаты).</div>
-                </div>
+                <!-- ДОП. ПОЛЯ -->
+                <div class="cart-bonus-extra">
 
+                  <!-- Только скидка => списать бонусы -->
+                  <div class="cart-field js-only-discount" {% if cart.discount_type != cart.DiscountType.DISCOUNT %}style="display:none"{% endif %}>
+                    <label class="cart-field__label" for="cart-bonuses-spend">Списать бонусы</label>
+                    <input
+                      id="cart-bonuses-spend"
+                      class="cart-field__input js-bonuses-spend"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      value="{{ cart.bonuses_spent_total|default:0 }}"
+                      placeholder="0"
+                    >
+                    <div class="cart-field__hint">Максимум ограничен правилами (сумма заказа не менее − 11 ₽ и баланс бонусов).</div>
+                  </div>
+
+                  <!-- Недоступный пользовательский режим -->
+                  <div class="cart-field js-semi-bonuses" style="display:none">
+                    <label class="cart-field__label" for="cart-order-discount">Скидка заказа (%)</label>
+                    <input
+                      id="cart-order-discount"
+                      class="cart-field__input js-order-discount"
+                      type="number"
+                      inputmode="numeric"
+                      min="0"
+                      value="{{ cart.order_discount_percent|default:0 }}"
+                      placeholder="0"
+                    >
+                    <div class="cart-field__hint">Можно от 0 до вашей партнёрской скидки (с учётом оплаты).</div>
+                  </div>
+
+                </div>
               </div>
             </div>
 
-            <div class="cart-box">
-              <h3 class="cart-box__title">Оплата</h3>
-
-              {# Выбор типа оплаты (в стиле dropdown-портала как в каталоге) #}
-              <div class="product-variant product-variant--custom js-cart-payment">
-                <select class="product-variant__native js-cart-payment-select">
-                  {% for value, label in cart.PaymentType.choices %}
-                    <option value="{{ value }}" {% if cart.payment_type == value %}selected{% endif %}>{{ label }}</option>
-                  {% endfor %}
-                </select>
-
-                <button type="button"
-                        class="product-variant__button js-cart-payment-button"
-                        aria-expanded="false">
-                  <span class="product-variant__label js-cart-payment-label">
+            <div class="cart-box cart-box--collapsible js-cart-section is-open">
+              <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
+                <span class="cart-box__heading">
+                  <span class="cart-box__title">Оплата</span>
+                  <span class="cart-box__summary js-cart-section-summary" data-summary-source=".js-cart-payment-label">
                     {{ cart.get_payment_type_display }}
                   </span>
-                  <span class="js-cart-payment-card-hint" style="color:red;{% if cart.payment_type != 'card' %}display:none;{% endif %}">(Скидка меньше на 2%)</span>
-                  <span class="product-variant__chevron" aria-hidden="true"></span>
-                </button>
-              </div>
+                </span>
+                <span class="cart-box__chevron" aria-hidden="true"></span>
+              </button>
 
-              {# Реквизиты показываем только если выбран "Счет на оплату" #}
-              <div class="cart-payment-extra js-invoice-fields"
-                   {% if cart.payment_type != cart.PaymentType.INVOICE %}style="display:none"{% endif %}>
+              <div class="cart-box__body js-cart-section-body">
+                {# Выбор типа оплаты (в стиле dropdown-портала как в каталоге) #}
+                <div class="product-variant product-variant--custom js-cart-payment">
+                  <select class="product-variant__native js-cart-payment-select">
+                    {% for value, label in cart.PaymentType.choices %}
+                      <option value="{{ value }}" {% if cart.payment_type == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <button type="button"
+                          class="product-variant__button js-cart-payment-button"
+                          aria-expanded="false">
+                    <span class="product-variant__label js-cart-payment-label">
+                      {{ cart.get_payment_type_display }}
+                    </span>
+                    <span class="js-cart-payment-card-hint" style="color:red;{% if cart.payment_type != 'card' %}display:none;{% endif %}">(Скидка меньше на 2%)</span>
+                    <span class="product-variant__chevron" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+                {# Реквизиты показываем только если выбран "Счет на оплату" #}
+                <div class="cart-payment-extra js-invoice-fields"
+                     {% if cart.payment_type != cart.PaymentType.INVOICE %}style="display:none"{% endif %}>
 
                 {# Поиск по сохранённым реквизитам пользователя (автоподстановка) #}
                 <div class="cart-field">
@@ -240,28 +266,38 @@
                   Сохранить реквизиты
                 </button>
 
+                </div>
               </div>
             </div>
 
-            <div class="cart-box">
-              <h3 class="cart-box__title">Доставка</h3>
-
-              <div class="product-variant product-variant--custom js-cart-delivery">
-                <select class="product-variant__native js-cart-delivery-select">
-                  {% for value, label in cart.DeliveryType.choices %}
-                    <option value="{{ value }}" {% if cart.delivery_type == value %}selected{% endif %}>
-                      {{ label }}
-                    </option>
-                  {% endfor %}
-                </select>
-
-                <button type="button" class="product-variant__button js-cart-delivery-button" aria-expanded="false">
-                  <span class="product-variant__label js-cart-delivery-label">
+            <div class="cart-box cart-box--collapsible js-cart-section is-open">
+              <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
+                <span class="cart-box__heading">
+                  <span class="cart-box__title">Доставка</span>
+                  <span class="cart-box__summary js-cart-section-summary" data-summary-source=".js-cart-delivery-label">
                     {{ cart.get_delivery_type_display }}
                   </span>
-                  <span class="product-variant__chevron" aria-hidden="true"></span>
-                </button>
-              </div>
+                </span>
+                <span class="cart-box__chevron" aria-hidden="true"></span>
+              </button>
+
+              <div class="cart-box__body js-cart-section-body">
+                <div class="product-variant product-variant--custom js-cart-delivery">
+                  <select class="product-variant__native js-cart-delivery-select">
+                    {% for value, label in cart.DeliveryType.choices %}
+                      <option value="{{ value }}" {% if cart.delivery_type == value %}selected{% endif %}>
+                        {{ label }}
+                      </option>
+                    {% endfor %}
+                  </select>
+
+                  <button type="button" class="product-variant__button js-cart-delivery-button" aria-expanded="false">
+                    <span class="product-variant__label js-cart-delivery-label">
+                      {{ cart.get_delivery_type_display }}
+                    </span>
+                    <span class="product-variant__chevron" aria-hidden="true"></span>
+                  </button>
+                </div>
 
               {# Самовывоз: фиксированный адрес #}
               <div class="cart-delivery-extra js-self-pickup"
@@ -329,6 +365,7 @@
                   </button>
               </div>
 
+              </div>
             </div>
 
 
@@ -366,7 +403,7 @@
                     class="cart-check__input js-cart-terms-input"
                     type="checkbox"
                   >
-                  <span class="cart-check__label" style="font-size: 12px;">
+                  <span class="cart-check__label cart-check__label--terms">
                     <b>Подтверждаю, что продукция из заказа не будет реализована ниже розничных цен</b>, указанных на сайте hite-pro.ru. Ознакомлен, что нарушение данного условия приведёт к потере статуса партнёра и согласен с
                     <a href="https://profi.hite-pro.ru/terms" target="_blank" rel="noopener noreferrer">условиями сотрудничества</a>.
                   </span>
@@ -397,6 +434,16 @@
             </div>
         </aside>
       </div>
+
+      <div class="cart-mobile-summary" aria-label="Краткий итог корзины">
+        <div class="cart-mobile-summary__total">
+          <span>Итого</span>
+          <strong><span id="cart-mobile-total">{{ cart.total }}</span> ₽</strong>
+        </div>
+        <button type="button" class="btn btn-cart btn-checkout cart-mobile-summary__cta js-mobile-checkout">
+          Оформить
+        </button>
+      </div>
     {% endif %}
 
   </div>
@@ -404,8 +451,8 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/cart.js' %}?v=20260416-1"></script>
-    <script src="{% static 'js/cart_discount_type.js' %}?v=20260403-2"></script>
+    <script src="{% static 'js/cart.js' %}?v=20260424-4"></script>
+    <script src="{% static 'js/cart_discount_type.js' %}?v=20260424-1"></script>
     <script src="{% static 'js/cart_payment.js' %}"></script>
     <script src="{% static 'js/cart_delivery.js' %}"></script>
 {% endblock %}

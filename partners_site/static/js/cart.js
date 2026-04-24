@@ -4,6 +4,16 @@
         return tokenInput ? tokenInput.value : '';
     }
 
+    const moneyFormatter = new Intl.NumberFormat('ru-RU');
+
+    function formatMoney(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) {
+            return value;
+        }
+        return moneyFormatter.format(Math.round(num));
+    }
+
     document.querySelectorAll('.btn-increase').forEach(button => {
         button.addEventListener('click', function () {
             const productId = this.getAttribute('data-product-id');
@@ -26,6 +36,7 @@
     });
 
     const checkoutButton = document.querySelector('.js-checkout');
+    const mobileCheckoutButton = document.querySelector('.js-mobile-checkout');
     const checkoutForm = checkoutButton ? checkoutButton.closest('form') : null;
     const termsCheckbox = document.querySelector('.js-cart-terms-input');
     const termsCheck = document.querySelector('.js-cart-terms-check');
@@ -38,12 +49,17 @@
     }
 
     function syncCheckoutState() {
-        if (!checkoutButton || !termsCheckbox) {
+        if (!termsCheckbox) {
             return;
         }
         const canCheckout = termsCheckbox.checked;
-        checkoutButton.classList.toggle('is-disabled', !canCheckout);
-        checkoutButton.setAttribute('aria-disabled', String(!canCheckout));
+        [checkoutButton, mobileCheckoutButton].forEach(button => {
+            if (!button) {
+                return;
+            }
+            button.classList.toggle('is-disabled', !canCheckout);
+            button.setAttribute('aria-disabled', String(!canCheckout));
+        });
     }
 
     if (termsCheckbox) {
@@ -61,12 +77,16 @@
             if (termsCheckbox && !termsCheckbox.checked) {
                 event.preventDefault();
                 setTermsHighlight(true);
+                termsCheck?.scrollIntoView({behavior: 'smooth', block: 'center'});
                 return;
             }
 
             event.preventDefault();
             setTermsHighlight(false);
             checkoutButton.disabled = true;
+            if (mobileCheckoutButton) {
+                mobileCheckoutButton.disabled = true;
+            }
 
             fetch('/api/cart/checkout/', {
                 method: 'POST',
@@ -99,8 +119,115 @@
                 })
                 .finally(() => {
                     checkoutButton.disabled = false;
+                    if (mobileCheckoutButton) {
+                        mobileCheckoutButton.disabled = false;
+                    }
                     syncCheckoutState();
                 });
+        });
+    }
+
+    if (mobileCheckoutButton && checkoutForm) {
+        mobileCheckoutButton.addEventListener('click', function () {
+            if (termsCheckbox && !termsCheckbox.checked) {
+                setTermsHighlight(true);
+                termsCheck?.scrollIntoView({behavior: 'smooth', block: 'center'});
+                syncCheckoutState();
+                return;
+            }
+
+            if (checkoutForm.requestSubmit) {
+                checkoutForm.requestSubmit();
+            } else {
+                checkoutForm.dispatchEvent(new Event('submit', {cancelable: true}));
+            }
+        });
+    }
+
+    const mobileSectionMedia = window.matchMedia('(max-width: 640px), (max-aspect-ratio: 4/5)');
+    const cartSections = Array.from(document.querySelectorAll('.js-cart-section'));
+
+    function setCartSectionOpen(section, isOpen) {
+        const toggle = section.querySelector('.js-cart-section-toggle');
+        section.classList.toggle('is-open', isOpen);
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', String(isOpen));
+        }
+    }
+
+    function syncCartSections() {
+        cartSections.forEach(section => {
+            if (mobileSectionMedia.matches) {
+                setCartSectionOpen(section, section.dataset.userOpen === 'true');
+            } else {
+                setCartSectionOpen(section, true);
+            }
+        });
+    }
+
+    cartSections.forEach(section => {
+        const toggle = section.querySelector('.js-cart-section-toggle');
+        if (!toggle) {
+            return;
+        }
+
+        toggle.addEventListener('click', function () {
+            if (!mobileSectionMedia.matches) {
+                return;
+            }
+            const isOpen = !section.classList.contains('is-open');
+            section.dataset.userOpen = String(isOpen);
+            setCartSectionOpen(section, isOpen);
+        });
+    });
+
+    if (cartSections.length) {
+        syncCartSections();
+        if (mobileSectionMedia.addEventListener) {
+            mobileSectionMedia.addEventListener('change', syncCartSections);
+        } else {
+            mobileSectionMedia.addListener(syncCartSections);
+        }
+    }
+
+    function syncSectionSummaries() {
+        document.querySelectorAll('.js-cart-section-summary[data-summary-source]').forEach(summary => {
+            const source = document.querySelector(summary.dataset.summarySource);
+            if (source) {
+                summary.textContent = source.textContent.trim();
+            }
+        });
+    }
+
+    syncSectionSummaries();
+    document.querySelectorAll('.js-cart-section-summary[data-summary-source]').forEach(summary => {
+        const source = document.querySelector(summary.dataset.summarySource);
+        if (!source || !window.MutationObserver) {
+            return;
+        }
+
+        new MutationObserver(syncSectionSummaries).observe(source, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+        });
+    });
+
+    const cartTotal = document.getElementById('cart-total');
+    const mobileTotal = document.getElementById('cart-mobile-total');
+
+    function syncMobileTotal() {
+        if (cartTotal && mobileTotal) {
+            mobileTotal.textContent = cartTotal.textContent.trim();
+        }
+    }
+
+    syncMobileTotal();
+    if (cartTotal && mobileTotal && window.MutationObserver) {
+        new MutationObserver(syncMobileTotal).observe(cartTotal, {
+            childList: true,
+            characterData: true,
+            subtree: true,
         });
     }
 
@@ -154,12 +281,18 @@
                     }
                     document.getElementById('cart-item-qty-' + productId).textContent = data.item_qty;
                     document.getElementById('button-item-qty-' + productId).textContent = data.item_qty;
-                    document.getElementById('item-line-total-' + productId).textContent = data.item_total;
-                    document.getElementById('cart-total').textContent = data.total;
-                    document.getElementById('cart-discount').textContent = data.discount_total;
-                    document.getElementById('cart-subtotal').textContent = data.subtotal;
-                    document.getElementById('item-bonuses-append-' + productId).textContent = data.bonus_append;
-                    document.getElementById('item-bonuses-spend-' + productId).textContent = data.bonus_spend;
+                    document.getElementById('item-line-total-' + productId).textContent = formatMoney(data.item_total);
+                    const mobileLineTotal = document.getElementById('item-line-total-mobile-' + productId);
+                    if (mobileLineTotal) {
+                        mobileLineTotal.textContent = formatMoney(data.item_total);
+                    }
+                    document.getElementById('cart-total').textContent = formatMoney(data.total);
+                    const mobileTotal = document.getElementById('cart-mobile-total');
+                    if (mobileTotal) {
+                        mobileTotal.textContent = formatMoney(data.total);
+                    }
+                    document.getElementById('cart-discount').textContent = formatMoney(data.discount_total);
+                    document.getElementById('cart-subtotal').textContent = formatMoney(data.subtotal);
                     document.getElementById('cart-bonuses-append').textContent = data.total_bonus_append;
                     document.getElementById('cart-bonuses-spent').textContent = data.total_bonus_spent;
                 }

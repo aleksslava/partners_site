@@ -1,11 +1,14 @@
 import json
 import re
+from datetime import timedelta
 from email.policy import default
 
+import requests
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
 
 from integrations.amocrm.factory import get_amocrm_client
@@ -18,6 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 _PHONE_RE = re.compile(r'^\+?\d{10,15}$')
+COMMERCIAL_PROPOSAL_URL = "https://education.hite-pro.ru/kp/partner"
 
 
 def _normalize_phone(s: str) -> str:
@@ -79,6 +83,73 @@ def cart_view(request):
         "user": user,
         "a": cart.address
     })
+
+
+@require_POST
+@login_required
+def cart_commercial_proposal(request):
+    cart, _ = Cart.objects.get_or_create(user=request.user, status=Cart.Status.ACTIVE)
+    cart = recalculate_cart(cart)
+    cart_items = cart.items.select_related("product").all()
+
+    products = []
+    total_amount = 0
+    for item in cart_items:
+        total = item.product.price * item.qty
+        total_amount += total
+        products.append({
+            "name": item.product.name,
+            "price": item.product.price,
+            "discount": 0,
+            "quantity": item.qty,
+            "total_discount": total,
+            "total": total,
+        })
+
+    proposal_date = timezone.localdate()
+
+    context = {
+        "request": request.build_absolute_uri(),
+        "proposal_number": cart.id,
+        "proposal_date": proposal_date.strftime("%d.%m.%y"),
+        "valid_until": (proposal_date + timedelta(days=14)).strftime("%d.%m.%y"),
+        "client_name": None,
+        "company_name": "ООО «ХАЙТ ПРО ИНЖИНИРИНГ»",
+        "manager_name": "ООО «ХАЙТ ПРО",
+        "manager_email": "partners@hite-pro.ru",
+        "manager_phone": "+7 (495) 256-33-00",
+        "products": products,
+        "total_amount": total_amount,
+        "total_discount": total_amount,
+        "lead_id": cart.id,
+        "project": "Выклы и УД (Партнеры)",
+        "content_blocks": [],
+    }
+
+    try:
+        response = requests.get(
+            COMMERCIAL_PROPOSAL_URL,
+            params={"context": json.dumps(context, ensure_ascii=False)},
+            timeout=30,
+        )
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.exception("Commercial proposal PDF generation failed: %s", exc)
+        return HttpResponse("Не удалось сформировать КП.", status=502)
+
+    content_type = response.headers.get("Content-Type", "")
+    if "application/pdf" not in content_type and not response.content.startswith(b"%PDF"):
+        logger.error(
+            "Commercial proposal service returned non-PDF response: status=%s content_type=%s",
+            response.status_code,
+            content_type,
+        )
+        return HttpResponse("Сервис формирования КП вернул некорректный ответ.", status=502)
+
+    pdf_response = HttpResponse(response.content, content_type="application/pdf")
+    pdf_response["Content-Disposition"] = f'inline; filename="commercial-proposal-{cart.id}.pdf"'
+    return pdf_response
+
 
 # Обновление количества товаров в корзине
 

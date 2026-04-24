@@ -6,7 +6,15 @@
 {% block content %}
 <section class="cart">
   <div class="container">
-    <h1 class="cart-title">Корзина</h1>
+    <div class="cart-header">
+      <div class="cart-header__main">
+        <h1 class="cart-title">Корзина</h1>
+        <form class="cart-commercial-proposal-form" method="post" action="/cart/commercial-proposal/" target="_blank">
+          {% csrf_token %}
+          <button class="btn btn-cart cart-commercial-proposal" type="submit">Сформировать КП</button>
+        </form>
+      </div>
+    </div>
 
     {% if not cart.items.count %}
       <p>Ваша корзина пуста. <a href="/" style="color: blue;">Перейти в каталог</a></p>

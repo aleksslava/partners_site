@@ -21,6 +21,10 @@ from django.urls import path, include
 
 from partners_site import settings
 
+admin.site.site_header = "Панель управления HiTE PRO"
+admin.site.site_title = "Админ"
+admin.site.index_title = "Панель управления HiTE PRO"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('users.urls')),

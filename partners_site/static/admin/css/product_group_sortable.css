@@ -1,0 +1,34 @@
+.field-drag_handle{
+  width:32px;
+  text-align:center;
+}
+
+.productgroup-drag-handle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  border-radius:6px;
+  color:#64748b;
+  cursor:grab;
+  user-select:none;
+}
+
+.productgroup-drag-handle:hover{
+  background:#eef2f7;
+  color:#334155;
+}
+
+#result_list tbody tr.productgroup-sortable-row{
+  transition:background-color .12s ease, opacity .12s ease;
+}
+
+#result_list tbody tr.productgroup-sortable-row.is-dragging{
+  opacity:.55;
+  background:#eef6ff;
+}
+
+#result_list tbody tr.productgroup-sortable-row.is-saving{
+  background:#f8fafc;
+}

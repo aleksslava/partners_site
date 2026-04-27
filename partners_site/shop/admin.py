@@ -1,5 +1,9 @@
 from django.contrib import admin
 from django import forms
+from django.db import transaction
+from django.http import JsonResponse
+from django.urls import path
+from django.utils.html import format_html
 from .models import (
     Product,
     Image,
@@ -94,11 +98,70 @@ class ProductInline(admin.TabularInline):
 
 @admin.register(ProductGroup)
 class ProductGroupAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'sort_order', 'is_pinned')
+    list_display = ('drag_handle', 'name', 'category', 'sort_order', 'is_pinned')
+    list_display_links = ('name',)
     list_filter = ('category', 'tags', 'is_pinned')
     list_editable = ('is_pinned', 'sort_order')
-    ordering = ('sort_order', '-is_pinned', 'id')
+    ordering = ('sort_order', 'id')
     inlines = [ProductInline]
 
+    class Media:
+        css = {
+            'all': ('admin/css/product_group_sortable.css',)
+        }
+        js = ('admin/js/product_group_sortable.js',)
+
+    @admin.display(description='')
+    def drag_handle(self, obj):
+        return format_html('<span class="productgroup-drag-handle" aria-hidden="true">☰</span>')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'reorder/',
+                self.admin_site.admin_view(self.reorder_view),
+                name='shop_productgroup_reorder',
+            ),
+        ]
+        return custom_urls + urls
+
+    @transaction.atomic
+    def reorder_view(self, request):
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'method_not_allowed'}, status=405)
+        if not self.has_change_permission(request):
+            return JsonResponse({'success': False, 'error': 'permission_denied'}, status=403)
+
+        import json
+        try:
+            payload = json.loads(request.body or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'invalid_json'}, status=400)
+
+        raw_ids = payload.get('ordered_ids') or []
+        try:
+            ordered_ids = [int(value) for value in raw_ids]
+        except (TypeError, ValueError):
+            return JsonResponse({'success': False, 'error': 'invalid_ids'}, status=400)
+
+        if not ordered_ids:
+            return JsonResponse({'success': False, 'error': 'empty_ids'}, status=400)
+
+        groups = list(ProductGroup.objects.select_for_update().filter(id__in=ordered_ids))
+        if len(groups) != len(set(ordered_ids)):
+            return JsonResponse({'success': False, 'error': 'unknown_ids'}, status=400)
+
+        groups_by_id = {group.id: group for group in groups}
+        start_position = min(group.sort_order for group in groups)
+        positions = {}
+
+        for index, group_id in enumerate(ordered_ids):
+            group = groups_by_id[group_id]
+            group.sort_order = start_position + index
+            positions[str(group_id)] = group.sort_order
+
+        ProductGroup.objects.bulk_update(groups, ['sort_order'])
+        return JsonResponse({'success': True, 'positions': positions})
 
 

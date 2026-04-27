@@ -186,9 +186,9 @@
   border-radius:999px;
   border:1px solid transparent;
   background:
-    linear-gradient(#f3f4f6, #f3f4f6) padding-box,
+    linear-gradient(#fff, #fff) padding-box,
     var(--cart-btn-bg) border-box;
-  color:#475569;
+  color:#005bff;
   font-size:18px;
   font-weight:700;
   cursor:pointer;
@@ -203,7 +203,7 @@
 .cart-item__controls .btn-decrease:hover,
 .cart-item__controls .btn-increase:hover{
   background:
-    linear-gradient(#eef2f7, #eef2f7) padding-box,
+    linear-gradient(#fff, #fff) padding-box,
     var(--cart-btn-bg) border-box;
 }
 

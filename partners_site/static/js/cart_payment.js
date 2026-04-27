@@ -86,6 +86,8 @@
     setText('cart-discount', data.discount_total);
     setText('cart-delivery', data.delivery_price);
     setText('cart-bonuses-append', data.bonuses_append_total);
+    setText('cart-bonuses-spent', data.bonuses_spent_total);
+    window.syncCartBonusRows?.();
   }
 
   // ----------------- portal dropdown (one per page) -----------------

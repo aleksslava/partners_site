@@ -71,6 +71,7 @@
       const el = document.getElementById(id);
       if (el) el.textContent = map[id];
     });
+    window.syncCartBonusRows?.();
   }
 
   function toggleExtraFields(discountType) {
@@ -213,6 +214,7 @@ function applyCartRecalc(data) {
   setText('cart-delivery', data.delivery_price);
   setText('cart-bonuses-append', data.bonuses_append_total);
   setText('cart-bonuses-spent', data.bonuses_spent_total);
+  window.syncCartBonusRows?.();
 
   // items
   (data.items || []).forEach(it => {

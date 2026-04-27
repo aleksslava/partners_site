@@ -14,6 +14,18 @@
         return moneyFormatter.format(Math.round(num));
     }
 
+    function syncCartBonusRows() {
+        document.querySelectorAll('.js-cart-bonus-row, .js-cart-discount-row').forEach(row => {
+            const valueEl = row.querySelector('strong');
+            const rawValue = valueEl ? valueEl.textContent.replace(/[^\d.-]/g, '') : '';
+            const value = Number(rawValue || 0);
+            row.style.display = value > 0 ? '' : 'none';
+        });
+    }
+
+    window.syncCartBonusRows = syncCartBonusRows;
+    syncCartBonusRows();
+
     document.querySelectorAll('.btn-increase').forEach(button => {
         button.addEventListener('click', function () {
             const productId = this.getAttribute('data-product-id');
@@ -295,6 +307,7 @@
                     document.getElementById('cart-subtotal').textContent = formatMoney(data.subtotal);
                     document.getElementById('cart-bonuses-append').textContent = data.total_bonus_append;
                     document.getElementById('cart-bonuses-spent').textContent = data.total_bonus_spent;
+                    syncCartBonusRows();
                 }
             });
     }

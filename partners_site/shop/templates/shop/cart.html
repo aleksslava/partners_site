@@ -20,6 +20,27 @@
       <p>Ваша корзина пуста. <a href="/" style="color: blue;">Перейти в каталог</a></p>
     {% else %}
     <div class="cart-layout">
+        <div class="cart-box cart-bonus-choice">
+          <h3 class="cart-box__title">Бонусная система</h3>
+
+          <div class="product-variant product-variant--custom js-cart-discount">
+            <select class="product-variant__native js-cart-discount-select">
+              {% for value, label in cart.DiscountType.choices %}
+                {% if value != cart.DiscountType.SEMI_BONUSES %}
+                  <option value="{{ value }}" {% if cart.discount_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+
+            <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
+              <span class="product-variant__label js-cart-discount-label">
+                {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}Только скидка{% else %}{{ cart.get_discount_type_display }}{% endif %}
+              </span>
+              <span class="product-variant__chevron" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
         <div class="cart-items">
             {% for item in cart.items.all %}
                 <div class="cart-item" data-product-id="{{ item.product.id }}">
@@ -104,73 +125,6 @@
         </div>
 
         <aside class="cart-sidebar">
-            <div class="cart-box cart-box--collapsible js-cart-section is-open">
-              <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
-                <span class="cart-box__heading">
-                  <span class="cart-box__title">Бонусная система</span>
-                  <span class="cart-box__summary js-cart-section-summary" data-summary-source=".js-cart-discount-label">
-                    {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}Только скидка{% else %}{{ cart.get_discount_type_display }}{% endif %}
-                  </span>
-                </span>
-                <span class="cart-box__chevron" aria-hidden="true"></span>
-              </button>
-
-              <div class="cart-box__body js-cart-section-body">
-                <!-- dropdown как в каталоге -->
-                <div class="product-variant product-variant--custom js-cart-discount">
-                  <select class="product-variant__native js-cart-discount-select">
-                    {% for value, label in cart.DiscountType.choices %}
-                      {% if value != cart.DiscountType.SEMI_BONUSES %}
-                        <option value="{{ value }}" {% if cart.discount_type == value %}selected{% endif %}>{{ label }}</option>
-                      {% endif %}
-                    {% endfor %}
-                  </select>
-
-                  <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
-                    <span class="product-variant__label js-cart-discount-label">
-                      {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}Только скидка{% else %}{{ cart.get_discount_type_display }}{% endif %}
-                    </span>
-                    <span class="product-variant__chevron" aria-hidden="true"></span>
-                  </button>
-                </div>
-
-                <!-- ДОП. ПОЛЯ -->
-                <div class="cart-bonus-extra">
-
-                  <!-- Только скидка => списать бонусы -->
-                  <div class="cart-field js-only-discount" {% if cart.discount_type != cart.DiscountType.DISCOUNT %}style="display:none"{% endif %}>
-                    <label class="cart-field__label" for="cart-bonuses-spend">Списать бонусы</label>
-                    <input
-                      id="cart-bonuses-spend"
-                      class="cart-field__input js-bonuses-spend"
-                      type="number"
-                      inputmode="numeric"
-                      min="0"
-                      value="{{ cart.bonuses_spent_total|default:0 }}"
-                      placeholder="0"
-                    >
-                    <div class="cart-field__hint">Максимум ограничен правилами (сумма заказа не менее − 11 ₽ и баланс бонусов).</div>
-                  </div>
-
-                  <!-- Недоступный пользовательский режим -->
-                  <div class="cart-field js-semi-bonuses" style="display:none">
-                    <label class="cart-field__label" for="cart-order-discount">Скидка заказа (%)</label>
-                    <input
-                      id="cart-order-discount"
-                      class="cart-field__input js-order-discount"
-                      type="number"
-                      inputmode="numeric"
-                      min="0"
-                      value="{{ cart.order_discount_percent|default:0 }}"
-                      placeholder="0"
-                    >
-                    <div class="cart-field__hint">Можно от 0 до вашей партнёрской скидки (с учётом оплаты).</div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-
             <div class="cart-box cart-box--collapsible js-cart-section is-open">
               <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
                 <span class="cart-box__heading">
@@ -369,6 +323,34 @@
             </div>
 
 
+            <div class="cart-box cart-box--collapsible cart-bonus-spend js-cart-section js-only-discount is-open" {% if cart.discount_type != cart.DiscountType.DISCOUNT %}style="display:none"{% endif %}>
+              <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
+                <span class="cart-box__heading">
+                  <span class="cart-box__title">Списать бонусы</span>
+                  <span class="cart-box__summary js-cart-section-summary" data-summary-source="#cart-bonuses-spent">
+                    {{ cart.bonuses_spent_total|default:0 }}
+                  </span>
+                </span>
+                <span class="cart-box__chevron" aria-hidden="true"></span>
+              </button>
+
+              <div class="cart-box__body js-cart-section-body">
+                <div class="cart-field">
+                  <label class="cart-field__label" for="cart-bonuses-spend">Сумма списания</label>
+                  <input
+                    id="cart-bonuses-spend"
+                    class="cart-field__input js-bonuses-spend"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                    value="{{ cart.bonuses_spent_total|default:0 }}"
+                    placeholder="0"
+                  >
+                  <div class="cart-field__hint">Максимум ограничен правилами (сумма заказа не менее − 11 ₽ и баланс бонусов).</div>
+                </div>
+              </div>
+            </div>
+
 
             <div class="cart-summary sticky-summary">
               <h3 class="cart-summary__title">Итог</h3>
@@ -378,9 +360,19 @@
                 <span><strong id="cart-subtotal">{{ cart.items_subtotal }}</strong> ₽</span>
               </div>
 
-              <div class="cart-summary__row">
+              <div class="cart-summary__row js-cart-discount-row" {% if not cart.discount_total %}style="display:none"{% endif %}>
                 <span>Скидка</span>
                 <span>− <strong id="cart-discount">{{ cart.discount_total }}</strong> ₽</span>
+              </div>
+
+              <div class="cart-summary__row js-cart-bonus-row" {% if not cart.bonuses_append_total %}style="display:none"{% endif %}>
+                <span>Бонусов начислится</span>
+                <span><strong id="cart-bonuses-append">{{ cart.bonuses_append_total }}</strong></span>
+              </div>
+
+              <div class="cart-summary__row js-cart-bonus-row" {% if not cart.bonuses_spent_total %}style="display:none"{% endif %}>
+                <span>Бонусов спишется</span>
+                <span>− <strong id="cart-bonuses-spent">{{ cart.bonuses_spent_total }}</strong> ₽</span>
               </div>
 
               <div class="cart-summary__row">
@@ -425,12 +417,6 @@
                 </label>
               </div>
 
-              <p class="cart-summary__note">
-                Бонусов начислится: <strong id="cart-bonuses-append">{{ cart.bonuses_append_total }}</strong>
-              </p>
-              <p class="cart-summary__note">
-                Бонусов спишется:   <strong id="cart-bonuses-spent">{{ cart.bonuses_spent_total }}</strong>
-              </p>
             </div>
         </aside>
       </div>
@@ -451,8 +437,8 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/cart.js' %}?v=20260424-4"></script>
-    <script src="{% static 'js/cart_discount_type.js' %}?v=20260424-1"></script>
-    <script src="{% static 'js/cart_payment.js' %}"></script>
-    <script src="{% static 'js/cart_delivery.js' %}"></script>
+    <script src="{% static 'js/cart.js' %}?v=20260427-2"></script>
+    <script src="{% static 'js/cart_discount_type.js' %}?v=20260427-1"></script>
+    <script src="{% static 'js/cart_payment.js' %}?v=20260427-1"></script>
+    <script src="{% static 'js/cart_delivery.js' %}?v=20260427-1"></script>
 {% endblock %}

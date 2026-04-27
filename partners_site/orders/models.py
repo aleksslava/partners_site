@@ -20,8 +20,8 @@ class Cart(models.Model):
         ABANDONED = "abandoned", "Брошена"
 
     class DiscountType(models.TextChoices):
-        BONUSES = "bonuses", "Только бонусы"
-        DISCOUNT = "discount", "Только скидка"
+        BONUSES = "bonuses", "Накопить бонусы"
+        DISCOUNT = "discount", "Применить скидку"
         SEMI_BONUSES = "semi_bonuses", "Скидка и бонусы"
 
     user = models.ForeignKey(
@@ -127,8 +127,8 @@ class Order(models.Model):
         ABANDONED = "abandoned", "Брошена"
 
     class DiscountType(models.TextChoices):
-        BONUSES = "bonuses", "Только бонусы"
-        DISCOUNT = "discount", "Только скидка"
+        BONUSES = "bonuses", "Накопить бонусы"
+        DISCOUNT = "discount", "Применить скидку"
         SEMI_BONUSES = "semi_bonuses", "Скидка и бонусы"
 
     user = models.ForeignKey(

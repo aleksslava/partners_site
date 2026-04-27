@@ -100,14 +100,54 @@
     const select = box.querySelector('.js-cart-discount-select');
     const button = box.querySelector('.js-cart-discount-button');
     const label = box.querySelector('.js-cart-discount-label');
+    const optionButtons = Array.from(document.querySelectorAll('.js-cart-discount-option'));
 
     const bonusesSpendInput = document.querySelector('.js-bonuses-spend');
     const orderDiscountInput = document.querySelector('.js-order-discount');
 
     if (!select || !button || !label) return;
 
+    function getOptionText(value) {
+      const option = Array.from(select.options).find(opt => opt.value === value);
+      return option ? option.textContent : '';
+    }
+
+    function syncDiscountButtons(value) {
+      optionButtons.forEach(optionButton => {
+        const isActive = optionButton.dataset.discountType === value;
+        optionButton.classList.toggle('is-active', isActive);
+        optionButton.setAttribute('aria-pressed', String(isActive));
+      });
+    }
+
+    function setDiscountUi(value, text) {
+      select.value = value;
+      label.textContent = text || getOptionText(value);
+      toggleExtraFields(value);
+      syncDiscountButtons(value);
+    }
+
+    async function saveDiscountType(value, text) {
+      setDiscountUi(value, text);
+      closePortal();
+
+      // если режим не DISCOUNT — списание бонусов сбросим на UI
+      if (value !== 'discount' && bonusesSpendInput) bonusesSpendInput.value = '0';
+
+      try {
+        const data = await apiPost('/api/cart/discount_type/', { discount_type: value });
+        if (data?.discount_type_label) label.textContent = data.discount_type_label;
+        applyTotals(data);
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        location.reload();
+      }
+    }
+
     // первичный показ полей
     toggleExtraFields(select.value);
+    syncDiscountButtons(select.value);
 
     // dropdown open
     button.addEventListener('click', (e) => {
@@ -125,29 +165,19 @@
       box.classList.add('product-variant--open');
       button.setAttribute('aria-expanded', 'true');
 
-      buildOptions(select, select.value, async (value, text) => {
-        // UI
-        select.value = value;
-        label.textContent = text;
-        toggleExtraFields(value);
-        closePortal();
-
-        // если режим не DISCOUNT — списание бонусов сбросим на UI
-        if (value !== 'discount' && bonusesSpendInput) bonusesSpendInput.value = '0';
-
-        try {
-          const data = await apiPost('/api/cart/discount_type/', { discount_type: value });
-          if (data?.discount_type_label) label.textContent = data.discount_type_label;
-          applyTotals(data);
-          location.reload();
-        } catch (err) {
-          console.error(err);
-          location.reload();
-        }
-      });
+      buildOptions(select, select.value, saveDiscountType);
 
       positionPortalUnderButton(button);
       portal.classList.add('variant-portal--open');
+    });
+
+    optionButtons.forEach(optionButton => {
+      optionButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        const value = optionButton.dataset.discountType;
+        if (!value || value === select.value) return;
+        saveDiscountType(value, optionButton.textContent.trim());
+      });
     });
 
     // debounce helper
@@ -161,17 +191,49 @@
 
     // BONUSES_SPEND (only DISCOUNT)
     if (bonusesSpendInput) {
+      const parseNumber = (value) => {
+        const normalized = String(value || '').replace(/[^\d.-]/g, '');
+        const parsed = Number(normalized || 0);
+        return Number.isFinite(parsed) ? parsed : 0;
+      };
+      const getBonusesSpendLimit = () => parseNumber(bonusesSpendInput.dataset.max || bonusesSpendInput.max || 0);
+      const getBonusesSpendValue = () => parseNumber(bonusesSpendInput.value || 0);
+      const syncBonusesSpendValidity = () => {
+        bonusesSpendInput.classList.toggle('is-invalid', getBonusesSpendValue() > getBonusesSpendLimit());
+      };
+      const saveBonusesSpend = async (value) => {
+        const data = await apiPost('/api/cart/set_bonuses_spend/', { bonuses_spent_total: value });
+        applyCartRecalc(data);
+        if (data?.bonus_spend_limit != null) {
+          bonusesSpendInput.max = data.bonus_spend_limit;
+          bonusesSpendInput.dataset.max = data.bonus_spend_limit;
+        }
+        if (data?.bonuses_spent_total != null) bonusesSpendInput.value = data.bonuses_spent_total;
+        syncBonusesSpendValidity();
+      };
+
       bonusesSpendInput.addEventListener('input', debounce(async () => {
         if (select.value !== 'discount') return;
-        const v = Number(bonusesSpendInput.value || 0);
+        const v = getBonusesSpendValue();
+        syncBonusesSpendValidity();
+        if (v > getBonusesSpendLimit()) return;
         try {
-          const data = await apiPost('/api/cart/set_bonuses_spend/', { bonuses_spent_total: v });
-          applyCartRecalc(data);
-
+          await saveBonusesSpend(v);
         } catch (err) {
           console.error(err);
         }
       }, 250));
+
+      bonusesSpendInput.addEventListener('blur', async () => {
+        if (select.value !== 'discount') return;
+        const nextValue = Math.min(Math.max(getBonusesSpendValue(), 0), getBonusesSpendLimit());
+        bonusesSpendInput.value = nextValue;
+        try {
+          await saveBonusesSpend(nextValue);
+        } catch (err) {
+          console.error(err);
+        }
+      });
     }
 
     // ORDER_DISCOUNT (only SEMI_BONUSES)

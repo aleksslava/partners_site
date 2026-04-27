@@ -15,7 +15,7 @@
     }
 
     function syncCartBonusRows() {
-        document.querySelectorAll('.js-cart-bonus-row, .js-cart-discount-row').forEach(row => {
+        document.querySelectorAll('.js-cart-bonus-row, .js-cart-discount-row, .js-cart-delivery-row').forEach(row => {
             const valueEl = row.querySelector('strong');
             const rawValue = valueEl ? valueEl.textContent.replace(/[^\d.-]/g, '') : '';
             const value = Number(rawValue || 0);

@@ -75,10 +75,15 @@ def cart_view(request):
         .prefetch_related("items", "items__product", "items__product__images")
         .get(pk=cart.pk)
     )
+    customer = user.customer
+    items_total_after_discount = max(0, int(cart.items_subtotal or 0) - int(cart.discount_total or 0))
+    bonus_spend_limit = min(max(items_total_after_discount - 11, 0), max(int(customer.bonuses or 0), 0))
 
     # Передаем данные корзины в шаблон
     return render(request, "shop/cart.html", {
         "cart": cart,
+        "customer": customer,
+        "bonus_spend_limit": bonus_spend_limit,
         "requisites": cart.requisites,  # удобно для шаблона
         "user": user,
         "a": cart.address
@@ -363,6 +368,9 @@ def api_cart_set_bonuses_spend(request):
         cart = recalculate_cart(cart)  # внутри клампится по правилам
 
     cart.refresh_from_db()
+    customer_bonuses = int(request.user.customer.bonuses or 0)
+    items_total_after_discount = max(0, int(cart.items_subtotal or 0) - int(cart.discount_total or 0))
+    bonus_spend_limit = min(max(items_total_after_discount - 11, 0), max(customer_bonuses, 0))
     items_payload = []
     for it in cart.items.all():
         qty = int(it.qty or 0)
@@ -381,6 +389,7 @@ def api_cart_set_bonuses_spend(request):
     return JsonResponse({
         "success": True,
         "bonuses_spent_total": cart.bonuses_spent_total,
+        "bonus_spend_limit": bonus_spend_limit,
         "items_subtotal": cart.items_subtotal,
         "discount_total": cart.discount_total,
         "bonuses_append_total": cart.bonuses_append_total,

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}Корзина{% endblock %}
 
@@ -23,21 +23,42 @@
         <div class="cart-box cart-bonus-choice">
           <h3 class="cart-box__title">Бонусная система</h3>
 
-          <div class="product-variant product-variant--custom js-cart-discount">
+          <div class="product-variant product-variant--custom cart-bonus-choice__select js-cart-discount">
             <select class="product-variant__native js-cart-discount-select">
               {% for value, label in cart.DiscountType.choices %}
-                {% if value != cart.DiscountType.SEMI_BONUSES %}
-                  <option value="{{ value }}" {% if cart.discount_type == value %}selected{% endif %}>{{ label }}</option>
+                {% if value == cart.DiscountType.DISCOUNT or value == cart.DiscountType.BONUSES %}
+                  <option value="{{ value }}" {% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}selected{% endif %}>{{ label }}</option>
                 {% endif %}
               {% endfor %}
             </select>
 
             <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
               <span class="product-variant__label js-cart-discount-label">
-                {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}Только скидка{% else %}{{ cart.get_discount_type_display }}{% endif %}
+                {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}
+                  {% for value, label in cart.DiscountType.choices %}
+                    {% if value == cart.DiscountType.DISCOUNT %}{{ label }}{% endif %}
+                  {% endfor %}
+                {% else %}
+                  {{ cart.get_discount_type_display }}
+                {% endif %}
               </span>
               <span class="product-variant__chevron" aria-hidden="true"></span>
             </button>
+          </div>
+
+          <div class="cart-bonus-segment js-cart-discount-segment" role="radiogroup" aria-label="Бонусная система">
+            {% for value, label in cart.DiscountType.choices %}
+              {% if value == cart.DiscountType.DISCOUNT or value == cart.DiscountType.BONUSES %}
+                <button
+                  type="button"
+                  class="cart-bonus-segment__button js-cart-discount-option {% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}is-active{% endif %}"
+                  data-discount-type="{{ value }}"
+                  aria-pressed="{% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}true{% else %}false{% endif %}"
+                >
+                  {{ label }}
+                </button>
+              {% endif %}
+            {% endfor %}
           </div>
         </div>
 
@@ -327,8 +348,8 @@
               <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
                 <span class="cart-box__heading">
                   <span class="cart-box__title">Списать бонусы</span>
-                  <span class="cart-box__summary js-cart-section-summary" data-summary-source="#cart-bonuses-spent">
-                    {{ cart.bonuses_spent_total|default:0 }}
+                  <span class="cart-box__summary">
+                    На Вашем балансе - {{ customer.bonuses }}
                   </span>
                 </span>
                 <span class="cart-box__chevron" aria-hidden="true"></span>
@@ -343,10 +364,12 @@
                     type="number"
                     inputmode="numeric"
                     min="0"
-                    value="{{ cart.bonuses_spent_total|default:0 }}"
+                    max="{{ bonus_spend_limit|unlocalize }}"
+                    data-max="{{ bonus_spend_limit|unlocalize }}"
+                    value="{{ cart.bonuses_spent_total|default:0|unlocalize }}"
                     placeholder="0"
                   >
-                  <div class="cart-field__hint">Максимум ограничен правилами (сумма заказа не менее − 11 ₽ и баланс бонусов).</div>
+                  <div class="cart-field__hint">Можно списать {{ bonus_spend_limit }} из {{ customer.bonuses }} бонусов</div>
                 </div>
               </div>
             </div>
@@ -375,7 +398,7 @@
                 <span>− <strong id="cart-bonuses-spent">{{ cart.bonuses_spent_total }}</strong> ₽</span>
               </div>
 
-              <div class="cart-summary__row">
+              <div class="cart-summary__row js-cart-delivery-row" {% if not cart.delivery_price %}style="display:none"{% endif %}>
                 <span>Доставка</span>
                 <span><strong id="cart-delivery">{{ cart.delivery_price }}</strong> ₽</span>
               </div>
@@ -437,8 +460,8 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/cart.js' %}?v=20260427-2"></script>
-    <script src="{% static 'js/cart_discount_type.js' %}?v=20260427-1"></script>
+    <script src="{% static 'js/cart.js' %}?v=20260427-3"></script>
+    <script src="{% static 'js/cart_discount_type.js' %}?v=20260427-4"></script>
     <script src="{% static 'js/cart_payment.js' %}?v=20260427-1"></script>
     <script src="{% static 'js/cart_delivery.js' %}?v=20260427-1"></script>
 {% endblock %}

@@ -214,9 +214,24 @@
 }
 
 .cabinet-btn--ghost {
-  background: rgba(255, 255, 255, 0.86);
-  border-color: var(--cabinet-ring);
-  color: var(--cabinet-contrast);
+  min-width: auto;
+  padding: 6px 10px;
+  border-color: transparent;
+  background:
+    linear-gradient(#f3f4f6, #f3f4f6) padding-box,
+    linear-gradient(135deg, #005bff, #0ea5e9) border-box;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.cabinet-btn--ghost:hover {
+  opacity: 1;
+  transform: none;
+  background:
+    linear-gradient(#eef2f7, #eef2f7) padding-box,
+    linear-gradient(135deg, #005bff, #0ea5e9) border-box;
   box-shadow: none;
 }
 

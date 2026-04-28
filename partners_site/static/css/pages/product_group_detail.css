@@ -17,10 +17,18 @@
   padding:18px;
 }
 
-.pdp-gallery{ display:flex; flex-direction:column; gap:12px; }
+.pdp-gallery{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0;
+  max-width:100%;
+}
 
 .pdp-carousel{
   position:relative;
+  width:100%;
+  max-width:100%;
   overflow:hidden;
   border-radius:18px;
   background:#f3f4f6;
@@ -30,10 +38,12 @@
 .pdp-carousel__track{
   display:flex;
   width:100%;
+  max-width:100%;
   transition: transform .22s ease;
 }
 .pdp-carousel__slide{
   flex: 0 0 100%;
+  min-width:0;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -44,6 +54,7 @@
 }
 .pdp-image{
   width:100%;
+  max-width:100%;
   height:auto;
   display:block;
 }

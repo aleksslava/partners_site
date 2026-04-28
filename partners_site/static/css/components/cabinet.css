@@ -651,11 +651,13 @@
   }
 
   .cabinet-overview__kpis {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .cabinet-overview-kpi {
     min-height: 74px;
+    padding: 10px;
   }
 
   .cabinet-panel {

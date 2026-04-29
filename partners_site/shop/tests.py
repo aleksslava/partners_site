@@ -1,10 +1,17 @@
+import tempfile
+from io import BytesIO
+
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
+from PIL import Image as PilImage
 
 from users.models import Customer, User
 
 from .discounts import get_category_discount_limit, get_item_discount_percent
-from .models import Category, CategoryStatusDiscountCap, Product, ProductGroup
+from .models import Category, CategoryStatusDiscountCap, Image, Product, ProductGroup
 
 
 class DiscountResolverTests(TestCase):
@@ -166,3 +173,59 @@ class CatalogAndDetailDiscountTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["discount_percent"], 12)
         self.assertEqual(response.context["discounted_price"], 880)
+
+
+class ProductImageSaveTests(TestCase):
+    def setUp(self):
+        self.media_root = tempfile.TemporaryDirectory()
+        self.override = override_settings(MEDIA_ROOT=self.media_root.name)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.addCleanup(self.media_root.cleanup)
+
+        category = Category.objects.create(name="Category", discount=0)
+        group = ProductGroup.objects.create(name="Group", category=category)
+        self.product = Product.objects.create(
+            name="Product",
+            amo_id=2001,
+            price=100,
+            title="Description",
+            group=group,
+            is_visible=True,
+        )
+
+    @staticmethod
+    def _image_bytes(format_name):
+        output = BytesIO()
+        PilImage.new("RGB", (20, 20), "red").save(output, format=format_name)
+        return output.getvalue()
+
+    def test_uploaded_product_image_is_saved_as_webp(self):
+        image = Image(
+            product=self.product,
+            photo=SimpleUploadedFile(
+                "photo.jpg",
+                self._image_bytes("JPEG"),
+                content_type="image/jpeg",
+            ),
+        )
+
+        image.save()
+
+        self.assertTrue(image.photo.name.endswith(".webp"))
+        with PilImage.open(image.photo.path) as saved_image:
+            self.assertEqual(saved_image.format, "WEBP")
+
+    def test_field_file_save_is_saved_as_webp(self):
+        image = Image(product=self.product, name="photo", title="photo")
+
+        image.photo.save(
+            "photo.png",
+            ContentFile(self._image_bytes("PNG")),
+            save=True,
+        )
+        image.refresh_from_db()
+
+        self.assertTrue(image.photo.name.endswith(".webp"))
+        with PilImage.open(image.photo.path) as saved_image:
+            self.assertEqual(saved_image.format, "WEBP")

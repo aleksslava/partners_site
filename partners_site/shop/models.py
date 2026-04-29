@@ -136,7 +136,6 @@ class Product(models.Model):
 
 class Image(models.Model):
     MAX_IMAGE_SIDE = 1600
-    JPEG_QUALITY = 82
     WEBP_QUALITY = 80
 
     name = models.CharField(max_length=255, verbose_name='\u041d\u0430\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435')
@@ -156,11 +155,29 @@ class Image(models.Model):
         caption = ' '.join(stem.replace('_', ' ').replace('-', ' ').split())
         return (caption or 'image')[:255]
 
+    def _should_optimize_committed_photo(self) -> bool:
+        if not self.pk:
+            return True
+
+        saved_photo_name = (
+            type(self).objects
+            .filter(pk=self.pk)
+            .values_list('photo', flat=True)
+            .first()
+        )
+        return saved_photo_name != self.photo.name
+
     def _optimize_photo_if_needed(self):
-        if not self.photo or getattr(self.photo, '_committed', True):
+        if not self.photo:
             return
 
-        file_name = Path(self.photo.name)
+        source_photo_name = self.photo.name
+        source_is_committed = getattr(self.photo, '_committed', True)
+        if source_is_committed and not self._should_optimize_committed_photo():
+            return
+
+        file_name = Path(source_photo_name)
+        optimized = False
         try:
             self.photo.open('rb')
             with PilImage.open(self.photo) as raw_image:
@@ -174,38 +191,27 @@ class Image(models.Model):
                         PilImage.Resampling.LANCZOS,
                     )
 
-                original_format = (raw_image.format or file_name.suffix.lstrip('.')).upper()
                 output = BytesIO()
-
-                if original_format in {'JPG', 'JPEG'}:
-                    if image.mode not in {'RGB', 'L'}:
-                        image = image.convert('RGB')
-                    image.save(
-                        output,
-                        format='JPEG',
-                        optimize=True,
-                        progressive=True,
-                        quality=self.JPEG_QUALITY,
-                    )
-                    new_suffix = '.jpg'
-                elif original_format == 'PNG':
-                    image.save(output, format='PNG', optimize=True, compress_level=9)
-                    new_suffix = '.png'
-                else:
-                    if image.mode not in {'RGB', 'RGBA'}:
-                        image = image.convert('RGB')
-                    image.save(output, format='WEBP', quality=self.WEBP_QUALITY, method=6)
-                    new_suffix = '.webp'
+                if image.mode not in {'RGB', 'RGBA'}:
+                    image = image.convert('RGB')
+                image.save(output, format='WEBP', quality=self.WEBP_QUALITY, method=6)
 
                 output.seek(0)
-                optimized_name = f"{file_name.stem}{new_suffix}"
+                optimized_name = f"{file_name.stem}.webp"
                 self.photo.save(optimized_name, ContentFile(output.read()), save=False)
+                optimized = True
         except Exception:
             # Fallback: keep original file if optimization failed.
             return
         finally:
             try:
                 self.photo.close()
+            except Exception:
+                pass
+
+        if optimized and source_is_committed and source_photo_name != self.photo.name:
+            try:
+                self.photo.storage.delete(source_photo_name)
             except Exception:
                 pass
 

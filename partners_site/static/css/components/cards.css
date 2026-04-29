@@ -485,14 +485,14 @@
 .product-actions .js-cart-control {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 8px;
 }
 
 .product-actions .cart-control__status {
   min-width: 0;
   color: #358b55;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
 }

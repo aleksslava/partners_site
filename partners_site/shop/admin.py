@@ -61,25 +61,25 @@ class ImageInlineForm(forms.ModelForm):
 
 class ImageInline(admin.TabularInline):
     model = Image
-    extra = 1
+    extra = 0
     form = ImageInlineForm
 
 class VideoInline(admin.TabularInline):
     model = Video
-    extra = 1
+    extra = 0
 
 class ModificationInline(admin.TabularInline):
     model = Product
-    extra = 1
+    extra = 0
     fk_name = 'parent'
 
 class CharacteristicsInline(admin.TabularInline):
     model = Characteristics
-    extra = 3
+    extra = 0
 
 class InstructionInline(admin.TabularInline):
     model = Instruction
-    extra = 1
+    extra = 0
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -92,7 +92,7 @@ class ProductAdmin(admin.ModelAdmin):
 class ProductInline(admin.TabularInline):
     model = Product
     fk_name = 'group'
-    extra = 1
+    extra = 0
     fields = ('name', 'modification_name', 'price', 'is_primary', 'is_visible')
     show_change_link = True
 

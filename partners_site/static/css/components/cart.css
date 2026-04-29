@@ -286,14 +286,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   grid-template-areas:
-    "items bonus"
     "items sidebar";
   gap: 22px;
   align-items: start;
-}
-
-.cart-bonus-choice{
-  grid-area:bonus;
 }
 
 .cart-bonus-segment{
@@ -316,7 +311,6 @@
   .cart-layout{
     grid-template-columns: 1fr;
     grid-template-areas:
-      "bonus"
       "items"
       "sidebar";
   }

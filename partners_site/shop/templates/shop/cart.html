@@ -20,48 +20,6 @@
       <p>Ваша корзина пуста. <a href="/" style="color: blue;">Перейти в каталог</a></p>
     {% else %}
     <div class="cart-layout">
-        <div class="cart-box cart-bonus-choice">
-          <h3 class="cart-box__title">Бонусная система</h3>
-
-          <div class="product-variant product-variant--custom cart-bonus-choice__select js-cart-discount">
-            <select class="product-variant__native js-cart-discount-select">
-              {% for value, label in cart.DiscountType.choices %}
-                {% if value == cart.DiscountType.DISCOUNT or value == cart.DiscountType.BONUSES %}
-                  <option value="{{ value }}" {% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}selected{% endif %}>{{ label }}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-
-            <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
-              <span class="product-variant__label js-cart-discount-label">
-                {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}
-                  {% for value, label in cart.DiscountType.choices %}
-                    {% if value == cart.DiscountType.DISCOUNT %}{{ label }}{% endif %}
-                  {% endfor %}
-                {% else %}
-                  {{ cart.get_discount_type_display }}
-                {% endif %}
-              </span>
-              <span class="product-variant__chevron" aria-hidden="true"></span>
-            </button>
-          </div>
-
-          <div class="cart-bonus-segment js-cart-discount-segment" role="radiogroup" aria-label="Бонусная система">
-            {% for value, label in cart.DiscountType.choices %}
-              {% if value == cart.DiscountType.DISCOUNT or value == cart.DiscountType.BONUSES %}
-                <button
-                  type="button"
-                  class="cart-bonus-segment__button js-cart-discount-option {% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}is-active{% endif %}"
-                  data-discount-type="{{ value }}"
-                  aria-pressed="{% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}true{% else %}false{% endif %}"
-                >
-                  {{ label }}
-                </button>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-
         <div class="cart-items">
             {% for item in cart.items.all %}
                 <div class="cart-item" data-product-id="{{ item.product.id }}">
@@ -146,6 +104,48 @@
         </div>
 
         <aside class="cart-sidebar">
+            <div class="cart-box cart-bonus-choice">
+              <h3 class="cart-box__title">Бонусная система</h3>
+
+              <div class="product-variant product-variant--custom cart-bonus-choice__select js-cart-discount">
+                <select class="product-variant__native js-cart-discount-select">
+                  {% for value, label in cart.DiscountType.choices %}
+                    {% if value == cart.DiscountType.DISCOUNT or value == cart.DiscountType.BONUSES %}
+                      <option value="{{ value }}" {% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}selected{% endif %}>{{ label }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+
+                <button type="button" class="product-variant__button js-cart-discount-button" aria-expanded="false">
+                  <span class="product-variant__label js-cart-discount-label">
+                    {% if cart.discount_type == cart.DiscountType.SEMI_BONUSES %}
+                      {% for value, label in cart.DiscountType.choices %}
+                        {% if value == cart.DiscountType.DISCOUNT %}{{ label }}{% endif %}
+                      {% endfor %}
+                    {% else %}
+                      {{ cart.get_discount_type_display }}
+                    {% endif %}
+                  </span>
+                  <span class="product-variant__chevron" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <div class="cart-bonus-segment js-cart-discount-segment" role="radiogroup" aria-label="Бонусная система">
+                {% for value, label in cart.DiscountType.choices %}
+                  {% if value == cart.DiscountType.DISCOUNT or value == cart.DiscountType.BONUSES %}
+                    <button
+                      type="button"
+                      class="cart-bonus-segment__button js-cart-discount-option {% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}is-active{% endif %}"
+                      data-discount-type="{{ value }}"
+                      aria-pressed="{% if cart.discount_type == value or cart.discount_type == cart.DiscountType.SEMI_BONUSES and value == cart.DiscountType.DISCOUNT %}true{% else %}false{% endif %}"
+                    >
+                      {{ label }}
+                    </button>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+
             <div class="cart-box cart-box--collapsible js-cart-section is-open">
               <button type="button" class="cart-box__toggle js-cart-section-toggle" aria-expanded="true">
                 <span class="cart-box__heading">

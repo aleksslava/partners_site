@@ -93,7 +93,7 @@ class ProductInline(admin.TabularInline):
     model = Product
     fk_name = 'group'
     extra = 1
-    fields = ('name', 'price', 'is_primary', 'is_visible')
+    fields = ('name', 'modification_name', 'price', 'is_primary', 'is_visible')
     show_change_link = True
 
 @admin.register(ProductGroup)

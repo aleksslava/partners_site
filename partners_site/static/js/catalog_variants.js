@@ -73,7 +73,7 @@
       });
     }
 
-    if (ctx.label) ctx.label.textContent = mod.name || '';
+    if (ctx.label) ctx.label.textContent = mod.modification_name || mod.name || '';
   }
 
   function buildPortalOptions(ctx, activeId) {
@@ -83,7 +83,7 @@
       const opt = document.createElement('button');
       opt.type = 'button';
       opt.className = `variant-portal__option${String(mod.id) === String(activeId) ? ' is-active' : ''}`;
-      opt.textContent = mod.name;
+      opt.textContent = mod.modification_name || mod.name || '';
       opt.dataset.value = mod.id;
 
       opt.addEventListener('click', (e) => {

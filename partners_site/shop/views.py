@@ -108,6 +108,7 @@ def catalog_view(request):
             mods_payload.append({
                 "id": m.id,
                 "name": m.name,
+                "modification_name": m.modification_name,
                 "price": m.price,
                 "discount_percent": discount_percent,
                 "discounted_price": calc_discounted(m.price),

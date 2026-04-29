@@ -122,10 +122,18 @@ class CatalogAndDetailDiscountTests(TestCase):
             name="Unrelated group",
             category=self.category,
         )
-        Product.objects.create(
+        matching_product = Product.objects.create(
             name="Searchable Relay",
             amo_id=1002,
             price=1200,
+            title="Description",
+            group=matching_group,
+            is_visible=True,
+        )
+        Product.objects.create(
+            name="Plain Switch",
+            amo_id=1004,
+            price=1400,
             title="Description",
             group=matching_group,
             is_visible=True,
@@ -146,8 +154,11 @@ class CatalogAndDetailDiscountTests(TestCase):
         response = self.client.get(reverse("catalog"), {"q": "relay"})
 
         self.assertEqual(response.status_code, 200)
-        group_ids = [card["group"].id for card in response.context["group_cards"]]
+        cards = response.context["group_cards"]
+        group_ids = [card["group"].id for card in cards]
         self.assertEqual(group_ids, [matching_group.id])
+        self.assertEqual(cards[0]["product"].id, matching_product.id)
+        self.assertEqual([m.id for m in cards[0]["mods"]], [matching_product.id])
 
     def test_product_detail_uses_status_capped_discount(self):
         response = self.client.get(reverse("product_group_detail", args=[self.group.pk]))

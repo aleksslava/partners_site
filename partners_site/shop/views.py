@@ -83,6 +83,9 @@ def catalog_view(request):
     for group in groups:
         # Получаем все модификации группы
         mods = [m for m in group.modifications.all() if m.is_visible]
+        if q:
+            q_norm = q.casefold()
+            mods = [m for m in mods if q_norm in (m.name or "").casefold()]
         if not mods:
             continue
 

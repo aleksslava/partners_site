@@ -128,7 +128,11 @@
               </a>
 
               <div class="product-info">
-                <h2 class="product-name">{{ group.name }}</h2>
+                <h2 class="product-name">
+                  <a href="{% url 'product_group_detail' group.pk %}"
+                     class="product-name__link js-details-link"
+                     data-base-href="{% url 'product_group_detail' group.pk %}">{{ group.name }}</a>
+                </h2>
 
                 <div class="product-prices">
                   <span class="product-price product-price--new js-product-price-discount">
@@ -175,9 +179,6 @@
                   {% endif %}
 
                 <div class="product-actions">
-                  <a href="{% url 'product_group_detail' group.pk %}" class="btn btn-details js-details-link"
-                     data-base-href="{% url 'product_group_detail' group.pk %}">Подробнее</a>
-
                   <div class="cart-control js-cart-control" data-product-id="{{ product.id }}">
                     <button type="button" class="qty-btn js-cart-dec" aria-label="Уменьшить">−</button>
                     <button type="button" class="btn btn-cart js-cart-main">В корзину</button>

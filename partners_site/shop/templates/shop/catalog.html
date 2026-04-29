@@ -101,10 +101,9 @@
               <a href="{% url 'product_group_detail' group.pk %}"
                  class="product-image-wrapper js-details-link"
                  data-base-href="{% url 'product_group_detail' group.pk %}">
-                {% with img=product.images.first %}
-                  {% if img %}
+                  {% if item.image_url %}
                     <img
-                      src="{{ img.photo.url }}"
+                      src="{{ item.image_url }}"
                       alt="{{ product.name }}"
                       class="product-image js-product-image"
                       loading="lazy"
@@ -124,7 +123,6 @@
                       style="display:none;"
                     >
                   {% endif %}
-                {% endwith %}
               </a>
 
               <div class="product-info">

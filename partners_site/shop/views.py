@@ -3,6 +3,7 @@ from pathlib import Path
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
+from django.db.models import Prefetch
 from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import filesizeformat
 from django.template.loader import render_to_string
@@ -11,7 +12,7 @@ import json
 
 from taggit.models import Tag
 
-from shop.models import Product, ProductGroup
+from shop.models import Image, Product, ProductGroup
 from users.models import User
 from .discounts import get_item_discount_percent
 
@@ -48,7 +49,21 @@ def catalog_view(request):
         ProductGroup.objects.filter(modifications__is_visible=True)
         .distinct()
         .select_related('category')
-        .prefetch_related('category__status_caps')
+        .prefetch_related(
+            'category__status_caps',
+            Prefetch(
+                'modifications',
+                queryset=(
+                    Product.objects
+                    .filter(is_visible=True)
+                    .order_by('id')
+                    .prefetch_related(
+                        Prefetch('images', queryset=Image.objects.order_by('id'))
+                    )
+                ),
+                to_attr='visible_modifications',
+            ),
+        )
     )
 
     # Фильтрация по поисковому запросу
@@ -80,9 +95,12 @@ def catalog_view(request):
 
     group_cards = []
 
+    def first_prefetched_image(product):
+        return next(iter(product.images.all()), None)
+
     for group in groups:
         # Получаем все модификации группы
-        mods = [m for m in group.modifications.all() if m.is_visible]
+        mods = list(group.visible_modifications)
         if q:
             q_norm = q.casefold()
             mods = [m for m in mods if q_norm in (m.name or "").casefold()]
@@ -101,7 +119,7 @@ def catalog_view(request):
 
         mods_payload = []
         for m in mods:
-            img = m.images.first()
+            img = first_prefetched_image(m)
             mods_payload.append({
                 "id": m.id,
                 "name": m.name,
@@ -114,9 +132,12 @@ def catalog_view(request):
                 "image_url": img.photo.url if img else "",
             })
 
+        primary_img = first_prefetched_image(primary)
+
         group_cards.append({
             "group": group,
             "product": primary,
+            "image_url": primary_img.photo.url if primary_img else "",
             "mods": mods,  # <- для <select>
             "price": primary.price,
             "discounted_price": calc_discounted(primary.price),

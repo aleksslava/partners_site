@@ -96,7 +96,7 @@
                       data-group-url="{% url 'product_group_detail' group.pk %}">
                 {% for m in mods %}
                   <option value="{{ m.id }}" {% if m.id == product.id %}selected{% endif %}>
-                    {{ m.name }}
+                    {{ m.modification_name }}
                   </option>
                 {% endfor %}
               </select>
@@ -107,7 +107,7 @@
                       aria-haspopup="listbox"
                       aria-expanded="false">
                 <span class="product-variant__label js-pdp-variant-label">
-                  {{ product.name }}
+                  {{ product.modification_name }}
                 </span>
                 <span class="product-variant__chevron" aria-hidden="true"></span>
               </button>

@@ -40,8 +40,10 @@
 
   function setControlState(control, qty) {
     const mainBtn = control.querySelector('.js-cart-main');
+    const status = control.querySelector('.js-cart-status');
     control.classList.toggle('is-active', qty > 0);
-    if (mainBtn) mainBtn.textContent = qty > 0 ? String(qty) : 'В корзину';
+    if (mainBtn) mainBtn.textContent = 'В корзину';
+    if (status) status.textContent = qty > 0 ? `В корзине: ${qty}` : '';
   }
 
   function initCartControls(root) {

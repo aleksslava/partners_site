@@ -7,8 +7,6 @@ from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import filesizeformat
 from django.template.loader import render_to_string
 from django.views.generic import DetailView
-from django.db.models import Q
-from django.db.models.functions import Lower
 import json
 
 from taggit.models import Tag
@@ -26,8 +24,6 @@ from django.shortcuts import render
 from .models import ProductGroup
 
 
-from django.db.models import Q, F
-from django.db.models.functions import Lower
 import json
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -57,12 +53,10 @@ def catalog_view(request):
 
     # Фильтрация по поисковому запросу
     if q:
-        q_norm = q.lower()
-        # Фильтруем по группам и товарам
-        groups = groups.annotate(
-            name_l=Lower("name")
-        ).filter(
-            Q(name_l__contains=q_norm)
+        # Фильтруем по названию видимых товаров в группе
+        groups = groups.filter(
+            modifications__is_visible=True,
+            modifications__name__icontains=q,
         ).distinct()
 
     # Фильтрация по тегам

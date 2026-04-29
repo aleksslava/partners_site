@@ -154,3 +154,115 @@
     });
   });
 })();
+
+(() => {
+  function getCookie(name) {
+    const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return m ? decodeURIComponent(m[2]) : null;
+  }
+
+  async function apiGetQuantities() {
+    const r = await fetch('/api/cart/quantities/', {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    return r.ok ? r.json() : {};
+  }
+
+  async function apiAdd(productId, delta) {
+    const r = await fetch('/api/cart/add/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken') || '',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({ product_id: String(productId), delta: Number(delta) })
+    });
+
+    const ct = r.headers.get('content-type') || '';
+    if (!r.ok) throw new Error('Cart update failed');
+    if (!ct.includes('application/json')) throw new Error('Not JSON (maybe redirected to login)');
+
+    return r.json();
+  }
+
+  function updateCartBadge() {
+    const badge = document.getElementById('cart-badge');
+    if (!badge) return;
+    const total = Object.values(window.__cartQty || {}).reduce((s, v) => s + Number(v), 0);
+    badge.textContent = total;
+    badge.hidden = total === 0;
+  }
+
+  function setControlState(control, qty) {
+    const mainBtn = control.querySelector('.js-cart-main');
+    const status = control.querySelector('.js-cart-status');
+    control.classList.toggle('is-active', qty > 0);
+    if (mainBtn) mainBtn.textContent = 'В корзину';
+    if (status) status.textContent = qty > 0 ? `В корзине: ${qty}` : '';
+  }
+
+  function initCartControl(control) {
+    if (!control || control.dataset.init === '1') return;
+    control.dataset.init = '1';
+
+    const decBtn = control.querySelector('.js-cart-dec');
+    const incBtn = control.querySelector('.js-cart-inc');
+    const mainBtn = control.querySelector('.js-cart-main');
+
+    function currentProductId() {
+      return String(control.dataset.productId || '');
+    }
+
+    async function applyDelta(delta) {
+      const pid = currentProductId();
+      if (!pid) return;
+
+      control.querySelectorAll('button').forEach((button) => {
+        button.disabled = true;
+      });
+
+      try {
+        const res = await apiAdd(pid, delta);
+        const qty = Number(res.qty || 0);
+
+        window.__cartQty = window.__cartQty || {};
+        window.__cartQty[String(pid)] = qty;
+
+        setControlState(control, qty);
+        updateCartBadge();
+      } catch (err) {
+        console.error(err);
+        alert('Не удалось обновить корзину. Возможно, нужно войти в аккаунт.');
+      } finally {
+        control.querySelectorAll('button').forEach((button) => {
+          button.disabled = false;
+        });
+      }
+    }
+
+    if (mainBtn) {
+      mainBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const pid = currentProductId();
+        if (!pid) return;
+
+        const qty = window.__cartQty?.[pid] || 0;
+        applyDelta(qty > 0 ? 0 : 1).catch(console.error);
+      });
+    }
+
+    if (incBtn) incBtn.addEventListener('click', (e) => { e.preventDefault(); applyDelta(1).catch(console.error); });
+    if (decBtn) decBtn.addEventListener('click', (e) => { e.preventDefault(); applyDelta(-1).catch(console.error); });
+
+    const initPid = currentProductId();
+    const initQty = initPid ? (window.__cartQty?.[initPid] || 0) : 0;
+    setControlState(control, initQty);
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    window.__cartQty = await apiGetQuantities();
+    updateCartBadge();
+    document.querySelectorAll('.js-cart-control').forEach(initCartControl);
+  });
+})();

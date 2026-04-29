@@ -67,26 +67,6 @@
       <div class="pdp-info">
         <div class="pdp-card">
           <div class="pdp-subtitle">Выбранная модификация</div>
-          <div class="pdp-modname">{{ product.name }}</div>
-
-          <div class="pdp-price">
-            <span class="pdp-price__new">
-              {% if has_discount %}
-                {{ discounted_price|localize }} ₽
-              {% else %}
-                {{ price|localize }} ₽
-              {% endif %}
-            </span>
-
-            <span class="pdp-price__old-wrap" {% if not has_discount %}style="display:none;"{% endif %}>
-              <span class="pdp-price__discount">-{{ discount_percent }}%</span>
-              <span class="pdp-price__old">{{ price|localize }} ₽</span>
-            </span>
-          </div>
-
-          <div class="pdp-desc">
-            {{ product.title|linebreaksbr }}
-          </div>
 
           <!-- (опционально) переключатель модификаций: можно добавить позже -->
           {% if mods and mods|length > 1 %}
@@ -113,6 +93,34 @@
               </button>
             </div>
           {% endif %}
+
+          <div class="pdp-price">
+            <span class="pdp-price__new">
+              {% if has_discount %}
+                {{ discounted_price|localize }} ₽
+              {% else %}
+                {{ price|localize }} ₽
+              {% endif %}
+            </span>
+
+            <span class="pdp-price__old-wrap" {% if not has_discount %}style="display:none;"{% endif %}>
+              <span class="pdp-price__discount">-{{ discount_percent }}%</span>
+              <span class="pdp-price__old">{{ price|localize }} ₽</span>
+            </span>
+          </div>
+
+          <div class="product-actions">
+            <div class="cart-control js-cart-control" data-product-id="{{ product.id }}">
+              <span class="cart-control__status js-cart-status" aria-live="polite"></span>
+              <button type="button" class="qty-btn js-cart-dec" aria-label="Уменьшить">−</button>
+              <button type="button" class="btn btn-cart js-cart-main">В корзину</button>
+              <button type="button" class="qty-btn js-cart-inc" aria-label="Увеличить">+</button>
+            </div>
+          </div>
+
+          <div class="pdp-desc">
+            {{ product.title|linebreaksbr }}
+          </div>
 
         </div>
 

@@ -106,9 +106,21 @@
 }
 
 .pdp-subtitle{ color: rgba(15,23,42,.55); font-weight:700; font-size:12px; }
-.pdp-modname{ font-weight:900; font-size:20px; color:#0f172a; margin-top:6px; }
+.pdp-subtitle + .pdp-variant{ margin-top:6px; }
 
 .pdp-price{ margin-top:10px; display:flex; align-items:baseline; gap:10px; }
+.pdp-price + .product-actions{
+  margin-top:12px;
+  justify-content:flex-start;
+}
+.pdp-price + .product-actions .js-cart-control{
+  width:auto;
+  justify-content:flex-start;
+}
+.pdp-price + .product-actions .js-cart-control.is-active{
+  grid-template-columns:auto 36px 36px;
+  padding:0;
+}
 .pdp-price__new{ font-size:18px; font-weight:800; color:#0f172a; }
 .pdp-price__old-wrap{
   position: relative;

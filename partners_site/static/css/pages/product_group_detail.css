@@ -118,7 +118,7 @@
   justify-content:flex-start;
 }
 .pdp-price + .product-actions .js-cart-control.is-active{
-  grid-template-columns:auto 36px 36px;
+  grid-template-columns:auto 44px 44px;
   padding:0;
 }
 .pdp-price__new{ font-size:18px; font-weight:800; color:#0f172a; }

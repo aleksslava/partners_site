@@ -93,6 +93,7 @@ class ProductGroup(models.Model):
 # Create your models here.
 class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name='Наименование')
+    modification_name = models.CharField(max_length=255, default='Нет наименования', verbose_name='Наименование модификации')
     amo_id = models.PositiveBigIntegerField(verbose_name='id товара в amocrm')
     price = models.PositiveIntegerField(verbose_name='Цена')
     title = models.TextField(verbose_name='Описание')

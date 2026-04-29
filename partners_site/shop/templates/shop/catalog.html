@@ -3,6 +3,12 @@
 
 {% block title %}Каталог{% endblock %}
 
+{% block extra_css %}
+  {% if group_cards.0.image_url %}
+    <link rel="preload" as="image" href="{{ group_cards.0.image_url }}">
+  {% endif %}
+{% endblock %}
+
 {% block content %}
 <section class="catalog">
   <div class="container">
@@ -106,7 +112,8 @@
                       src="{{ item.image_url }}"
                       alt="{{ product.name }}"
                       class="product-image js-product-image"
-                      loading="lazy"
+                      loading="{% if forloop.counter <= 4 %}eager{% else %}lazy{% endif %}"
+                      {% if forloop.first %}fetchpriority="high"{% endif %}
                       decoding="async"
                       width="520"
                       height="260"

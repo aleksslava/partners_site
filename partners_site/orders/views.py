@@ -120,7 +120,7 @@ def cart_commercial_proposal(request):
         "valid_until": (proposal_date + timedelta(days=14)).strftime("%d.%m.%y"),
         "client_name": None,
         "company_name": "ООО «ХАЙТ ПРО ИНЖИНИРИНГ»",
-        "manager_name": "Отдел продаж\nHiTE PRO",
+        "manager_name": "Отдел продаж HiTE PRO",
         "manager_email": "partners@hite-pro.ru",
         "manager_phone": "+7 (495) 256-33-00",
         "products": products,
@@ -1025,45 +1025,8 @@ def api_cart_checkout(request):
     ]
     OrderItem.objects.bulk_create(order_items)
 
-    # Очищаем корзину после успешного переноса данных в Order/OrderItem.
-    cart.items.all().delete()
-    cart.address = None
-    cart.requisites = None
-    cart.order_discount_percent = 0
-    cart.delivery_service = ""
-    cart.delivery_tariff = ""
-    cart.discount_type = Cart.DiscountType.DISCOUNT
-    cart.status = Cart.Status.ACTIVE
-    cart.delivery_type = Cart.DeliveryType.COURIER
-    cart.delivery_price = 0
-    cart.payment_type = Cart.PaymentType.SBP
-    cart.comment = ""
-    cart.need_help = False
-    cart.items_subtotal = 0
-    cart.discount_total = 0
-    cart.bonuses_spent_total = 0
-    cart.bonuses_append_total = 0
-    cart.total = 0
-    cart.save(update_fields=[
-        "address",
-        "requisites",
-        "order_discount_percent",
-        "delivery_service",
-        "delivery_tariff",
-        "discount_type",
-        "status",
-        "delivery_type",
-        "delivery_price",
-        "payment_type",
-        "comment",
-        "need_help",
-        "items_subtotal",
-        "discount_total",
-        "bonuses_spent_total",
-        "bonuses_append_total",
-        "total",
-        "time_updated",
-    ])
+    cart.status = Cart.Status.CONVERTED
+    cart.save(update_fields=["status", "time_updated"])
     amocrm_client = get_amocrm_client()
     response = amocrm_client.send_lead_to_amo(
         leads_data=create_data_for_lead(order=order, user=cart.user, fields_ids=fields_ids)

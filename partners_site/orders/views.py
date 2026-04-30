@@ -40,12 +40,27 @@ def _compose_delivery_address_text(city: str, street: str, house: str) -> str:
 
 def _get_or_create_cart_address(cart: Cart, user: User) -> Address:
     if cart.address_id:
-        addr = Address.objects.filter(pk=cart.address_id, user=user).first()
-        if addr:
+        addr = Address.objects.filter(pk=cart.address_id).first()
+        if addr and addr.user_id is None:
             return addr
+        if addr and addr.user_id == user.id:
+            draft = Address.objects.create(
+                user=None,
+                city=addr.city,
+                street=addr.street,
+                house=addr.house,
+                label=addr.label,
+                recipient_name=addr.recipient_name,
+                recipient_phone=addr.recipient_phone,
+                delivery_address_text=addr.delivery_address_text,
+                is_default=False,
+            )
+            cart.address = draft
+            cart.save(update_fields=["address", "time_updated"])
+            return draft
 
     addr = Address.objects.create(
-        user=user,
+        user=None,
         city="",
         street="",
         house="",
@@ -663,21 +678,7 @@ def api_cart_delivery_draft(request):
     # Serialize draft/save address requests for the same user to avoid race duplicates.
     User.objects.select_for_update().only("id").get(pk=request.user.pk)
 
-    incoming_label = (data.get("label") or "").strip()
-    addr = None
-    if incoming_label:
-        addr = (
-            Address.objects
-            .filter(user=request.user, label__iexact=incoming_label)
-            .order_by("id")
-            .first()
-        )
-        if addr and cart.address_id != addr.id:
-            cart.address = addr
-            cart.save(update_fields=["address", "time_updated"])
-
-    if not addr:
-        addr = _get_or_create_cart_address(cart, request.user)
+    addr = _get_or_create_cart_address(cart, request.user)
 
     phone = _normalize_phone(data.get("recipient_phone", addr.recipient_phone) or "")
     if phone and not _PHONE_RE.match(phone):
@@ -779,17 +780,43 @@ def api_cart_delivery_save_address(request):
             "time_updated",
         ])
     else:
-        saved_addr = Address.objects.create(
-            user=request.user,
-            label=label,
-            city=city,
-            street=street,
-            house=house,
-            recipient_name=recipient_name,
-            recipient_phone=recipient_phone,
-            delivery_address_text=_compose_delivery_address_text(city, street, house),
-            is_default=False,
+        saved_addr = (
+            Address.objects
+            .filter(pk=cart.address_id, user__isnull=True)
+            .first()
         )
+        if saved_addr:
+            saved_addr.user = request.user
+            saved_addr.label = label
+            saved_addr.city = city
+            saved_addr.street = street
+            saved_addr.house = house
+            saved_addr.recipient_name = recipient_name
+            saved_addr.recipient_phone = recipient_phone
+            saved_addr.delivery_address_text = _compose_delivery_address_text(city, street, house)
+            saved_addr.save(update_fields=[
+                "user",
+                "label",
+                "city",
+                "street",
+                "house",
+                "recipient_name",
+                "recipient_phone",
+                "delivery_address_text",
+                "time_updated",
+            ])
+        else:
+            saved_addr = Address.objects.create(
+                user=request.user,
+                label=label,
+                city=city,
+                street=street,
+                house=house,
+                recipient_name=recipient_name,
+                recipient_phone=recipient_phone,
+                delivery_address_text=_compose_delivery_address_text(city, street, house),
+                is_default=False,
+            )
 
     if cart.address_id != saved_addr.id:
         cart.address = saved_addr

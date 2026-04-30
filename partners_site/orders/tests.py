@@ -1,10 +1,105 @@
+import json
+
 from django.test import TestCase
 
-from users.models import Customer, User
+from users.models import Address, Customer, User
 from shop.models import Category, CategoryStatusDiscountCap, Product, ProductGroup
 
 from .models import Cart, CartItem
 from .services import recalculate_cart
+
+
+class CartDeliveryAddressPersistenceTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="delivery_partner",
+            password="secret",
+        )
+        self.client.force_login(self.user)
+
+    def test_draft_address_is_attached_to_cart_not_user(self):
+        response = self.client.post(
+            "/api/cart/delivery/draft/",
+            data=json.dumps({
+                "label": "Office",
+                "city": "Moscow",
+                "street": "Tverskaya",
+                "house": "1",
+                "recipient_name": "Ivan Ivanov",
+                "recipient_phone": "+79991234567",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        cart = Cart.objects.get(user=self.user, status=Cart.Status.ACTIVE)
+        self.assertIsNotNone(cart.address_id)
+        self.assertIsNone(cart.address.user_id)
+        self.assertEqual(self.user.addresses.count(), 0)
+
+    def test_save_address_with_label_attaches_address_to_user_and_cart(self):
+        draft_response = self.client.post(
+            "/api/cart/delivery/draft/",
+            data=json.dumps({
+                "city": "Moscow",
+                "street": "Tverskaya",
+                "house": "1",
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(draft_response.status_code, 200)
+        cart = Cart.objects.get(user=self.user, status=Cart.Status.ACTIVE)
+        draft_address_id = cart.address_id
+
+        response = self.client.post(
+            "/api/cart/delivery/save-address/",
+            data=json.dumps({
+                "label": "Office",
+                "city": "Moscow",
+                "street": "Tverskaya",
+                "house": "1",
+                "recipient_name": "Ivan Ivanov",
+                "recipient_phone": "+79991234567",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        cart.refresh_from_db()
+        address = Address.objects.get(pk=draft_address_id)
+        self.assertEqual(cart.address_id, address.id)
+        self.assertEqual(address.user_id, self.user.id)
+        self.assertEqual(address.label, "Office")
+        self.assertEqual(self.user.addresses.count(), 1)
+
+    def test_draft_does_not_update_saved_address_with_same_label(self):
+        saved_address = Address.objects.create(
+            user=self.user,
+            label="Office",
+            city="Moscow",
+            street="Old street",
+            house="1",
+        )
+
+        response = self.client.post(
+            "/api/cart/delivery/draft/",
+            data=json.dumps({
+                "label": "Office",
+                "city": "Moscow",
+                "street": "New street",
+                "house": "2",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        saved_address.refresh_from_db()
+        cart = Cart.objects.get(user=self.user, status=Cart.Status.ACTIVE)
+        self.assertNotEqual(cart.address_id, saved_address.id)
+        self.assertIsNone(cart.address.user_id)
+        self.assertEqual(saved_address.street, "Old street")
+        self.assertEqual(saved_address.house, "1")
+        self.assertEqual(self.user.addresses.count(), 1)
 
 
 class RecalculateCartStatusCappedDiscountTests(TestCase):

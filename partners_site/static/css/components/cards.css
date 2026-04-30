@@ -529,7 +529,7 @@
 .product-actions .js-cart-control.is-active .js-cart-dec,
 .product-actions .js-cart-control.is-active .js-cart-inc {
   width: 44px;
-  height: 36px;
+  height: 34px;
   border: 2px solid transparent;
   background:
     linear-gradient(#fff, #fff) padding-box,

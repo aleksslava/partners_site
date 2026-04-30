@@ -41,8 +41,10 @@ fields_ids = {
         'appeal_type_field_id': 961948,
         'lead_target_field_id': 1103658,
         'need_manager_checkbox': 1105727,
+        'total_spent_bonus': 1105036,
     }
 }
+
 
 class CustomFiedsData:
     def __init__(self, order: Order, fields_id: dict):
@@ -181,6 +183,15 @@ class CustomFiedsData:
                  }
         return data
 
+    def get_bonus_spent(self):
+        total_bonus_spent_field_id = self.custom_fields.get('total_bonus_spent')
+        bonusses = self.order.bonuses_spent_total
+        data = {"field_id": total_bonus_spent_field_id,
+                "values": [
+                    {'value': bonusses}
+                ]
+                }
+
     def get_custom_fields_data(self):
         custom_fields_data = []
         if self.order.requisites is not None:
@@ -196,6 +207,7 @@ class CustomFiedsData:
         custom_fields_data.append(self.get_appeal_type())
         custom_fields_data.append(self.get_lead_target_data())
         custom_fields_data.append(self.get_need_manager_data())
+        custom_fields_data.append(self.get_bonus_spent())
         return custom_fields_data
 
     def get_lead_tags(self):

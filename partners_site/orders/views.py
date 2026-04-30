@@ -120,7 +120,7 @@ def cart_commercial_proposal(request):
         "valid_until": (proposal_date + timedelta(days=14)).strftime("%d.%m.%y"),
         "client_name": None,
         "company_name": "ООО «ХАЙТ ПРО ИНЖИНИРИНГ»",
-        "manager_name": "ООО «ХАЙТ ПРО",
+        "manager_name": "ООО «ХАЙТ ПРО ИНЖИНИРИНГ",
         "manager_email": "partners@hite-pro.ru",
         "manager_phone": "+7 (495) 256-33-00",
         "products": products,

@@ -269,7 +269,7 @@ def create_note_for_lead(order: Order, order_items: list[OrderItem]):
     text = 'Заказ с сайта партнёров:\n\n'
     text += 'Состав заказа:\n'
     for order_item in order_items:
-        text += f'{order_item.product.name} - {order_item.qty}шт. по {order_item.current_unit_price_discounted} руб. - {order_item.bonuses_spent} бонусов списано = сумма {order_item.line_total}\n'
+        text += f'{order_item.product.name} - {order_item.qty}шт. по {order_item.current_unit_price_discounted} руб. - {order_item.bonuses_spent} бонусов списано = сумма {order_item.line_total}, Скидка на позицию - {order_item.discount_percent}%\n'
 
     text += f'Итого: {order.total}\n\n'
     text += f'Тип оплаты: {order.get_payment_type_display()}\n'

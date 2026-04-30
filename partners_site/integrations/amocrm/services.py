@@ -191,6 +191,7 @@ class CustomFiedsData:
                     {'value': bonusses}
                 ]
                 }
+        return data
 
     def get_custom_fields_data(self):
         custom_fields_data = []

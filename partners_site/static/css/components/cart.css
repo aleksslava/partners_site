@@ -286,6 +286,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
   grid-template-areas:
+    "items bonus"
     "items sidebar";
   gap: 22px;
   align-items: start;
@@ -297,6 +298,10 @@
 
 .cart-items{
   grid-area:items;
+}
+
+.cart-bonus-choice{
+  grid-area:bonus;
 }
 
 .cart-sidebar{
@@ -311,6 +316,7 @@
   .cart-layout{
     grid-template-columns: 1fr;
     grid-template-areas:
+      "bonus"
       "items"
       "sidebar";
   }
@@ -770,18 +776,6 @@
 @media (max-width: 640px), (max-aspect-ratio: 4/5){
   .cart-sidebar{
     gap:10px;
-  }
-
-  .cart-bonus-choice{
-    order:1;
-  }
-
-  .cart-items{
-    order:2;
-  }
-
-  .cart-sidebar{
-    order:3;
   }
 
   .cart-box{

@@ -184,7 +184,7 @@ class CustomFiedsData:
         return data
 
     def get_bonus_spent(self):
-        total_bonus_spent_field_id = self.custom_fields.get('total_bonus_spent')
+        total_bonus_spent_field_id = self.custom_fields.get('total_spent_bonus')
         bonusses = self.order.bonuses_spent_total
         data = {"field_id": total_bonus_spent_field_id,
                 "values": [

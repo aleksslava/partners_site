@@ -44,10 +44,6 @@ def get_external_identity(request) -> tuple[str, int] | None:
     if telegram_id is not None:
         return "telegram_id", telegram_id
 
-    max_id = parse_external_id(request.GET.get("max_id"))
-    if max_id is not None:
-        return "max_id", max_id
-
     return None
 
 

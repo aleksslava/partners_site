@@ -189,6 +189,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOG_LEVEL = env("DJANGO_LOG_LEVEL", default="INFO").upper()
 
+MAX_BOT_TOKEN = env("MAX_BOT_TOKEN", default="")
+MAX_INIT_DATA_MAX_AGE_SECONDS = env.int("MAX_INIT_DATA_MAX_AGE_SECONDS", default=86400)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

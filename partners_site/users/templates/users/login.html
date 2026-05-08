@@ -40,7 +40,6 @@
         {% if request.GET.next %}
           <input type="hidden" name="next" value="{{ request.GET.next }}">
         {% endif %}
-        <input type="hidden" name="max_init_data" value="">
       </form>
     </div>
   </div>
@@ -53,7 +52,7 @@
 <script>
   (function () {
     const params = new URLSearchParams(window.location.search);
-    if (params.has("telegram_id")) {
+    if (params.has("telegram_id") || params.has("max_id")) {
       return;
     }
 
@@ -82,12 +81,11 @@
       return;
     }
 
-    const maxInitData = window.WebApp?.initData;
-    const authForm = document.querySelector(".auth-form");
-    const maxInitDataInput = authForm?.querySelector('input[name="max_init_data"]');
-    if (maxInitData && authForm && maxInitDataInput) {
-      maxInitDataInput.value = maxInitData;
-      authForm.submit();
+    const maxId = toPositiveInt(
+      window.WebApp?.initDataUnsafe?.user?.id ?? window.WebApp?.WebAppData?.user?.id
+    );
+    if (maxId) {
+      redirectWithId("max_id", maxId);
     }
   })();
 </script>

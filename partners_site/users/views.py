@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import update_session_auth_hash
@@ -22,7 +21,6 @@ from users.services.amocrm_login import (
     resolve_user_via_amocrm,
 )
 from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
-from users.services.max_auth import MaxInitDataError, get_max_id_from_init_data
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +30,24 @@ class UserLoginView(LoginView):
     redirect_authenticated_user = True
     auth_exec_param = "auth_exec"
 
-    def authenticate_external_identity(self, request, field_name: str, field_value: int):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(self.get_success_url())
+
+        identity = get_external_identity(request)
+        if identity is None:
+            return super().get(request, *args, **kwargs)
+
+        if request.GET.get(self.auth_exec_param) != "1":
+            auth_query_params = request.GET.copy()
+            auth_query_params[self.auth_exec_param] = "1"
+            return render(
+                request,
+                "users/login_loading.html",
+                {"auth_redirect_url": f"{request.path}?{auth_query_params.urlencode()}"},
+            )
+
+        field_name, field_value = identity
         user = get_local_user_by_external_identity(field_name=field_name, field_value=field_value)
 
         if user is None:
@@ -66,46 +81,6 @@ class UserLoginView(LoginView):
 
         auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         return redirect(self.get_success_url())
-
-    def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect(self.get_success_url())
-
-        identity = get_external_identity(request)
-        if identity is None:
-            return super().get(request, *args, **kwargs)
-
-        if request.GET.get(self.auth_exec_param) != "1":
-            auth_query_params = request.GET.copy()
-            auth_query_params[self.auth_exec_param] = "1"
-            return render(
-                request,
-                "users/login_loading.html",
-                {"auth_redirect_url": f"{request.path}?{auth_query_params.urlencode()}"},
-            )
-
-        return self.authenticate_external_identity(request, *identity)
-
-    def post(self, request, *args, **kwargs):
-        max_init_data = request.POST.get("max_init_data")
-        if not max_init_data:
-            return super().post(request, *args, **kwargs)
-
-        try:
-            max_id = get_max_id_from_init_data(
-                max_init_data,
-                bot_token=settings.MAX_BOT_TOKEN,
-                max_age_seconds=settings.MAX_INIT_DATA_MAX_AGE_SECONDS,
-            )
-        except MaxInitDataError:
-            logger.exception("MAX initData validation failed")
-            return render(
-                request,
-                "shop/error.html",
-                {"error_message": "Не удалось подтвердить данные MAX, откройте сайт из мини-приложения MAX"},
-            )
-
-        return self.authenticate_external_identity(request, "max_id", max_id)
 
 
 @require_http_methods(["GET", "POST"])

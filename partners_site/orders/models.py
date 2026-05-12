@@ -61,7 +61,7 @@ class Cart(models.Model):
     discount_type = models.CharField(choices=DiscountType.choices, default=DiscountType.DISCOUNT, max_length=20)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
 
-    delivery_type = models.CharField(max_length=20, choices=DeliveryType.choices, default=DeliveryType.COURIER)
+    delivery_type = models.CharField(max_length=20, choices=DeliveryType.choices, default=DeliveryType.SELF_PICKUP)
     delivery_price = models.PositiveIntegerField(default=0, verbose_name="Цена доставки")
 
     payment_type = models.CharField(max_length=20, choices=PaymentType.choices, default=PaymentType.SBP)

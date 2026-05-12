@@ -285,8 +285,13 @@ def create_note_for_lead(order: Order, order_items: list[OrderItem]):
 
     text += f'Что делать с бонусами: {order.get_discount_type_display()}\n'
 
+    try:
+        delivery_adress = order.address.delivery_address_text
+    except:
+        delivery_adress = ''
+
     text += (f'Тип доставки: {order.get_delivery_type_display()}\n'
-             f'Адрес доставки: {order.address.delivery_address_text}')
+             f'Адрес доставки: {delivery_adress}')
 
     return text
 

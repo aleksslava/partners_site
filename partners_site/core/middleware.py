@@ -24,7 +24,7 @@ class LoginRequiredMiddleware:
             return self.get_response(request)
 
         # Разрешаем страницы входа/выхода
-        if path == settings.LOGIN_URL or path == "/logout/":
+        if path == settings.LOGIN_URL or path == "/login/diagnostics/" or path == "/logout/":
             return self.get_response(request)
 
         # Если пользователь уже авторизован — пускаем

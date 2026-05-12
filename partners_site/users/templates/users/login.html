@@ -49,6 +49,8 @@
 {% block extra_js %}
 <script>
   (function () {
+    const startedAt = window.performance?.now?.() ?? Date.now();
+    const diagnosticsUrl = "{% url 'users:login_diagnostics' %}";
     const params = new URLSearchParams(window.location.search);
     if (params.has("telegram_id") || params.has("max_id")) {
       return;
@@ -62,6 +64,36 @@
       return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
     };
 
+    const elapsedMs = () => {
+      const now = window.performance?.now?.() ?? Date.now();
+      return Math.round(now - startedAt);
+    };
+
+    const reportDiagnostic = (event, details) => {
+      const data = new FormData();
+      data.set("csrfmiddlewaretoken", "{{ csrf_token }}");
+      data.set("event", event);
+      data.set("elapsed_ms", String(elapsedMs()));
+      data.set("path", `${window.location.pathname}${window.location.search}`);
+
+      Object.entries(details || {}).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          data.set(key, String(value));
+        }
+      });
+
+      if (navigator.sendBeacon && navigator.sendBeacon(diagnosticsUrl, data)) {
+        return;
+      }
+
+      fetch(diagnosticsUrl, {
+        method: "POST",
+        body: data,
+        credentials: "same-origin",
+        keepalive: true,
+      }).catch(() => {});
+    };
+
     const redirectWithId = (field, value) => {
       const next = params.get("next");
       const targetParams = new URLSearchParams();
@@ -72,6 +104,10 @@
 
       const targetUrl = `${window.location.pathname}?${targetParams.toString()}`;
       if (targetUrl !== window.location.href) {
+        reportDiagnostic(`${field}_detected`, {
+          identity_field: field,
+          identity_value: value,
+        });
         redirected = true;
         window.location.replace(targetUrl);
       }
@@ -99,31 +135,39 @@
       return false;
     };
 
-    const loadSdk = (src) => {
+    const loadSdk = (sdk, src) => {
+      reportDiagnostic("sdk_load_start", {sdk: sdk});
+
       return new Promise((resolve) => {
         const script = document.createElement("script");
         let finished = false;
 
-        const finish = () => {
+        const finish = (status) => {
           if (finished) {
             return;
           }
           finished = true;
           window.clearTimeout(timer);
+          reportDiagnostic("sdk_load_finish", {
+            sdk: sdk,
+            status: status,
+          });
           resolve();
         };
 
-        const timer = window.setTimeout(finish, sdkTimeoutMs);
+        const timer = window.setTimeout(() => finish("timeout"), sdkTimeoutMs);
         script.src = src;
         script.async = true;
         script.onload = () => {
-          finish();
+          finish("loaded");
           tryRedirect();
         };
-        script.onerror = finish;
+        script.onerror = () => finish("error");
         document.head.appendChild(script);
       });
     };
+
+    reportDiagnostic("login_page_loaded");
 
     const watchTimer = window.setInterval(() => {
       if (tryRedirect()) {
@@ -133,8 +177,8 @@
     window.setTimeout(() => window.clearInterval(watchTimer), sdkTimeoutMs);
 
     tryRedirect();
-    loadSdk("https://st.max.ru/js/max-web-app.js").then(tryRedirect);
-    loadSdk("https://telegram.org/js/telegram-web-app.js?61").then(tryRedirect);
+    loadSdk("max", "https://st.max.ru/js/max-web-app.js").then(tryRedirect);
+    loadSdk("telegram", "https://telegram.org/js/telegram-web-app.js?61").then(tryRedirect);
   })();
 </script>
 {% endblock %}

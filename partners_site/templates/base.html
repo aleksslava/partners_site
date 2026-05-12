@@ -8,7 +8,7 @@
     <title>{% block title %}HiTE PRO{% endblock %}</title>
 
     <link rel="icon" href="{% static 'img/favicon.jpg' %}?v=20260406-1" type="image/jpeg">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=20260430-2">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=20260512-1">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -28,7 +28,7 @@
                 <li><a href="{% url 'users:user_cabinet' %}" class="nav-item">Личный кабинет</a></li>
                 <li class="cart-nav-item">
                     <a href="{% url 'cart' %}" class="nav-item">Корзина</a>
-                    <span class="cart-badge" id="cart-badge" hidden>0</span>
+                    <span class="cart-badge js-cart-badge" id="cart-badge" hidden>0</span>
                 </li>
 
                 <li>
@@ -44,6 +44,15 @@
             </ul>
         </nav>
 
+
+        <a href="{% url 'cart' %}" class="header-mobile-cart" aria-label="Корзина">
+            <svg class="header-mobile-cart__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="8" cy="21" r="1"></circle>
+                <circle cx="19" cy="21" r="1"></circle>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h8.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+            </svg>
+            <span class="cart-badge js-cart-badge header-mobile-cart__badge" hidden>0</span>
+        </a>
 
         <!-- ВАЖНО: id="mobileMenuToggle" -->
         <button type="button" class="mobile-toggle" id="mobileMenuToggle" aria-label="Open menu">
@@ -65,7 +74,6 @@
         <nav class="mobile-menu__nav">
             <a href="{% url 'catalog' %}">Каталог</a>
             <a href="{% url 'users:user_cabinet' %}">Личный кабинет</a>
-            <a href="{% url 'cart' %}">Корзина</a>
         </nav>
     </div>
 </div>

@@ -63,15 +63,54 @@ header {
     background: currentColor;
 }
 
+.header-mobile-cart {
+    display: none;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.header-mobile-cart__icon {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 @media (max-width: 768px) {
     .header-nav {
         display: none;
     }
-    .mobile-toggle {
+    .header-mobile-cart {
         display: inline-flex;
         margin-left: auto;
         position: relative;
         z-index: 2;
+    }
+    .mobile-toggle {
+        display: inline-flex;
+        margin-left: 8px;
+        position: relative;
+        z-index: 2;
+    }
+
+    html.is-telegram-mobile .header-mobile-cart {
+        position: fixed;
+        top: calc(72px + env(safe-area-inset-top, 0px) + 10px);
+        right: 60px;
+        margin-left: 0;
+        border-radius: 50%;
+        background: var(--color-dark);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.32);
+        z-index: 70;
     }
 
     html.is-telegram-mobile .mobile-toggle {
@@ -184,4 +223,9 @@ nav a:hover,
   text-align: center;
   border-radius: 9px;
   pointer-events: none;
+}
+
+.header-mobile-cart__badge {
+  top: -4px;
+  right: -4px;
 }

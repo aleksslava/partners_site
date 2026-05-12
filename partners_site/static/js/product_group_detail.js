@@ -187,11 +187,13 @@
   }
 
   function updateCartBadge() {
-    const badge = document.getElementById('cart-badge');
-    if (!badge) return;
+    const badges = document.querySelectorAll('.js-cart-badge');
+    if (!badges.length) return;
     const total = Object.values(window.__cartQty || {}).reduce((s, v) => s + Number(v), 0);
-    badge.textContent = total;
-    badge.hidden = total === 0;
+    badges.forEach((badge) => {
+      badge.textContent = total;
+      badge.hidden = total === 0;
+    });
   }
 
   function setControlState(control, qty) {

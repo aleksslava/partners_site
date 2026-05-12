@@ -31,19 +31,21 @@
   }
 
   function updateCartBadge() {
-    const badge = document.getElementById('cart-badge');
-    if (!badge) return;
+    const badges = document.querySelectorAll('.js-cart-badge');
+    if (!badges.length) return;
     const total = Object.values(window.__cartQty || {}).reduce((s, v) => s + Number(v), 0);
-    badge.textContent = total;
-    badge.hidden = total === 0;
+    badges.forEach((badge) => {
+      badge.textContent = total;
+      badge.hidden = total === 0;
+    });
   }
 
   function setControlState(control, qty) {
     const mainBtn = control.querySelector('.js-cart-main');
     const status = control.querySelector('.js-cart-status');
     control.classList.toggle('is-active', qty > 0);
-    if (mainBtn) mainBtn.textContent = 'В корзину';
-    if (status) status.textContent = qty > 0 ? `В корзине: ${qty}` : '';
+    if (mainBtn) mainBtn.textContent = 'В корзине';
+    if (status) status.textContent = qty > 0 ? `В корзину: ${qty}` : '';
   }
 
   function initCartControls(root) {

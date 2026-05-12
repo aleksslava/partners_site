@@ -47,14 +47,15 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://telegram.org/js/telegram-web-app.js?61"></script>
-<script src="https://st.max.ru/js/max-web-app.js"></script>
 <script>
   (function () {
     const params = new URLSearchParams(window.location.search);
     if (params.has("telegram_id") || params.has("max_id")) {
       return;
     }
+
+    const sdkTimeoutMs = 4000;
+    let redirected = false;
 
     const toPositiveInt = (value) => {
       const parsed = Number(value);
@@ -71,22 +72,69 @@
 
       const targetUrl = `${window.location.pathname}?${targetParams.toString()}`;
       if (targetUrl !== window.location.href) {
+        redirected = true;
         window.location.replace(targetUrl);
       }
     };
 
-    const telegramId = toPositiveInt(window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
-    if (telegramId) {
-      redirectWithId("telegram_id", telegramId);
-      return;
-    }
+    const tryRedirect = () => {
+      if (redirected) {
+        return true;
+      }
 
-    const maxId = toPositiveInt(
-      window.WebApp?.initDataUnsafe?.user?.id ?? window.WebApp?.WebAppData?.user?.id
-    );
-    if (maxId) {
-      redirectWithId("max_id", maxId);
-    }
+      const telegramId = toPositiveInt(window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
+      if (telegramId) {
+        redirectWithId("telegram_id", telegramId);
+        return true;
+      }
+
+      const maxId = toPositiveInt(
+        window.WebApp?.initDataUnsafe?.user?.id ?? window.WebApp?.WebAppData?.user?.id
+      );
+      if (maxId) {
+        redirectWithId("max_id", maxId);
+        return true;
+      }
+
+      return false;
+    };
+
+    const loadSdk = (src) => {
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        let finished = false;
+
+        const finish = () => {
+          if (finished) {
+            return;
+          }
+          finished = true;
+          window.clearTimeout(timer);
+          resolve();
+        };
+
+        const timer = window.setTimeout(finish, sdkTimeoutMs);
+        script.src = src;
+        script.async = true;
+        script.onload = () => {
+          finish();
+          tryRedirect();
+        };
+        script.onerror = finish;
+        document.head.appendChild(script);
+      });
+    };
+
+    const watchTimer = window.setInterval(() => {
+      if (tryRedirect()) {
+        window.clearInterval(watchTimer);
+      }
+    }, 100);
+    window.setTimeout(() => window.clearInterval(watchTimer), sdkTimeoutMs);
+
+    tryRedirect();
+    loadSdk("https://st.max.ru/js/max-web-app.js").then(tryRedirect);
+    loadSdk("https://telegram.org/js/telegram-web-app.js?61").then(tryRedirect);
   })();
 </script>
 {% endblock %}

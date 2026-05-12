@@ -6,9 +6,9 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.db.models import Sum
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_http_methods
 
 from integrations.amocrm.exceptions import AmoCRMError, ContactCustomerBindingError
 from orders.models import Cart, Order
@@ -23,10 +23,6 @@ from users.services.amocrm_login import (
 from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
 
 logger = logging.getLogger(__name__)
-
-
-def _trim_diagnostic_value(value, limit=255):
-    return str(value or "")[:limit]
 
 
 class UserLoginView(LoginView):
@@ -85,23 +81,6 @@ class UserLoginView(LoginView):
 
         auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
         return redirect(self.get_success_url())
-
-
-@require_POST
-def login_diagnostics_view(request):
-    logger.info(
-        "login diagnostics event=%s elapsed_ms=%s sdk=%s status=%s identity_field=%s identity_value=%s path=%s referrer=%s ua=%s",
-        _trim_diagnostic_value(request.POST.get("event"), 80),
-        _trim_diagnostic_value(request.POST.get("elapsed_ms"), 20),
-        _trim_diagnostic_value(request.POST.get("sdk"), 40),
-        _trim_diagnostic_value(request.POST.get("status"), 40),
-        _trim_diagnostic_value(request.POST.get("identity_field"), 40),
-        _trim_diagnostic_value(request.POST.get("identity_value"), 80),
-        _trim_diagnostic_value(request.POST.get("path"), 255),
-        _trim_diagnostic_value(request.META.get("HTTP_REFERER"), 255),
-        _trim_diagnostic_value(request.META.get("HTTP_USER_AGENT"), 255),
-    )
-    return JsonResponse({"success": True})
 
 
 @require_http_methods(["GET", "POST"])

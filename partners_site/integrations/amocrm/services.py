@@ -94,11 +94,15 @@ class CustomFiedsData:
         return data
 
     def get_delivery_adress_data(self):
+        try:
+            adress = self.order.address.delivery_address_text
+        except:
+            adress = ''
         data = {"field_id": self.custom_fields.get('delivery_adress'),  # Поле адрес доставки
                  "values": [
                      {'enum_code': 'address_line_1',
                       'enum_id': 1,
-                      'value': self.order.address.delivery_address_text}
+                      'value': adress}
                  ]
                  }
         return data

@@ -197,10 +197,16 @@ LOGGING = {
             "format": "%(asctime)s %(levelname)s [%(name)s] %(message)s",
         },
     },
+    "filters": {
+        "clean_disallowed_host": {
+            "()": "partners_site.logging_filters.CleanDisallowedHostFilter",
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "standard",
+            "filters": ["clean_disallowed_host"],
         },
     },
     "root": {

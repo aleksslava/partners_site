@@ -278,14 +278,20 @@ def create_note_for_lead(order: Order, order_items: list[OrderItem]):
     text += f'Итого: {order.total}\n\n'
     text += f'Тип оплаты: {order.get_payment_type_display()}\n'
     if order.payment_type == 'invoice':
-        inn = order.requisites.inn if order.requisites.inn is not None else 'Не заполнен'
-        legal_address = order.requisites.legal_address if order.requisites.legal_address is not None else 'Не заполнен'
-        bik = order.requisites.bik if order.requisites.bik is not None else 'Не заполнен'
-        settlement_account = order.requisites.settlement_account if order.requisites.settlement_account is not None else 'Не заполнен'
-        text += (f'Инн: {inn}\n'
-                 f'Адрес: {legal_address}\n'
-                 f'Бик: {bik}\n'
-                 f'Р\с: {settlement_account}\n\n')
+        try:
+            inn = order.requisites.inn if order.requisites.inn is not None else 'Не заполнен'
+            legal_address = order.requisites.legal_address if order.requisites.legal_address is not None else 'Не заполнен'
+            bik = order.requisites.bik if order.requisites.bik is not None else 'Не заполнен'
+            settlement_account = order.requisites.settlement_account if order.requisites.settlement_account is not None else 'Не заполнен'
+            text += (f'Инн: {inn}\n'
+                     f'Адрес: {legal_address}\n'
+                     f'Бик: {bik}\n'
+                     f'Р\с: {settlement_account}\n\n')
+        except:
+            text += (f'Инн: Не заполнен\n'
+                     f'Адрес: Не заполнен\n'
+                     f'Бик: Не заполнен\n'
+                     f'Р\с: Не заполнен\n\n')
 
     text += f'Что делать с бонусами: {order.get_discount_type_display()}\n'
 

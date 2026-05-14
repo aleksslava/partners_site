@@ -44,8 +44,8 @@
     const mainBtn = control.querySelector('.js-cart-main');
     const status = control.querySelector('.js-cart-status');
     control.classList.toggle('is-active', qty > 0);
-    if (mainBtn) mainBtn.textContent = 'В корзине';
-    if (status) status.textContent = qty > 0 ? `В корзину: ${qty}` : '';
+    if (mainBtn) mainBtn.textContent = 'В корзину';
+    if (status) status.textContent = qty > 0 ? `В корзине: ${qty}` : '';
   }
 
   function initCartControls(root) {

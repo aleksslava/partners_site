@@ -250,7 +250,7 @@
                 <span class="cart-box__heading">
                   <span class="cart-box__title">Доставка</span>
                   <span class="cart-box__summary js-cart-section-summary" data-summary-source=".js-cart-delivery-label">
-                    {{ cart.get_delivery_type_display }}
+                    {% if cart.delivery_type == cart.DeliveryType.COURIER %}Пункт выдачи{% else %}{{ cart.get_delivery_type_display }}{% endif %}
                   </span>
                 </span>
                 <span class="cart-box__chevron" aria-hidden="true"></span>
@@ -260,15 +260,17 @@
                 <div class="product-variant product-variant--custom js-cart-delivery">
                   <select class="product-variant__native js-cart-delivery-select">
                     {% for value, label in cart.DeliveryType.choices %}
-                      <option value="{{ value }}" {% if cart.delivery_type == value %}selected{% endif %}>
-                        {{ label }}
-                      </option>
+                      {% if value != cart.DeliveryType.COURIER %}
+                        <option value="{{ value }}" {% if cart.delivery_type == value or cart.delivery_type == cart.DeliveryType.COURIER and value == cart.DeliveryType.PICKUP_POINT %}selected{% endif %}>
+                          {{ label }}
+                        </option>
+                      {% endif %}
                     {% endfor %}
                   </select>
 
                   <button type="button" class="product-variant__button js-cart-delivery-button" aria-expanded="false">
                     <span class="product-variant__label js-cart-delivery-label">
-                      {{ cart.get_delivery_type_display }}
+                      {% if cart.delivery_type == cart.DeliveryType.COURIER %}Пункт выдачи{% else %}{{ cart.get_delivery_type_display }}{% endif %}
                     </span>
                     <span class="product-variant__chevron" aria-hidden="true"></span>
                   </button>
@@ -283,7 +285,7 @@
                 </div>
               </div>
 
-              {# Курьер/ПВЗ: ручной ввод #}
+              {# ПВЗ: ручной ввод #}
               <div class="cart-delivery-extra js-manual-delivery"
                    {% if cart.delivery_type == cart.DeliveryType.SELF_PICKUP %}style="display:none"{% endif %}>
 
@@ -369,7 +371,7 @@
                     value="{{ cart.bonuses_spent_total|default:0|unlocalize }}"
                     placeholder="0"
                   >
-                  <div class="cart-field__hint">Можно списать {{ bonus_spend_limit }} из {{ customer.bonuses }} бонусов</div>
+                  <div class="cart-field__hint js-bonuses-spend-hint" data-customer-bonuses="{{ customer.bonuses|unlocalize }}">Можно списать {{ bonus_spend_limit }} из {{ customer.bonuses }} бонусов</div>
                 </div>
               </div>
             </div>
@@ -460,8 +462,8 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/cart.js' %}?v=20260427-3"></script>
-    <script src="{% static 'js/cart_discount_type.js' %}?v=20260427-4"></script>
+    <script src="{% static 'js/cart.js' %}?v=20260515-1"></script>
+    <script src="{% static 'js/cart_discount_type.js' %}?v=20260515-1"></script>
     <script src="{% static 'js/cart_payment.js' %}?v=20260427-1"></script>
     <script src="{% static 'js/cart_delivery.js' %}?v=20260427-1"></script>
 {% endblock %}

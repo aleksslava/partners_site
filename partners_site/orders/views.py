@@ -74,6 +74,17 @@ def _get_or_create_cart_address(cart: Cart, user: User) -> Address:
     cart.save(update_fields=["address", "time_updated"])
     return addr
 
+
+def _get_customer_bonuses(user: User) -> int:
+    customer = getattr(user, "customer", None)
+    return max(int(getattr(customer, "bonuses", 0) or 0), 0)
+
+
+def _get_bonus_spend_limit(cart: Cart, user: User) -> int:
+    items_total_after_discount = max(0, int(cart.items_subtotal or 0) - int(cart.discount_total or 0))
+    return min(max(items_total_after_discount - 11, 0), _get_customer_bonuses(user))
+
+
 @login_required
 def cart_view(request):
     # Получаем корзину пользователя
@@ -91,8 +102,7 @@ def cart_view(request):
         .get(pk=cart.pk)
     )
     customer = user.customer
-    items_total_after_discount = max(0, int(cart.items_subtotal or 0) - int(cart.discount_total or 0))
-    bonus_spend_limit = min(max(items_total_after_discount - 11, 0), max(int(customer.bonuses or 0), 0))
+    bonus_spend_limit = _get_bonus_spend_limit(cart, user)
 
     # Передаем данные корзины в шаблон
     return render(request, "shop/cart.html", {
@@ -227,6 +237,8 @@ def cart_update_item(request):
                 'bonus_spend': cart_item.bonuses_spent,
                 'total_bonus_append': cart.bonuses_append_total,
                 'total_bonus_spent': cart.bonuses_spent_total,
+                "bonus_spend_limit": _get_bonus_spend_limit(cart, request.user),
+                "customer_bonuses": _get_customer_bonuses(request.user),
 
             })
 
@@ -356,6 +368,8 @@ def api_cart_discount_type(request):
         "bonuses_append_total": cart.bonuses_append_total,
         "delivery_price": cart.delivery_price,
         "total": cart.total,
+        "bonus_spend_limit": _get_bonus_spend_limit(cart, request.user),
+        "customer_bonuses": _get_customer_bonuses(request.user),
     })
 
 # Обработка суммы бонусов для списания из корзины
@@ -383,9 +397,8 @@ def api_cart_set_bonuses_spend(request):
         cart = recalculate_cart(cart)  # внутри клампится по правилам
 
     cart.refresh_from_db()
-    customer_bonuses = int(request.user.customer.bonuses or 0)
-    items_total_after_discount = max(0, int(cart.items_subtotal or 0) - int(cart.discount_total or 0))
-    bonus_spend_limit = min(max(items_total_after_discount - 11, 0), max(customer_bonuses, 0))
+    customer_bonuses = _get_customer_bonuses(request.user)
+    bonus_spend_limit = _get_bonus_spend_limit(cart, request.user)
     items_payload = []
     for it in cart.items.all():
         qty = int(it.qty or 0)
@@ -411,6 +424,7 @@ def api_cart_set_bonuses_spend(request):
         "delivery_price": cart.delivery_price,
         "total": cart.total,
         "items": items_payload,
+        "customer_bonuses": customer_bonuses,
     })
 
 # Обработка скидки на заказ из корзины клиента
@@ -462,6 +476,8 @@ def api_cart_set_order_discount(request):
         "delivery_price": cart.delivery_price,
         "total": cart.total,
         "items": items_payload,
+        "bonus_spend_limit": _get_bonus_spend_limit(cart, request.user),
+        "customer_bonuses": _get_customer_bonuses(request.user),
     })
 
 
@@ -546,6 +562,8 @@ def api_cart_payment_type(request):
         "delivery_price": cart.delivery_price,
         "total": cart.total,
         "items": items_payload,
+        "bonus_spend_limit": _get_bonus_spend_limit(cart, request.user),
+        "customer_bonuses": _get_customer_bonuses(request.user),
     })
 
 @require_GET

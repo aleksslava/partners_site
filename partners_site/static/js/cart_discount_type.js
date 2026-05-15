@@ -276,6 +276,7 @@ function applyCartRecalc(data) {
   setText('cart-delivery', data.delivery_price);
   setText('cart-bonuses-append', data.bonuses_append_total);
   setText('cart-bonuses-spent', data.bonuses_spent_total);
+  applyCartBonusSpendLimit(data);
   window.syncCartBonusRows?.();
 
   // items
@@ -326,4 +327,41 @@ function applyCartRecalc(data) {
     const oldPriceWrapMobile = document.getElementById('item-old-price-wrap-mobile-' + pid);
     if (oldPriceWrapMobile) oldPriceWrapMobile.style.display = discountPercent > 0 ? '' : 'none';
   });
+}
+
+function applyCartBonusSpendLimit(data) {
+  if (!data || data.bonus_spend_limit == null) return;
+
+  const moneyFormatter = new Intl.NumberFormat('ru-RU');
+  const formatMoney = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    return moneyFormatter.format(Math.round(num));
+  };
+  const parseNumber = (value) => {
+    const parsed = Number(String(value || '').replace(/[^\d.-]/g, '') || 0);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const limit = Math.max(0, parseNumber(data.bonus_spend_limit));
+  const input = document.querySelector('.js-bonuses-spend');
+  const hint = document.querySelector('.js-bonuses-spend-hint');
+  const customerBonuses = data.customer_bonuses != null
+    ? Math.max(0, parseNumber(data.customer_bonuses))
+    : Math.max(0, parseNumber(hint?.dataset.customerBonuses));
+
+  if (input) {
+    input.max = String(limit);
+    input.dataset.max = String(limit);
+
+    const spent = data.bonuses_spent_total ?? data.total_bonus_spent;
+    const nextValue = spent != null ? parseNumber(spent) : Math.min(parseNumber(input.value), limit);
+    input.value = String(Math.min(Math.max(nextValue, 0), limit));
+    input.classList.toggle('is-invalid', parseNumber(input.value) > limit);
+  }
+
+  if (hint) {
+    hint.dataset.customerBonuses = String(customerBonuses);
+    hint.textContent = `Можно списать ${formatMoney(limit)} из ${formatMoney(customerBonuses)} бонусов`;
+  }
 }

@@ -307,6 +307,7 @@
                     document.getElementById('cart-subtotal').textContent = formatMoney(data.subtotal);
                     document.getElementById('cart-bonuses-append').textContent = data.total_bonus_append;
                     document.getElementById('cart-bonuses-spent').textContent = data.total_bonus_spent;
+                    window.applyCartBonusSpendLimit?.(data);
                     syncCartBonusRows();
                 }
             });

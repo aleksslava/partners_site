@@ -217,7 +217,9 @@ class Address(models.Model):
 class Requisites(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
     company_name = models.CharField(max_length=255, verbose_name='Наименование')
     inn = models.CharField(max_length=20, blank=True, verbose_name="ИНН")

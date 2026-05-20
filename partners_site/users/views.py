@@ -5,6 +5,7 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.db import transaction
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -12,7 +13,7 @@ from django.views.decorators.http import require_http_methods
 
 from integrations.amocrm.exceptions import AmoCRMError, ContactCustomerBindingError
 from orders.models import Cart, Order
-from users.forms import CabinetCredentialsForm
+from users.forms import CabinetCredentialsForm, CabinetRequisitesForm
 from users.models import User
 from users.services.amocrm_login import (
     extract_error_message,
@@ -23,6 +24,31 @@ from users.services.amocrm_login import (
 from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
 
 logger = logging.getLogger(__name__)
+
+
+def _compose_delivery_address_text(city: str, street: str, house: str) -> str:
+    return f"город {city}, улица {street}, дом {house}"
+
+
+def _parse_object_id(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _clear_active_carts_requisites(requisites):
+    Cart.objects.filter(
+        requisites=requisites,
+        status=Cart.Status.ACTIVE,
+    ).update(requisites=None)
+
+
+def _clear_active_carts_address(address):
+    Cart.objects.filter(
+        address=address,
+        status=Cart.Status.ACTIVE,
+    ).update(address=None)
 
 
 class UserLoginView(LoginView):
@@ -95,6 +121,101 @@ def user_cabinet_view(request):
     credentials_form = CabinetCredentialsForm(user=user, data=request.POST or None)
 
     if request.method == "POST":
+        cabinet_action = request.POST.get("cabinet_action")
+
+        if cabinet_action == "update_requisites":
+            requisites_id = _parse_object_id(request.POST.get("requisites_id"))
+            requisites = user.requisites_set.filter(pk=requisites_id).first() if requisites_id is not None else None
+
+            if requisites is None:
+                messages.error(request, "Реквизиты не найдены.")
+            else:
+                form = CabinetRequisitesForm(request.POST, instance=requisites, user=user)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, "Реквизиты обновлены.")
+                else:
+                    for _field_name, field_errors in form.errors.items():
+                        for error in field_errors:
+                            messages.error(request, error)
+
+            return redirect("users:user_cabinet")
+
+        if cabinet_action == "delete_requisites":
+            requisites_id = _parse_object_id(request.POST.get("requisites_id"))
+            requisites = user.requisites_set.filter(pk=requisites_id).first() if requisites_id is not None else None
+
+            if requisites is None:
+                messages.error(request, "Реквизиты не найдены.")
+            else:
+                with transaction.atomic():
+                    _clear_active_carts_requisites(requisites)
+                    if requisites.orders.exists():
+                        requisites.user = None
+                        requisites.is_default = False
+                        requisites.save(update_fields=["user", "is_default", "time_updated"])
+                    else:
+                        requisites.delete()
+
+                messages.success(request, "Реквизиты удалены из кабинета.")
+
+            return redirect("users:user_cabinet")
+
+        if cabinet_action == "delete_address":
+            address_id = _parse_object_id(request.POST.get("address_id"))
+            address = user.addresses.filter(pk=address_id).first() if address_id is not None else None
+
+            if address is None:
+                messages.error(request, "Адрес не найден.")
+            else:
+                with transaction.atomic():
+                    _clear_active_carts_address(address)
+                    if address.orders.exists():
+                        address.user = None
+                        address.is_default = False
+                        address.save(update_fields=["user", "is_default", "time_updated"])
+                    else:
+                        address.delete()
+
+                messages.success(request, "Адрес удалён из кабинета.")
+
+            return redirect("users:user_cabinet")
+
+        if cabinet_action == "update_address":
+            address_id = _parse_object_id(request.POST.get("address_id"))
+            address = user.addresses.filter(pk=address_id).first() if address_id is not None else None
+            label = (request.POST.get("label") or "").strip()
+
+            if address is None:
+                messages.error(request, "Адрес не найден.")
+            elif not label:
+                messages.error(request, "Укажите название адреса.")
+            else:
+                city = (request.POST.get("city") or "").strip()
+                street = (request.POST.get("street") or "").strip()
+                house = (request.POST.get("house") or "").strip()
+
+                address.label = label
+                address.city = city
+                address.street = street
+                address.house = house
+                address.recipient_name = (request.POST.get("recipient_name") or "").strip()
+                address.recipient_phone = (request.POST.get("recipient_phone") or "").strip()
+                address.delivery_address_text = _compose_delivery_address_text(city, street, house)
+                address.save(update_fields=[
+                    "label",
+                    "city",
+                    "street",
+                    "house",
+                    "recipient_name",
+                    "recipient_phone",
+                    "delivery_address_text",
+                    "time_updated",
+                ])
+                messages.success(request, "Адрес обновлён.")
+
+            return redirect("users:user_cabinet")
+
         if credentials_form.is_valid():
             username_changed, password_changed = credentials_form.save()
 
@@ -168,6 +289,8 @@ def user_cabinet_view(request):
         .first()
         or user.requisites_set.order_by("-time_updated").first()
     )
+    saved_addresses = user.addresses.order_by("-time_updated", "-id")
+    saved_requisites = user.requisites_set.order_by("-time_updated", "-id")
 
     return render(
         request,
@@ -181,5 +304,7 @@ def user_cabinet_view(request):
             "active_cart_items_total": active_cart_items_total,
             "default_address": default_address,
             "default_requisites": default_requisites,
+            "saved_addresses": saved_addresses,
+            "saved_requisites": saved_requisites,
         },
     )

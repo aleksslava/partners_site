@@ -3,7 +3,7 @@ from django.contrib.auth import password_validation
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
-from .models import User
+from .models import Requisites, User
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -146,3 +146,61 @@ class CabinetCredentialsForm(forms.Form):
             self.user.save()
 
         return username_change_requested, password_change_requested
+
+
+class CabinetRequisitesForm(forms.ModelForm):
+    class Meta:
+        model = Requisites
+        fields = (
+            "company_name",
+            "inn",
+            "bik",
+            "legal_address",
+            "settlement_account",
+        )
+
+    def __init__(self, *args, user: User, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_company_name(self) -> str:
+        value = (self.cleaned_data.get("company_name") or "").strip()
+        if not value:
+            raise ValidationError("Укажите название реквизитов.")
+        return value
+
+    def clean(self):
+        cleaned_data = super().clean()
+        inn = (cleaned_data.get("inn") or "").strip()
+        settlement_account = (cleaned_data.get("settlement_account") or "").strip()
+
+        duplicate = (
+            Requisites.objects
+            .filter(user=self.user, inn=inn, settlement_account=settlement_account)
+            .exclude(pk=self.instance.pk)
+            .exists()
+        )
+        if duplicate:
+            raise ValidationError("Реквизиты с таким ИНН и расчётным счётом уже сохранены.")
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        requisites = super().save(commit=False)
+        requisites.user = self.user
+
+        if commit:
+            if requisites.pk:
+                requisites.save(update_fields=[
+                    "company_name",
+                    "inn",
+                    "bik",
+                    "legal_address",
+                    "settlement_account",
+                    "user",
+                    "time_updated",
+                ])
+            else:
+                requisites.save()
+
+        return requisites

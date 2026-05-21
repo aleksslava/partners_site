@@ -1100,7 +1100,7 @@ def api_cart_checkout(request):
         else:
             order.save(update_fields=["amo_crm_id"])
 
-    success_redirect_url = "/cabinet/?checkout_success=1"
+    success_redirect_url = "/"
 
     if expects_json:
         payload = {

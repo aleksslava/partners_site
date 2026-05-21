@@ -74,6 +74,77 @@
         });
     }
 
+    function redirectAfterCheckout() {
+        window.location.href = '/';
+    }
+
+    function getCheckoutSuccessModal() {
+        let modal = document.querySelector('.js-checkout-success-modal');
+        if (modal) {
+            return {
+                modal: modal,
+                message: modal.querySelector('.js-checkout-success-message'),
+                closeButton: modal.querySelector('.js-checkout-success-close'),
+            };
+        }
+
+        modal = document.createElement('div');
+        modal.className = 'cart-checkout-modal js-checkout-success-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'cart-checkout-success-title');
+
+        const panel = document.createElement('div');
+        panel.className = 'cart-checkout-modal__panel';
+
+        const title = document.createElement('h2');
+        title.className = 'cart-checkout-modal__title';
+        title.id = 'cart-checkout-success-title';
+        title.textContent = 'Заказ отправлен!';
+
+        const message = document.createElement('p');
+        message.className = 'cart-checkout-modal__message js-checkout-success-message';
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn btn-cart cart-checkout-modal__close js-checkout-success-close';
+        closeButton.textContent = 'Закрыть';
+        closeButton.addEventListener('click', redirectAfterCheckout);
+
+        panel.append(title, message, closeButton);
+        modal.append(panel);
+        document.body.append(modal);
+
+        return {
+            modal: modal,
+            message: message,
+            closeButton: closeButton,
+        };
+    }
+
+    function showCheckoutSuccessModal(data) {
+        const orderNumber = data.amocrm_lead_id || data.order_id || '';
+        const modalParts = getCheckoutSuccessModal();
+        const messageLines = [
+            orderNumber
+                ? `Ваш заказ № ${orderNumber} успешно передан на оформление.`
+                : 'Ваш заказ успешно передан на оформление.',
+            'С Вами свяжется менеджер для уточнения деталей.',
+            'Часы работы партнёрского отдела: Пн-Пт, с 09:00 до 18:00 мск',
+        ];
+
+        modalParts.message.replaceChildren();
+        messageLines.forEach(line => {
+            const item = document.createElement('span');
+            item.textContent = line;
+            modalParts.message.append(item);
+        });
+
+        document.body.classList.add('cart-checkout-modal-open');
+        modalParts.modal.classList.add('is-open');
+        modalParts.closeButton.focus({preventScroll: true});
+    }
+
     if (termsCheckbox) {
         syncCheckoutState();
         termsCheckbox.addEventListener('change', function () {
@@ -124,7 +195,7 @@
                         throw new Error((data && data.error) || 'Не удалось оформить заказ');
                     }
 
-                    window.location.href = data.redirect_url || '/cabinet/';
+                    showCheckoutSuccessModal(data);
                 })
                 .catch(error => {
                     alert(error.message || 'Ошибка при оформлении заказа');

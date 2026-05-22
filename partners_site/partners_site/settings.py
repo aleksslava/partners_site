@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "core.middleware.EmbeddedWebAppFrameOptionsMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "core.middleware.LoginRequiredMiddleware"
 ]
@@ -142,6 +143,11 @@ USE_THOUSAND_SEPARATOR = True
 THOUSAND_SEPARATOR = ' '
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+EMBEDDED_WEBAPP_SESSION_KEY = "embedded_webapp_platform"
+EMBEDDED_WEBAPP_FRAME_ANCESTORS = {
+    "telegram": "https://web.telegram.org",
+    "max": "https://web.max.ru",
+}
 
 
 # Internationalization

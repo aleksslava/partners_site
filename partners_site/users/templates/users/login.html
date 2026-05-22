@@ -50,6 +50,7 @@
 <script>
   (function () {
     const params = new URLSearchParams(window.location.search);
+    const embeddedPlatform = "{{ embedded_webapp_platform|default:''|escapejs }}";
     if (params.has("telegram_id") || params.has("max_id")) {
       return;
     }
@@ -133,8 +134,12 @@
     window.setTimeout(() => window.clearInterval(watchTimer), sdkTimeoutMs);
 
     tryRedirect();
-    loadSdk("https://st.max.ru/js/max-web-app.js").then(tryRedirect);
-    loadSdk("https://telegram.org/js/telegram-web-app.js?61").then(tryRedirect);
+    if (!embeddedPlatform || embeddedPlatform === "max") {
+      loadSdk("https://st.max.ru/js/max-web-app.js").then(tryRedirect);
+    }
+    if (!embeddedPlatform || embeddedPlatform === "telegram") {
+      loadSdk("https://telegram.org/js/telegram-web-app.js?61").then(tryRedirect);
+    }
   })();
 </script>
 {% endblock %}

@@ -6,6 +6,8 @@ from . import views
 app_name = "users"
 
 urlpatterns = [
+    path("telegram/", views.embedded_webapp_entry, {"platform": "telegram"}, name="telegram_webapp"),
+    path("max/", views.embedded_webapp_entry, {"platform": "max"}, name="max_webapp"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("cabinet/", views.user_cabinet_view, name="user_cabinet"),

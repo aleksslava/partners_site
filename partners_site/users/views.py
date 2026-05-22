@@ -1,5 +1,7 @@
 import logging
+from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import update_session_auth_hash
@@ -9,6 +11,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from integrations.amocrm.exceptions import AmoCRMError, ContactCustomerBindingError
@@ -24,6 +27,23 @@ from users.services.amocrm_login import (
 from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
 
 logger = logging.getLogger(__name__)
+
+
+def embedded_webapp_entry(request, platform: str):
+    if platform not in settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS:
+        return redirect(settings.LOGIN_URL)
+
+    next_url = request.GET.get("next") or settings.LOGIN_REDIRECT_URL
+    is_safe_next = url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    )
+    if not is_safe_next:
+        next_url = settings.LOGIN_REDIRECT_URL
+
+    request.session[settings.EMBEDDED_WEBAPP_SESSION_KEY] = platform
+    return redirect(f"{settings.LOGIN_URL}?{urlencode({'next': next_url})}")
 
 
 def _compose_delivery_address_text(city: str, street: str, house: str) -> str:
@@ -55,6 +75,14 @@ class UserLoginView(LoginView):
     template_name = "users/login.html"
     redirect_authenticated_user = True
     auth_exec_param = "auth_exec"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["embedded_webapp_platform"] = self.request.session.get(
+            settings.EMBEDDED_WEBAPP_SESSION_KEY,
+            "",
+        )
+        return context
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:

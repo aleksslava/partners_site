@@ -3,6 +3,27 @@ from django.shortcuts import redirect
 from django.urls import resolve
 
 
+class EmbeddedWebAppFrameOptionsMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.path.startswith("/admin/"):
+            return response
+
+        platform = request.session.get(settings.EMBEDDED_WEBAPP_SESSION_KEY)
+        frame_ancestor = settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS.get(platform)
+        if frame_ancestor is None:
+            return response
+
+        response.xframe_options_exempt = True
+        response.headers[
+            "Content-Security-Policy"
+        ] = f"frame-ancestors 'self' {frame_ancestor}; upgrade-insecure-requests; block-all-mixed-content"
+        return response
+
+
 class LoginRequiredMiddleware:
     """
     Закрывает весь сайт для неавторизованных пользователей.
@@ -24,7 +45,7 @@ class LoginRequiredMiddleware:
             return self.get_response(request)
 
         # Разрешаем страницы входа/выхода
-        if path == settings.LOGIN_URL or path == "/logout/":
+        if path in (settings.LOGIN_URL, "/logout/", "/telegram/", "/max/"):
             return self.get_response(request)
 
         # Если пользователь уже авторизован — пускаем

@@ -1,24 +1,24 @@
 /* --- Базовые стили --- */
-@import "base/reset.css";
-@import "base/variables.css";
-@import "base/typography.css";
-@import "base/layout.css";
+@import "base/reset.css?v=20260525-1";
+@import "base/variables.css?v=20260525-1";
+@import "base/typography.css?v=20260525-1";
+@import "base/layout.css?v=20260525-1";
 
 /* --- Компоненты --- */
-@import "components/header.css";
-@import "components/mobile_menu.css";
-@import "components/buttons.css";
-@import "components/cards.css";
-@import "components/footer.css";
-@import "components/auth.css";
-@import "components/catalog_search.css";
-@import "components/cart.css";
-@import "components/cabinet.css";
+@import "components/header.css?v=20260525-1";
+@import "components/mobile_menu.css?v=20260525-1";
+@import "components/buttons.css?v=20260525-1";
+@import "components/cards.css?v=20260525-1";
+@import "components/footer.css?v=20260525-1";
+@import "components/auth.css?v=20260525-1";
+@import "components/catalog_search.css?v=20260525-1";
+@import "components/cart.css?v=20260525-1";
+@import "components/cabinet.css?v=20260525-1";
 
 
 /* --- Страницы --- */
-@import "pages/catalog.css";
-@import "pages/product_group_detail.css";
+@import "pages/catalog.css?v=20260525-1";
+@import "pages/product_group_detail.css?v=20260525-1";
 
 /* --- Утилиты --- */
-@import "utils.css";
+@import "utils.css?v=20260525-1";

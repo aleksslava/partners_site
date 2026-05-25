@@ -1,5 +1,5 @@
 import logging
-from urllib.parse import urlencode
+from urllib.parse import urlencode, parse_qs
 
 from django.conf import settings
 from django.contrib import messages
@@ -9,22 +9,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.db import transaction
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from integrations.amocrm.exceptions import AmoCRMError, ContactCustomerBindingError
 from orders.models import Cart, Order
 from users.forms import CabinetCredentialsForm, CabinetRequisitesForm
-from users.models import User
+from users.models import Customer, User
 from users.services.amocrm_login import (
     extract_error_message,
     get_external_identity,
     get_local_user_by_external_identity,
     resolve_user_via_amocrm,
 )
-from users.services.amocrm_sync import sync_user_and_customer_from_amocrm
+from users.services.amocrm_sync import sync_customer_from_amocrm, sync_user_and_customer_from_amocrm
 
 logger = logging.getLogger(__name__)
 
@@ -335,4 +336,34 @@ def user_cabinet_view(request):
             "saved_addresses": saved_addresses,
             "saved_requisites": saved_requisites,
         },
+    )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def customer_changed(request):
+    raw_body = request.body
+    payload = parse_qs(raw_body.decode("utf-8", errors="replace"), keep_blank_values=True)
+    customer_id = _parse_object_id(payload.get("customers[update][0][id]", [None])[0])
+
+    if customer_id is None:
+        logger.warning("Customer changed webhook ignored: customer_id is missing")
+        return JsonResponse({"status": "ignored"})
+
+    customer = Customer.objects.filter(amo_id_customer=customer_id).first()
+    if customer is None:
+        logger.info("Customer changed webhook ignored: customer_id=%s not found", customer_id)
+        return JsonResponse({"status": "ignored"})
+
+    try:
+        sync_result = sync_customer_from_amocrm(customer)
+    except AmoCRMError:
+        logger.exception("Failed to sync customer from amoCRM for customer_id=%s", customer_id)
+        return JsonResponse({"status": "error"}, status=502)
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "updated_customer_fields": sync_result["updated_customer_fields"],
+        }
     )

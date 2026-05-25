@@ -122,6 +122,48 @@ def _extract_customer_error_message(customer_response: Any) -> str:
     return "Не удалось получить данные покупателя, обратитесь к менеджеру"
 
 
+def sync_customer_from_amocrm(customer: Customer) -> dict[str, Any]:
+    customer_response = get_amocrm_client().get_customer_by_id(customer_id=customer.amo_id_customer)
+    customer_api_payload = _extract_customer_payload(customer_response)
+
+    if not (
+        isinstance(customer_response, tuple)
+        and len(customer_response) >= 2
+        and customer_response[0] is True
+        and isinstance(customer_api_payload, dict)
+    ):
+        logger.warning(
+            "Unexpected amoCRM customer response for customer_id=%s: %s",
+            customer.id,
+            customer_response,
+        )
+        return {
+            "customer": customer_api_payload,
+            "customer_record": customer,
+            "updated_customer_fields": [],
+        }
+
+    customer_updates = _extract_customer_updates(customer_api_payload)
+    changed_customer_fields: list[str] = []
+
+    for field_name, next_value in customer_updates.items():
+        if getattr(customer, field_name) != next_value:
+            setattr(customer, field_name, next_value)
+            changed_customer_fields.append(field_name)
+
+    if changed_customer_fields:
+        customer_update_fields = list(changed_customer_fields)
+        if "time_updated" not in customer_update_fields:
+            customer_update_fields.append("time_updated")
+        customer.save(update_fields=customer_update_fields)
+
+    return {
+        "customer": customer_api_payload,
+        "customer_record": customer,
+        "updated_customer_fields": changed_customer_fields,
+    }
+
+
 def sync_user_and_customer_from_amocrm(user: User, request: HttpRequest) -> dict[str, Any] | HttpResponse:
     """
     Синхронизирует данные пользователя и связанного покупателя из amoCRM.

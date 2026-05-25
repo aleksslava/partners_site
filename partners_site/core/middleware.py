@@ -45,7 +45,7 @@ class LoginRequiredMiddleware:
             return self.get_response(request)
 
         # Разрешаем страницы входа/выхода
-        if path in (settings.LOGIN_URL, "/logout/", "/telegram/", "/max/"):
+        if path in (settings.LOGIN_URL, "/logout/", "/telegram/", "/max/", "/customer/changed"):
             return self.get_response(request)
 
         # Если пользователь уже авторизован — пускаем

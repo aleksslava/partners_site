@@ -137,8 +137,9 @@ class Command(BaseCommand):
                     try:
                         vid_cf = download_as_contentfile(video_url)
                         vid_name = filename_from_url(video_url, fallback=f"{product.amo_id}.mp4")
-                        vid = Video(product=product, name=f"Видео {full_name}", title=f"Видео {full_name}")
+                        vid = Video(name=f"Видео {full_name}", title=f"Видео {full_name}")
                         vid.video.save(vid_name, vid_cf, save=True)
+                        vid.products.add(product)
                     except Exception:
                         # не падаем, если видео не скачивается
                         pass

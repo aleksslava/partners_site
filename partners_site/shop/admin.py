@@ -18,7 +18,13 @@ from .models import (
 
 # Register your models here.
 
-admin.site.register([Image, Video, Instruction])
+admin.site.register([Image, Instruction])
+
+
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    search_fields = ('name', 'title')
+    autocomplete_fields = ('products',)
 
 
 class CategoryStatusDiscountCapInline(admin.TabularInline):
@@ -64,9 +70,10 @@ class ImageInline(admin.TabularInline):
     extra = 0
     form = ImageInlineForm
 
-class VideoInline(admin.TabularInline):
-    model = Video
+class ProductVideoInline(admin.TabularInline):
+    model = Video.products.through
     extra = 0
+    autocomplete_fields = ('video',)
 
 class ModificationInline(admin.TabularInline):
     model = Product
@@ -83,7 +90,7 @@ class InstructionInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    inlines = [CharacteristicsInline, ImageInline, VideoInline, InstructionInline]
+    inlines = [CharacteristicsInline, ImageInline, ProductVideoInline, InstructionInline]
     list_display = ('name', 'group', 'is_primary', 'is_visible', 'price')
     list_filter = ('is_primary', 'is_visible', 'group__category')
     search_fields = ('name', 'amo_id')
@@ -163,5 +170,4 @@ class ProductGroupAdmin(admin.ModelAdmin):
 
         ProductGroup.objects.bulk_update(groups, ['sort_order'])
         return JsonResponse({'success': True, 'positions': positions})
-
 

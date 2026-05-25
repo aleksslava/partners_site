@@ -242,7 +242,7 @@ class Video(models.Model):
     name = models.CharField(max_length=255, verbose_name='Наименование')
     title = models.CharField(max_length=255, verbose_name='Описание')
     video = models.FileField(upload_to='products/', verbose_name='Видео')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Видео', related_name='videos')
+    products = models.ManyToManyField(Product, verbose_name='Товары', related_name='videos')
     time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')
 

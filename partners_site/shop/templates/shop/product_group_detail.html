@@ -146,11 +146,11 @@
 
           <div class="pdp-files">
             {% for item in instruction_items %}
-              <a class="pdp-file" href="{{ item.instruction.institution.url }}" target="_blank" rel="noopener">
+              <a class="pdp-file" href="{{ item.instruction.file_url }}" target="_blank" rel="noopener">
                 <span class="pdp-file__icon">📄</span>
                 <span class="pdp-file__name">{{ item.instruction.name }}</span>
                 <span class="pdp-file__meta">
-                  {{ item.file_ext }}{% if item.file_size %} • {{ item.file_size }}{% endif %}
+                  {{ item.file_ext }}
                 </span>
               </a>
             {% empty %}

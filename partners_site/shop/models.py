@@ -256,7 +256,7 @@ class Video(models.Model):
 
 class Instruction(models.Model):
     name = models.CharField(max_length=255, verbose_name='Наименование')
-    institution = models.FileField(upload_to='products', verbose_name='Файл инструкции')
+    file_url = models.URLField(max_length=500, verbose_name='Ссылка на инструкцию')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Товар', related_name='instructions')
     time_created = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     time_updated = models.DateTimeField(auto_now=True, verbose_name='Дата изменения')

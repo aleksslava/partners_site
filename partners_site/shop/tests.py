@@ -11,7 +11,14 @@ from PIL import Image as PilImage
 from users.models import Customer, User
 
 from .discounts import get_category_discount_limit, get_item_discount_percent
-from .models import Category, CategoryStatusDiscountCap, Image, Product, ProductGroup
+from .models import (
+    Category,
+    CategoryStatusDiscountCap,
+    Image,
+    Instruction,
+    Product,
+    ProductGroup,
+)
 
 
 class DiscountResolverTests(TestCase):
@@ -173,6 +180,24 @@ class CatalogAndDetailDiscountTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["discount_percent"], 12)
         self.assertEqual(response.context["discounted_price"], 880)
+
+    def test_product_detail_renders_remote_instruction_url(self):
+        instruction_url = (
+            "https://www.hite-pro.ru/wp-content/uploads/manual/AT115x105mm.pdf"
+        )
+        Instruction.objects.create(
+            product=self.product,
+            name="Instruction",
+            file_url=instruction_url,
+        )
+
+        response = self.client.get(reverse("product_group_detail", args=[self.group.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'href="{instruction_url}"')
+        instruction_items = response.context["instruction_items"]
+        self.assertEqual(instruction_items[0]["file_ext"], "PDF")
+        self.assertNotIn("file_size", instruction_items[0])
 
 
 class ProductImageSaveTests(TestCase):

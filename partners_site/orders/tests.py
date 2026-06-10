@@ -216,3 +216,41 @@ class RecalculateCartStatusCappedDiscountTests(TestCase):
         self.assertEqual(cart.order_discount_percent, 33)
         self.assertEqual(item.discount_percent, 33)
         self.assertEqual(item.current_unit_price_discounted, 670)
+
+    def test_update_item_response_includes_recalculated_bonus_spend_limit(self):
+        self.customer.bonuses = 2000
+        self.customer.save(update_fields=["bonuses"])
+        self.client.force_login(self.user)
+        cart = self._create_cart(discount_type=Cart.DiscountType.DISCOUNT)
+
+        response = self.client.post(
+            "/api/cart/update_item/",
+            data=json.dumps({"product_id": self.product.id, "delta": 1}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["item_qty"], 2)
+        self.assertEqual(data["bonus_spend_limit"], 1749)
+        self.assertEqual(data["customer_bonuses"], 2000)
+
+    def test_payment_type_response_includes_recalculated_bonus_spend_limit(self):
+        self.customer.bonuses = 2000
+        self.customer.save(update_fields=["bonuses"])
+        self.client.force_login(self.user)
+        self.cap.max_discount = 40
+        self.cap.save(update_fields=["max_discount"])
+        self._create_cart(discount_type=Cart.DiscountType.DISCOUNT)
+
+        response = self.client.post(
+            "/api/cart/payment-type/",
+            data=json.dumps({"payment_type": Cart.PaymentType.CARD}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["payment_type"], Cart.PaymentType.CARD)
+        self.assertEqual(data["bonus_spend_limit"], 659)
+        self.assertEqual(data["customer_bonuses"], 2000)

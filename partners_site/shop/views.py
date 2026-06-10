@@ -1,11 +1,11 @@
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Prefetch
 from django.shortcuts import render, get_object_or_404
-from django.template.defaultfilters import filesizeformat
 from django.template.loader import render_to_string
 from django.views.generic import DetailView
 import json
@@ -221,19 +221,12 @@ def product_group_detail(request, pk):
     instructions = list(active_mod.instructions.all())
     instruction_items = []
     for inst in instructions:
-        file_name = getattr(inst.institution, 'name', '')
-        file_ext = Path(file_name).suffix.lstrip('.').upper() or 'ФАЙЛ'
-
-        file_size = None
-        try:
-            file_size = filesizeformat(inst.institution.size)
-        except Exception:
-            file_size = None
+        file_path = urlsplit(inst.file_url).path
+        file_ext = Path(file_path).suffix.lstrip('.').upper() or 'ФАЙЛ'
 
         instruction_items.append({
             'instruction': inst,
             'file_ext': file_ext,
-            'file_size': file_size,
         })
 
     context = {

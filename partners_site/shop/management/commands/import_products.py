@@ -119,10 +119,13 @@ class Command(BaseCommand):
                 instr = mod.get("instructions") or {}
                 pdf_url = instr.get("pdf")
                 if pdf_url:
-                    pdf_cf = download_as_contentfile(pdf_url)
-                    pdf_name = filename_from_url(pdf_url, fallback=f"{product.amo_id}.pdf")
-                    inst = Instruction(product=product, name=f"Инструкция {full_name}")
-                    inst.institution.save(pdf_name, pdf_cf, save=True)
+                    Instruction.objects.update_or_create(
+                        product=product,
+                        defaults={
+                            "name": f"Инструкция {full_name}",
+                            "file_url": pdf_url,
+                        },
+                    )
 
                 # Видео (ВНИМАНИЕ)
                 # В твоей модели Video.video = FileField, а в JSON ссылка (не файл).

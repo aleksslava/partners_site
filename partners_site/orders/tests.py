@@ -9,6 +9,18 @@ from .models import Cart, CartItem
 from .services import recalculate_cart
 
 
+class CartDefaultsTests(TestCase):
+    def test_delivery_type_defaults_to_pickup_point(self):
+        user = User.objects.create_user(
+            username="default_delivery_partner",
+            password="secret",
+        )
+
+        cart = Cart.objects.create(user=user)
+
+        self.assertEqual(cart.delivery_type, Cart.DeliveryType.PICKUP_POINT)
+
+
 class CartDeliveryAddressPersistenceTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

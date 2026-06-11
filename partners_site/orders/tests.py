@@ -1,11 +1,18 @@
 import json
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
 from users.models import Address, Customer, User
-from shop.models import Category, CategoryStatusDiscountCap, Product, ProductGroup
+from shop.models import (
+    Category,
+    CategoryStatusDiscountCap,
+    Product,
+    ProductGroup,
+    RelatedProductGroup,
+)
 
-from .models import Cart, CartItem
+from .models import Cart, CartItem, OrderItem
 from .services import recalculate_cart
 
 
@@ -19,6 +26,185 @@ class CartDefaultsTests(TestCase):
         cart = Cart.objects.create(user=user)
 
         self.assertEqual(cart.delivery_type, Cart.DeliveryType.PICKUP_POINT)
+
+
+class CartRelatedProductContextTests(TestCase):
+    def test_cart_view_includes_related_product_cards(self):
+        customer = Customer.objects.create(
+            name="Партнер",
+            partner_status=Customer.PartnerStatus.Gold,
+        )
+        user = User.objects.create_user(
+            username="cart_related_partner",
+            password="secret",
+            customer=customer,
+        )
+        self.client.force_login(user)
+        category = Category.objects.create(name="Категория", discount=0)
+        source_group = ProductGroup.objects.create(
+            name="Источник",
+            category=category,
+        )
+        related_group = ProductGroup.objects.create(
+            name="Сопутствующий",
+            category=category,
+        )
+        source_product = Product.objects.create(
+            name="Источник",
+            amo_id=3001,
+            price=1000,
+            title="Описание",
+            group=source_group,
+            is_primary=True,
+            is_visible=True,
+        )
+        related_product = Product.objects.create(
+            name="Сопутствующий",
+            amo_id=3002,
+            price=500,
+            title="Описание",
+            group=related_group,
+            is_primary=True,
+            is_visible=True,
+        )
+        RelatedProductGroup.objects.create(
+            source_group=source_group,
+            related_group=related_group,
+        )
+        cart = Cart.objects.create(user=user)
+        CartItem.objects.create(cart=cart, product=source_product, qty=1)
+
+        response = self.client.get("/cart/")
+
+        self.assertEqual(response.status_code, 200)
+        related_product_cards = response.context["related_product_cards"]
+        self.assertEqual(len(related_product_cards), 1)
+        self.assertEqual(related_product_cards[0]["product"], related_product)
+
+
+class RelatedProductTrackingTests(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(
+            name="Партнер",
+            partner_status=Customer.PartnerStatus.Gold,
+        )
+        self.user = User.objects.create_user(
+            username="related_tracking_partner",
+            password="secret",
+            customer=self.customer,
+        )
+        self.client.force_login(self.user)
+        self.category = Category.objects.create(name="Категория", discount=0)
+        self.group = ProductGroup.objects.create(
+            name="Группа",
+            category=self.category,
+        )
+        self.product = Product.objects.create(
+            name="Товар",
+            amo_id=3101,
+            price=1000,
+            title="Описание",
+            group=self.group,
+            is_primary=True,
+            is_visible=True,
+        )
+
+    def _post_add(self, delta: int = 1, *, source: str | None = None):
+        payload = {"product_id": self.product.id, "delta": delta}
+        if source is not None:
+            payload["source"] = source
+        return self.client.post(
+            "/api/cart/add/",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+    def test_related_product_add_increments_tracked_quantity(self):
+        response = self._post_add(source="related_products")
+
+        self.assertEqual(response.status_code, 200)
+        item = CartItem.objects.get(product=self.product)
+        self.assertEqual(item.qty, 1)
+        self.assertEqual(item.related_added_qty, 1)
+
+    def test_regular_add_does_not_increment_tracked_quantity(self):
+        response = self._post_add()
+
+        self.assertEqual(response.status_code, 200)
+        item = CartItem.objects.get(product=self.product)
+        self.assertEqual(item.qty, 1)
+        self.assertEqual(item.related_added_qty, 0)
+
+    def test_repeated_related_adds_sum_tracked_quantity(self):
+        self._post_add(source="related_products")
+        self._post_add(source="related_products")
+
+        item = CartItem.objects.get(product=self.product)
+        self.assertEqual(item.qty, 2)
+        self.assertEqual(item.related_added_qty, 2)
+
+    def test_decrease_clamps_tracked_quantity_to_current_quantity(self):
+        self._post_add(source="related_products")
+        self._post_add(source="related_products")
+        self._post_add()
+
+        response = self.client.post(
+            "/api/cart/update_item/",
+            data=json.dumps({"product_id": self.product.id, "delta": -2}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        item = CartItem.objects.get(product=self.product)
+        self.assertEqual(item.qty, 1)
+        self.assertEqual(item.related_added_qty, 1)
+
+    def test_cart_quantity_increase_keeps_related_tracking(self):
+        self._post_add(source="related_products")
+
+        response = self.client.post(
+            "/api/cart/update_item/",
+            data=json.dumps({"product_id": self.product.id, "delta": 2}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        item = CartItem.objects.get(product=self.product)
+        self.assertEqual(item.qty, 3)
+        self.assertEqual(item.related_added_qty, 3)
+
+    def test_remove_deletes_tracked_cart_item(self):
+        self._post_add(source="related_products")
+
+        response = self.client.post(
+            "/cart/remove_item/",
+            data=json.dumps({"product_id": self.product.id}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(CartItem.objects.filter(product=self.product).exists())
+
+    @patch("orders.views.get_amocrm_client")
+    def test_checkout_copies_related_quantity_to_order_item(self, get_client):
+        client = Mock()
+        client.send_lead_to_amo.return_value = {"id": 12345}
+        get_client.return_value = client
+        self._post_add(source="related_products")
+        self._post_add(source="related_products")
+        self._post_add()
+
+        response = self.client.post(
+            "/api/cart/checkout/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        order_item = OrderItem.objects.get(product=self.product)
+        self.assertEqual(order_item.qty, 3)
+        self.assertEqual(order_item.related_added_qty, 2)
 
 
 class CartDeliveryAddressPersistenceTests(TestCase):

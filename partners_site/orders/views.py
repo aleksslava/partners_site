@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 from integrations.amocrm.factory import get_amocrm_client
 from integrations.amocrm.services import create_data_for_lead, fields_ids, create_items_list, create_note_for_lead
+from shop.services import get_cart_related_product_cards
 from users.models import Requisites, Address, User
 from .models import Cart, CartItem, Order, OrderItem
 from .services import recalculate_cart
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 _PHONE_RE = re.compile(r'^\+?\d{10,15}$')
 COMMERCIAL_PROPOSAL_URL = "https://education.hite-pro.ru/kp/partner"
+RELATED_PRODUCTS_SOURCE = "related_products"
 
 
 def _normalize_phone(s: str) -> str:
@@ -85,6 +87,13 @@ def _get_bonus_spend_limit(cart: Cart, user: User) -> int:
     return min(max(items_total_after_discount - 11, 0), _get_customer_bonuses(user))
 
 
+def _clamp_related_added_qty(cart_item: CartItem) -> None:
+    cart_item.related_added_qty = min(
+        int(cart_item.related_added_qty or 0),
+        int(cart_item.qty or 0),
+    )
+
+
 @login_required
 def cart_view(request):
     # Получаем корзину пользователя
@@ -103,12 +112,14 @@ def cart_view(request):
     )
     customer = user.customer
     bonus_spend_limit = _get_bonus_spend_limit(cart, user)
+    related_product_cards = get_cart_related_product_cards(cart, user)
 
     # Передаем данные корзины в шаблон
     return render(request, "shop/cart.html", {
         "cart": cart,
         "customer": customer,
         "bonus_spend_limit": bonus_spend_limit,
+        "related_product_cards": related_product_cards,
         "requisites": cart.requisites,  # удобно для шаблона
         "user": user,
         "a": cart.address
@@ -216,13 +227,23 @@ def cart_update_item(request):
 
             # Обновляем количество товара
             cart_item.qty += delta
+            if delta > 0 and cart_item.related_added_qty > 0:
+                cart_item.related_added_qty += delta
             if cart_item.qty <= 0:
                 cart_item.delete()
+                item_qty = 0
+                item_total = 0
             else:
-                cart_item.save()
-                cart_item.refresh_from_db()
+                _clamp_related_added_qty(cart_item)
+                cart_item.save(
+                    update_fields=["qty", "related_added_qty", "time_updated"]
+                )
+                item_qty = cart_item.qty
             # Пересчитываем корзину после изменений
             cart = recalculate_cart(cart)
+            if item_qty > 0:
+                cart_item.refresh_from_db()
+                item_total = cart_item.current_unit_price_discounted * cart_item.qty
 
 
             # Возвращаем обновленные данные корзины
@@ -230,8 +251,8 @@ def cart_update_item(request):
                 'success': True,
                 'total': cart.total,
                 'subtotal': cart.items_subtotal,
-                'item_qty': cart_item.qty,
-                'item_total': cart_item.current_unit_price_discounted * cart_item.qty,
+                'item_qty': item_qty,
+                'item_total': item_total,
                 "discount_total": cart.discount_total,
                 'bonus_append': cart_item.bonuses_append,
                 'bonus_spend': cart_item.bonuses_spent,
@@ -284,6 +305,7 @@ def add_to_cart(request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
         delta = data.get("delta", 0)
+        source = (data.get("source") or "").strip()
 
         if not product_id:
             return JsonResponse({"success": False, "message": "Product ID is required"}, status=400)
@@ -297,10 +319,19 @@ def add_to_cart(request):
         if delta != 0:
             # Изменение количества товара в корзине
             cart_item.qty += delta
+            if source == RELATED_PRODUCTS_SOURCE and delta > 0:
+                cart_item.related_added_qty += delta
             if cart_item.qty <= 0:
                 cart_item.delete()
+                item_qty = 0
             else:
-                cart_item.save()
+                _clamp_related_added_qty(cart_item)
+                cart_item.save(
+                    update_fields=["qty", "related_added_qty", "time_updated"]
+                )
+                item_qty = cart_item.qty
+        else:
+            item_qty = cart_item.qty
 
 
         # Пересчитываем корзину после изменений
@@ -309,7 +340,7 @@ def add_to_cart(request):
         return JsonResponse({
             "success": True,
             "product_id": product_id,
-            "qty": cart_item.qty,
+            "qty": item_qty,
             "total": cart.total,
         })
 
@@ -1065,6 +1096,7 @@ def api_cart_checkout(request):
             bonuses_append=item.bonuses_append,
             bonuses_spent=item.bonuses_spent,
             line_total=item.line_total,
+            related_added_qty=min(item.related_added_qty, item.qty),
         )
         for item in cart_items
     ]

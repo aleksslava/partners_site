@@ -16,6 +16,7 @@ class CartItemInline(admin.TabularInline):
         "bonuses_append",
         "bonuses_spent",
         "line_total",
+        "related_added_qty",
     )
     readonly_fields = (
         "product",
@@ -25,6 +26,7 @@ class CartItemInline(admin.TabularInline):
         "bonuses_append",
         "bonuses_spent",
         "line_total",
+        "related_added_qty",
         "time_created",
         "time_updated",
     )
@@ -74,6 +76,7 @@ class OrderItemInline(admin.TabularInline):
         "bonuses_append",
         "bonuses_spent",
         "line_total",
+        "related_added_qty",
     )
     readonly_fields = (
         "product",
@@ -83,6 +86,7 @@ class OrderItemInline(admin.TabularInline):
         "bonuses_append",
         "bonuses_spent",
         "line_total",
+        "related_added_qty",
         "time_created",
         "time_updated",
     )

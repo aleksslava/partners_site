@@ -1,9 +1,26 @@
-from django.contrib import admin
+from datetime import timedelta
+
 from django import forms
+from django.contrib import admin
 from django.db import transaction
+from django.db.models import (
+    ExpressionWrapper,
+    F,
+    IntegerField,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    Value,
+)
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.urls import path
+from django.utils import timezone
 from django.utils.html import format_html
+
+from orders.models import CartItem, OrderItem
+
 from .models import (
     Product,
     Image,
@@ -13,6 +30,8 @@ from .models import (
     Instruction,
     Characteristics,
     ProductGroup,
+    RelatedProductGroup,
+    RelatedProductStats,
 )
 
 
@@ -103,6 +122,164 @@ class ProductInline(admin.TabularInline):
     fields = ('name', 'modification_name', 'price', 'is_primary', 'is_visible')
     show_change_link = True
 
+
+class RelatedProductGroupInline(admin.TabularInline):
+    model = RelatedProductGroup
+    fk_name = 'source_group'
+    extra = 0
+    autocomplete_fields = ('related_group',)
+    fields = ('related_group', 'sort_order', 'is_active')
+    ordering = ('sort_order', 'id')
+
+
+class RelatedStatsPeriodFilter(admin.SimpleListFilter):
+    title = "Период"
+    parameter_name = "related_stats_period"
+
+    def lookups(self, request, model_admin):
+        return (
+            ("today", "Сегодня"),
+            ("7d", "Последние 7 дней"),
+            ("30d", "Последние 30 дней"),
+        )
+
+    def queryset(self, request, queryset):
+        return queryset
+
+
+def _get_related_stats_since(period: str | None):
+    now = timezone.now()
+    if period == "today":
+        return now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if period == "7d":
+        return now - timedelta(days=7)
+    if period == "30d":
+        return now - timedelta(days=30)
+    return None
+
+
+def _money_amount_expression():
+    return ExpressionWrapper(
+        F("current_unit_price_discounted") * F("related_added_qty"),
+        output_field=IntegerField(),
+    )
+
+
+def _format_rubles(value: int | None) -> str:
+    amount = int(value or 0)
+    return f"{amount:,}".replace(",", " ") + " ₽"
+
+
+@admin.register(RelatedProductStats)
+class RelatedProductStatsAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "group",
+        "category_name",
+        "cart_related_qty",
+        "cart_related_amount",
+        "order_related_qty",
+        "order_related_amount",
+    )
+    list_display_links = None
+    list_filter = (RelatedStatsPeriodFilter, "group__category", "group")
+    search_fields = ("name", "amo_id", "group__name")
+    ordering = ("name",)
+    actions = None
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request).select_related("group", "group__category")
+        since = _get_related_stats_since(request.GET.get("related_stats_period"))
+
+        cart_items = CartItem.objects.filter(
+            product_id=OuterRef("pk"),
+            related_added_qty__gt=0,
+        )
+        order_items = OrderItem.objects.filter(
+            product_id=OuterRef("pk"),
+            related_added_qty__gt=0,
+        )
+        if since is not None:
+            cart_items = cart_items.filter(cart__time_created__gte=since)
+            order_items = order_items.filter(order__time_created__gte=since)
+
+        cart_qty = (
+            cart_items
+            .values("product_id")
+            .annotate(total=Sum("related_added_qty"))
+            .values("total")
+        )
+        cart_amount = (
+            cart_items
+            .values("product_id")
+            .annotate(total=Sum(_money_amount_expression()))
+            .values("total")
+        )
+        order_qty = (
+            order_items
+            .values("product_id")
+            .annotate(total=Sum("related_added_qty"))
+            .values("total")
+        )
+        order_amount = (
+            order_items
+            .values("product_id")
+            .annotate(total=Sum(_money_amount_expression()))
+            .values("total")
+        )
+
+        return (
+            qs.annotate(
+                related_cart_qty=Coalesce(
+                    Subquery(cart_qty, output_field=IntegerField()),
+                    Value(0),
+                ),
+                related_cart_amount=Coalesce(
+                    Subquery(cart_amount, output_field=IntegerField()),
+                    Value(0),
+                ),
+                related_order_qty=Coalesce(
+                    Subquery(order_qty, output_field=IntegerField()),
+                    Value(0),
+                ),
+                related_order_amount=Coalesce(
+                    Subquery(order_amount, output_field=IntegerField()),
+                    Value(0),
+                ),
+            )
+            .filter(Q(related_cart_qty__gt=0) | Q(related_order_qty__gt=0))
+        )
+
+    @admin.display(description="Категория", ordering="group__category__name")
+    def category_name(self, obj):
+        return obj.group.category if obj.group_id else ""
+
+    @admin.display(description="Добавлено, шт.", ordering="related_cart_qty")
+    def cart_related_qty(self, obj):
+        return obj.related_cart_qty
+
+    @admin.display(description="Добавлено, сумма", ordering="related_cart_amount")
+    def cart_related_amount(self, obj):
+        return _format_rubles(obj.related_cart_amount)
+
+    @admin.display(description="Оформлено, шт.", ordering="related_order_qty")
+    def order_related_qty(self, obj):
+        return obj.related_order_qty
+
+    @admin.display(description="Оформлено, сумма", ordering="related_order_amount")
+    def order_related_amount(self, obj):
+        return _format_rubles(obj.related_order_amount)
+
+
 @admin.register(ProductGroup)
 class ProductGroupAdmin(admin.ModelAdmin):
     list_display = ('drag_handle', 'name', 'category', 'sort_order', 'is_pinned')
@@ -110,7 +287,8 @@ class ProductGroupAdmin(admin.ModelAdmin):
     list_filter = ('category', 'tags', 'is_pinned')
     list_editable = ('is_pinned', 'sort_order')
     ordering = ('sort_order', 'id')
-    inlines = [ProductInline]
+    search_fields = ('name',)
+    inlines = [ProductInline, RelatedProductGroupInline]
 
     class Media:
         css = {
@@ -170,4 +348,3 @@ class ProductGroupAdmin(admin.ModelAdmin):
 
         ProductGroup.objects.bulk_update(groups, ['sort_order'])
         return JsonResponse({'success': True, 'positions': positions})
-

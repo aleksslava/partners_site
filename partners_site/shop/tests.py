@@ -1,15 +1,21 @@
+import json
 import tempfile
 from io import BytesIO
 
+from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.db import IntegrityError, transaction
+from django.test import RequestFactory, TestCase
 from django.test import override_settings
 from django.urls import reverse
 from PIL import Image as PilImage
 
+from orders.models import Cart, CartItem, Order, OrderItem
 from users.models import Customer, User
 
+from .admin import RelatedProductStatsAdmin
 from .discounts import get_category_discount_limit, get_item_discount_percent
 from .models import (
     Category,
@@ -18,7 +24,10 @@ from .models import (
     Instruction,
     Product,
     ProductGroup,
+    RelatedProductGroup,
+    RelatedProductStats,
 )
+from .services import get_cart_related_product_cards
 
 
 class DiscountResolverTests(TestCase):
@@ -254,3 +263,292 @@ class ProductImageSaveTests(TestCase):
         self.assertTrue(image.photo.name.endswith(".webp"))
         with PilImage.open(image.photo.path) as saved_image:
             self.assertEqual(saved_image.format, "WEBP")
+
+
+class RelatedProductGroupTests(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(
+            name="Партнер",
+            partner_discount=35,
+            partner_status=Customer.PartnerStatus.Gold,
+        )
+        self.user = User.objects.create_user(
+            username="related_partner",
+            password="secret",
+            customer=self.customer,
+        )
+        self.category = Category.objects.create(
+            name="Категория",
+            discount=20,
+            discount_policy=Category.DiscountPolicy.STANDARD,
+        )
+        self.cart = Cart.objects.create(user=self.user)
+        self.source_group, self.source_product = self._create_group_with_product(
+            "Источник",
+            1000,
+        )
+        CartItem.objects.create(
+            cart=self.cart,
+            product=self.source_product,
+            qty=1,
+        )
+
+    def _create_group_with_product(
+        self,
+        name: str,
+        price: int,
+        *,
+        is_visible: bool = True,
+        is_primary: bool = True,
+    ) -> tuple[ProductGroup, Product]:
+        group = ProductGroup.objects.create(name=name, category=self.category)
+        product = Product.objects.create(
+            name=name,
+            amo_id=abs(hash(name)) % 1000000,
+            price=price,
+            title="Описание",
+            group=group,
+            is_primary=is_primary,
+            is_visible=is_visible,
+        )
+        return group, product
+
+    def test_self_relation_is_invalid(self):
+        relation = RelatedProductGroup(
+            source_group=self.source_group,
+            related_group=self.source_group,
+        )
+
+        with self.assertRaises(ValidationError):
+            relation.full_clean()
+
+    def test_duplicate_relation_is_rejected(self):
+        related_group, _ = self._create_group_with_product("Связанный", 500)
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=related_group,
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                RelatedProductGroup.objects.create(
+                    source_group=self.source_group,
+                    related_group=related_group,
+                )
+
+    def test_related_cards_use_manual_relations(self):
+        related_group, related_product = self._create_group_with_product(
+            "Сопутствующий",
+            1500,
+        )
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=related_group,
+        )
+
+        cards = get_cart_related_product_cards(self.cart, self.user)
+
+        self.assertEqual(len(cards), 1)
+        self.assertEqual(cards[0]["group"], related_group)
+        self.assertEqual(cards[0]["product"], related_product)
+
+    def test_related_card_contains_visible_modifications(self):
+        related_group, primary_product = self._create_group_with_product(
+            "Related set",
+            1500,
+        )
+        primary_product.modification_name = "Base"
+        primary_product.save(update_fields=["modification_name"])
+        hidden_product = Product.objects.create(
+            name="Hidden modification",
+            modification_name="Hidden",
+            amo_id=3501,
+            price=1700,
+            title="Description",
+            group=related_group,
+            is_visible=False,
+        )
+        visible_product = Product.objects.create(
+            name="Visible <modification>",
+            modification_name="Extended",
+            amo_id=3502,
+            price=2000,
+            title="Description",
+            group=related_group,
+            is_visible=True,
+        )
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=related_group,
+        )
+
+        cards = get_cart_related_product_cards(self.cart, self.user)
+
+        self.assertEqual(len(cards), 1)
+        self.assertEqual(cards[0]["product"], primary_product)
+        modification_ids = [
+            modification["id"] for modification in cards[0]["modifications"]
+        ]
+        self.assertEqual(modification_ids, [primary_product.id, visible_product.id])
+        self.assertNotIn(hidden_product.id, modification_ids)
+
+        modifications_json = json.loads(cards[0]["modifications_json"])
+        self.assertNotIn("<", cards[0]["modifications_json"])
+        self.assertEqual(
+            modifications_json[1],
+            {
+                "id": visible_product.id,
+                "name": visible_product.name,
+                "modification_name": visible_product.modification_name,
+                "price": 2000,
+                "discounted_price": 1600,
+                "discount_percent": 20,
+                "image_url": "",
+            },
+        )
+
+    def test_related_cards_exclude_products_already_in_cart(self):
+        related_group, related_product = self._create_group_with_product(
+            "Уже в корзине",
+            1500,
+        )
+        CartItem.objects.create(cart=self.cart, product=related_product, qty=1)
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=related_group,
+        )
+
+        cards = get_cart_related_product_cards(self.cart, self.user)
+
+        self.assertEqual(cards, [])
+
+    def test_related_cards_ignore_groups_without_visible_products(self):
+        related_group, _ = self._create_group_with_product(
+            "Скрытый",
+            1500,
+            is_visible=False,
+        )
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=related_group,
+        )
+
+        cards = get_cart_related_product_cards(self.cart, self.user)
+
+        self.assertEqual(cards, [])
+
+    def test_related_cards_are_deduplicated_and_ordered(self):
+        second_source_group, second_source_product = self._create_group_with_product(
+            "Второй источник",
+            2000,
+        )
+        CartItem.objects.create(
+            cart=self.cart,
+            product=second_source_product,
+            qty=1,
+        )
+        first_group, _ = self._create_group_with_product("Первый", 500)
+        second_group, _ = self._create_group_with_product("Второй", 600)
+
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=second_group,
+            sort_order=20,
+        )
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=first_group,
+            sort_order=10,
+        )
+        RelatedProductGroup.objects.create(
+            source_group=second_source_group,
+            related_group=first_group,
+            sort_order=1,
+        )
+
+        cards = get_cart_related_product_cards(self.cart, self.user)
+
+        self.assertEqual([card["group"] for card in cards], [first_group, second_group])
+
+    def test_related_cards_use_partner_discount(self):
+        related_group, _ = self._create_group_with_product("Со скидкой", 1000)
+        RelatedProductGroup.objects.create(
+            source_group=self.source_group,
+            related_group=related_group,
+        )
+
+        cards = get_cart_related_product_cards(self.cart, self.user)
+
+        self.assertEqual(cards[0]["discount_percent"], 20)
+        self.assertEqual(cards[0]["discounted_price"], 800)
+        self.assertTrue(cards[0]["has_discount"])
+
+
+class RelatedProductStatsAdminTests(TestCase):
+    def setUp(self):
+        self.customer = Customer.objects.create(
+            name="Партнер",
+            partner_status=Customer.PartnerStatus.Gold,
+        )
+        self.user = User.objects.create_user(
+            username="related_stats_partner",
+            password="secret",
+            customer=self.customer,
+        )
+        self.category = Category.objects.create(name="Категория", discount=0)
+        self.group = ProductGroup.objects.create(
+            name="Группа",
+            category=self.category,
+        )
+        self.product = Product.objects.create(
+            name="Tracked product",
+            amo_id=4001,
+            price=1000,
+            title="Описание",
+            group=self.group,
+            is_visible=True,
+        )
+        self.untracked_product = Product.objects.create(
+            name="Untracked product",
+            amo_id=4002,
+            price=500,
+            title="Описание",
+            group=self.group,
+            is_visible=True,
+        )
+        self.model_admin = RelatedProductStatsAdmin(RelatedProductStats, admin.site)
+        self.factory = RequestFactory()
+
+    def test_admin_report_aggregates_cart_and_order_stats(self):
+        cart = Cart.objects.create(user=self.user)
+        CartItem.objects.create(
+            cart=cart,
+            product=self.product,
+            qty=3,
+            current_unit_price_discounted=800,
+            related_added_qty=2,
+        )
+        CartItem.objects.create(
+            cart=cart,
+            product=self.untracked_product,
+            qty=1,
+            current_unit_price_discounted=500,
+            related_added_qty=0,
+        )
+        order = Order.objects.create(user=self.user)
+        OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            qty=2,
+            current_unit_price_discounted=750,
+            related_added_qty=1,
+        )
+
+        request = self.factory.get("/admin/shop/relatedproductstats/")
+        stats = list(self.model_admin.get_queryset(request))
+
+        self.assertEqual(stats, [self.product])
+        self.assertEqual(stats[0].related_cart_qty, 2)
+        self.assertEqual(stats[0].related_cart_amount, 1600)
+        self.assertEqual(stats[0].related_order_qty, 1)
+        self.assertEqual(stats[0].related_order_amount, 750)

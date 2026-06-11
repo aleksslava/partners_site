@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django.core.files.base import ContentFile
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from taggit.managers import TaggableManager
 from pathlib import Path
@@ -77,6 +78,14 @@ class ProductGroup(models.Model):
     sort_order = models.PositiveIntegerField(default=0, db_index=True, verbose_name='Позиция в каталоге')
     is_pinned = models.BooleanField(default=False, db_index=True, verbose_name='Закрепить наверху')
     tags = TaggableManager(blank=True, verbose_name="Теги")
+    related_groups = models.ManyToManyField(
+        "self",
+        through="RelatedProductGroup",
+        symmetrical=False,
+        related_name="recommended_by_groups",
+        blank=True,
+        verbose_name="Сопутствующие товары",
+    )
 
     @property
     def primary_product(self):
@@ -89,6 +98,60 @@ class ProductGroup(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RelatedProductGroup(models.Model):
+    """Manual recommendation from one product group to another."""
+
+    source_group = models.ForeignKey(
+        ProductGroup,
+        on_delete=models.CASCADE,
+        related_name="related_product_links",
+        verbose_name="Основная группа",
+    )
+    related_group = models.ForeignKey(
+        ProductGroup,
+        on_delete=models.CASCADE,
+        related_name="incoming_related_product_links",
+        verbose_name="Сопутствующая группа",
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        verbose_name="Порядок показа",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name="Активна",
+    )
+    time_created = models.DateTimeField(auto_now_add=True)
+    time_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Сопутствующий товар"
+        verbose_name_plural = "Сопутствующие товары"
+        ordering = ("sort_order", "id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_group", "related_group"],
+                name="unique_related_product_group_pair",
+            ),
+            models.CheckConstraint(
+                check=~Q(source_group=models.F("related_group")),
+                name="related_product_group_not_self",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.source_group_id and self.source_group_id == self.related_group_id:
+            raise ValidationError({
+                "related_group": "Группа не может ссылаться на саму себя.",
+            })
+
+    def __str__(self):
+        return f"{self.source_group} -> {self.related_group}"
 
 # Create your models here.
 class Product(models.Model):
@@ -133,6 +196,15 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RelatedProductStats(Product):
+    """Readonly admin report for products added from related-products block."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Статистика сопутствующего товара"
+        verbose_name_plural = "Статистика сопутствующих товаров"
 
 class Image(models.Model):
     MAX_IMAGE_SIDE = 1600

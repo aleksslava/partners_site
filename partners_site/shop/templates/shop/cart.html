@@ -62,9 +62,10 @@
           </div>
         </div>
 
-        <div class="cart-items">
-            {% for item in cart.items.all %}
-                <div class="cart-item" data-product-id="{{ item.product.id }}">
+        <div class="cart-main">
+          <div class="cart-items">
+              {% for item in cart.items.all %}
+                  <div class="cart-item" data-product-id="{{ item.product.id }}">
                   <div class="cart-item__main">
                     <div class="cart-item__media">
                       {% with image=item.product.images.first %}
@@ -140,9 +141,119 @@
                     <strong id="item-line-total-mobile-{{ item.product.id }}">{{ item.line_total }}</strong> ₽
                   </div>
 
-                </div>
+                  </div>
 
-            {% endfor %}
+              {% endfor %}
+          </div>
+
+          {% if related_product_cards %}
+            <section class="cart-related" aria-labelledby="cart-related-title">
+              <div class="cart-related__header">
+                <h2 class="cart-related__title" id="cart-related-title">Не забудьте добавить!</h2>
+              </div>
+
+              <div class="cart-related__list">
+                {% for card in related_product_cards %}
+                  <article class="cart-related-card js-related-card" data-group-id="{{ card.group.pk }}">
+                    <a
+                      class="cart-related-card__media js-related-details-link"
+                      href="{% url 'product_group_detail' card.group.pk %}"
+                      data-base-href="{% url 'product_group_detail' card.group.pk %}"
+                    >
+                      <img
+                        class="cart-related-card__image js-related-image"
+                        src="{{ card.image_url }}"
+                        alt="{{ card.product.name }}"
+                        loading="lazy"
+                        decoding="async"
+                        width="240"
+                        height="180"
+                        {% if not card.image_url %}style="display:none;"{% endif %}
+                      >
+                      <span
+                        class="cart-related-card__image-placeholder js-related-image-placeholder"
+                        {% if card.image_url %}style="display:none;"{% endif %}
+                      >
+                        No photo
+                      </span>
+                    </a>
+
+                    <div class="cart-related-card__body">
+                      <h3 class="cart-related-card__name">
+                        <a
+                          class="js-related-details-link"
+                          href="{% url 'product_group_detail' card.group.pk %}"
+                          data-base-href="{% url 'product_group_detail' card.group.pk %}"
+                        >
+                          {{ card.group.name }}
+                        </a>
+                      </h3>
+
+                      <div class="cart-related-card__prices">
+                        <span class="cart-related-card__price js-related-price">
+                          {% if card.has_discount %}
+                            {{ card.discounted_price|localize }} ₽
+                          {% else %}
+                            {{ card.price|localize }} ₽
+                          {% endif %}
+                        </span>
+
+                        <span
+                          class="cart-related-card__old-price-wrap js-related-old-wrap"
+                          {% if not card.has_discount %}style="display:none;"{% endif %}
+                        >
+                          <span class="cart-related-card__discount js-related-discount">
+                            {% if card.has_discount %}-{{ card.discount_percent }}%{% endif %}
+                          </span>
+                          <span class="cart-related-card__old-price js-related-old-price">
+                            {{ card.price|localize }} ₽
+                          </span>
+                        </span>
+                      </div>
+
+                      {% if card.modifications|length > 1 %}
+                        <div class="product-variant product-variant--custom cart-related-card__variant js-related-variant">
+                          <select class="product-variant__native js-related-variant-select">
+                            {% for modification in card.modifications %}
+                              <option value="{{ modification.id }}" {% if modification.id == card.product.id %}selected{% endif %}>
+                                {{ modification.modification_name }}
+                              </option>
+                            {% endfor %}
+                          </select>
+
+                          <button
+                            type="button"
+                            class="product-variant__button js-related-variant-button"
+                            aria-haspopup="listbox"
+                            aria-expanded="false"
+                          >
+                            <span class="product-variant__label js-related-variant-label">
+                              {{ card.product.modification_name }}
+                            </span>
+                            <span class="product-variant__chevron" aria-hidden="true"></span>
+                          </button>
+                        </div>
+                      {% endif %}
+
+                      <div class="cart-related-card__actions">
+                        <button
+                          class="btn btn-cart cart-related-card__add js-related-cart-add"
+                          type="button"
+                          data-product-id="{{ card.product.id }}"
+                        >
+                          В корзину
+                        </button>
+                      </div>
+                    </div>
+
+                    <script type="application/json" id="related-mods-{{ card.group.pk }}">
+                      {{ card.modifications_json|safe }}
+                    </script>
+                  </article>
+                {% endfor %}
+              </div>
+            </section>
+          {% endif %}
         </div>
 
         <aside class="cart-sidebar">
@@ -462,8 +573,9 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'js/cart.js' %}?v=20260521-1"></script>
+    <script src="{% static 'js/cart.js' %}?v=20260611-2"></script>
     <script src="{% static 'js/cart_discount_type.js' %}?v=20260515-1"></script>
     <script src="{% static 'js/cart_payment.js' %}?v=20260427-1"></script>
     <script src="{% static 'js/cart_delivery.js' %}?v=20260427-1"></script>
+    <script src="{% static 'js/related_products.js' %}?v=20260611-1"></script>
 {% endblock %}

@@ -104,6 +104,10 @@ class CartItem(models.Model):
     bonuses_spent = models.PositiveIntegerField(default=0, verbose_name="Списать бонусов по позиции")
 
     line_total = models.PositiveIntegerField(default=0, verbose_name="Итоговая сумма по позиции")
+    related_added_qty = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Добавлено из сопутствующих товаров",
+    )
 
     time_created = models.DateTimeField(auto_now_add=True)
     time_updated = models.DateTimeField(auto_now=True)
@@ -212,6 +216,10 @@ class OrderItem(models.Model):
     bonuses_spent = models.PositiveIntegerField(default=0, verbose_name="Списать бонусов по позиции")
 
     line_total = models.PositiveIntegerField(default=0, verbose_name="Итоговая сумма по позиции")
+    related_added_qty = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Добавлено из сопутствующих товаров",
+    )
 
     time_created = models.DateTimeField(auto_now_add=True)
     time_updated = models.DateTimeField(auto_now=True)

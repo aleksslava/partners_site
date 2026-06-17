@@ -20,6 +20,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from partners_site import settings
+from partners_site.views import exam_landing_view
 
 admin.site.site_header = "Панель управления HiTE PRO"
 admin.site.site_title = "Админ"
@@ -27,6 +28,7 @@ admin.site.index_title = "Панель управления HiTE PRO"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('landing/', exam_landing_view, name='exam_landing'),
     path('', include('users.urls')),
     path('', include('shop.urls')),
     path('cart/', include('orders.urls')),

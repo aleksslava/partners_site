@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.test import TestCase
 from django.urls import reverse
 
@@ -376,3 +377,30 @@ class EmbeddedWebAppFrameOptionsTests(TestCase):
         response = self.client.get(reverse("catalog"))
 
         self.assert_embedded_csp(response, "https://web.telegram.org")
+
+
+class ExamLandingPageTests(TestCase):
+    def test_landing_is_public_standalone_page(self):
+        response = self.client.get(reverse("exam_landing"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "header__logo")
+        self.assertNotContains(response, "mobileMenuToggle")
+        self.assertContains(response, "/static/landing/exam/style.css")
+        self.assertContains(response, "/static/landing/exam/questions.js")
+        self.assertContains(response, "/static/landing/exam/app.js")
+
+    def test_landing_static_assets_are_discoverable(self):
+        asset_paths = (
+            "landing/exam/style.css",
+            "landing/exam/questions.js",
+            "landing/exam/app.js",
+            "landing/exam/img/q1.png",
+            "landing/exam/img/q2.png",
+            "landing/exam/img/q3.png",
+            "landing/exam/img/q4.png",
+        )
+
+        for asset_path in asset_paths:
+            with self.subTest(asset_path=asset_path):
+                self.assertIsNotNone(finders.find(asset_path))

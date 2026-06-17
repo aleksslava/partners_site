@@ -1,0 +1,60 @@
+<!doctype html>
+{% load static %}
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Тест</title>
+
+  <link rel="stylesheet" href="{% static 'landing/exam/style.css' %}">
+  <script>
+    window.EXAM_LANDING_ASSET_BASE = "{% static 'landing/exam/' %}";
+  </script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div class="progress" id="progress"></div>
+    </header>
+
+    <section class="card">
+      <div class="taskText" id="taskText"></div>
+    </section>
+
+    <section class="card">
+      <img class="taskImage" id="taskImage" alt="Изображение задачи">
+    </section>
+
+    <section class="card">
+      <div class="questionText" id="questionText"></div>
+    </section>
+
+    <section class="card">
+      <div class="fields" id="fields"></div>
+    </section>
+
+    <footer class="footer">
+      <button class="btn" id="nextBtn" type="button" disabled>Далее</button>
+      <div class="hint" id="hint"></div>
+    </footer>
+  </main>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button
+      class="lightboxClose"
+      id="lightboxClose"
+      type="button"
+      aria-label="Закрыть"
+    >×</button>
+    <img
+      class="lightboxImage"
+      id="lightboxImage"
+      alt="Увеличенное изображение задачи"
+    >
+  </div>
+
+  <script src="{% static 'landing/exam/questions.js' %}"></script>
+  <script src="{% static 'landing/exam/app.js' %}"></script>
+</body>
+</html>

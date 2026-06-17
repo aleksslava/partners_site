@@ -1,6 +1,18 @@
 from django.conf import settings
 from django.shortcuts import redirect
-from django.urls import resolve
+
+
+PUBLIC_PATHS = frozenset(
+    (
+        settings.LOGIN_URL,
+        "/logout/",
+        "/telegram/",
+        "/max/",
+        "/customer/changed",
+        "/landing",
+        "/landing/",
+    )
+)
 
 
 class EmbeddedWebAppFrameOptionsMiddleware:
@@ -45,7 +57,7 @@ class LoginRequiredMiddleware:
             return self.get_response(request)
 
         # Разрешаем страницы входа/выхода
-        if path in (settings.LOGIN_URL, "/logout/", "/telegram/", "/max/", "/customer/changed"):
+        if path in PUBLIC_PATHS:
             return self.get_response(request)
 
         # Если пользователь уже авторизован — пускаем

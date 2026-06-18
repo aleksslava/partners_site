@@ -371,7 +371,7 @@ class PartnerWebhookCheckoutTests(TestCase):
             "https://bots-webhook.hite-pro.ru/tg_partners/site-order",
             json={
                 "telegram_id": 111,
-                "order_id": 12345,
+                "order_id": "12345",
                 "total": 2000,
                 "items": [
                     {
@@ -405,7 +405,7 @@ class PartnerWebhookCheckoutTests(TestCase):
             "https://bots-webhook.hite-pro.ru/max_partners/site-order",
             json={
                 "max_id": 222,
-                "order_id": 12345,
+                "order_id": "12345",
                 "total": 2000,
                 "items": [
                     {

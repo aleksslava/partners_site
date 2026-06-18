@@ -20,7 +20,7 @@ WEBHOOK_TIMEOUT_SECONDS = 10
 def send_order_partner_webhooks(
     order: Order,
     order_items: Iterable[OrderItem],
-    amocrm_lead_id: int,
+    amocrm_lead_id: int | str,
 ) -> None:
     """Send partner order webhooks for an order created in amoCRM.
 
@@ -60,12 +60,13 @@ def send_order_partner_webhooks(
         return
 
     items_payload = _build_items_payload(order_items)
+    external_order_id = str(amocrm_lead_id)
     for url, external_id_name, external_id_value in webhook_targets:
         _post_order_webhook(
             url=url,
             payload={
                 external_id_name: external_id_value,
-                "order_id": amocrm_lead_id,
+                "order_id": external_order_id,
                 "total": int(order.total or 0),
                 "items": items_payload,
             },

@@ -17,6 +17,7 @@ from shop.services import get_cart_related_product_cards
 from users.models import Requisites, Address, User
 from .models import Cart, CartItem, Order, OrderItem
 from .services import recalculate_cart
+from .webhooks import send_order_partner_webhooks
 from django.db.models import F, Q
 import logging
 logger = logging.getLogger(__name__)
@@ -1159,6 +1160,13 @@ def api_cart_checkout(request):
             logger.warning("amoCRM lead id has invalid type for order_id=%s: %s", order.id, amocrm_lead_id)
         else:
             order.save(update_fields=["amo_crm_id"])
+            transaction.on_commit(
+                lambda: send_order_partner_webhooks(
+                    order=order,
+                    order_items=order_items,
+                    amocrm_lead_id=order.amo_crm_id,
+                )
+            )
 
     success_redirect_url = "/"
 

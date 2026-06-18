@@ -33,6 +33,7 @@ ALLOWED_HOSTS = env.list(
     default=["127.0.0.1", "localhost"] if DEBUG else [],
 )
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+WEBHOOK_SECRET = env("WEBHOOK_SECRET", default="")
 
 
 # Application definition

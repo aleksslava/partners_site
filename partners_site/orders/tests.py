@@ -1,7 +1,9 @@
 import json
 from unittest.mock import Mock, patch
 
-from django.test import TestCase
+import requests
+from django.http import HttpResponse
+from django.test import TestCase, override_settings
 
 from users.models import Address, Customer, Requisites, User
 from shop.models import (
@@ -305,6 +307,205 @@ class InvoiceCheckoutRequisitesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Order.objects.count(), 1)
+
+
+@override_settings(WEBHOOK_SECRET="test-secret")
+class PartnerWebhookCheckoutTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            username="webhook_partner",
+            password="secret",
+        )
+        self.client.force_login(self.user)
+        category = Category.objects.create(name="Webhook category", discount=0)
+        group = ProductGroup.objects.create(name="Webhook group", category=category)
+        self.product = Product.objects.create(
+            name="Webhook product",
+            amo_id=3301,
+            price=1000,
+            title="Description",
+            group=group,
+            is_primary=True,
+            is_visible=True,
+        )
+
+    def _create_cart(self) -> Cart:
+        cart = Cart.objects.create(user=self.user)
+        CartItem.objects.create(cart=cart, product=self.product, qty=2)
+        return cart
+
+    def _checkout(self) -> HttpResponse:
+        return self.client.post(
+            "/api/cart/checkout/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+    def _mock_amocrm_client(
+        self,
+        get_client: Mock,
+        response: dict[str, object],
+    ) -> None:
+        client = Mock()
+        client.send_lead_to_amo.return_value = response
+        get_client.return_value = client
+
+    @patch("orders.webhooks.requests.post")
+    @patch("orders.views.get_amocrm_client")
+    def test_checkout_sends_telegram_webhook(
+        self,
+        get_client: Mock,
+        post: Mock,
+    ) -> None:
+        self.user.telegram_id = 111
+        self.user.save(update_fields=["telegram_id"])
+        self._create_cart()
+        self._mock_amocrm_client(get_client, {"id": 12345})
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        post.assert_called_once_with(
+            "https://bots-webhook.hite-pro.ru/tg_partners/site-order",
+            json={
+                "telegram_id": 111,
+                "order_id": 12345,
+                "total": 2000,
+                "items": [
+                    {
+                        "name": "Webhook product",
+                        "quantity": 2,
+                        "total": 2000,
+                    }
+                ],
+            },
+            headers={"X-Webhook-Secret": "test-secret"},
+            timeout=10,
+        )
+
+    @patch("orders.webhooks.requests.post")
+    @patch("orders.views.get_amocrm_client")
+    def test_checkout_sends_max_webhook(
+        self,
+        get_client: Mock,
+        post: Mock,
+    ) -> None:
+        self.user.max_id = 222
+        self.user.save(update_fields=["max_id"])
+        self._create_cart()
+        self._mock_amocrm_client(get_client, {"id": 12345})
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        post.assert_called_once_with(
+            "https://bots-webhook.hite-pro.ru/max_partners/site-order",
+            json={
+                "max_id": 222,
+                "order_id": 12345,
+                "total": 2000,
+                "items": [
+                    {
+                        "name": "Webhook product",
+                        "quantity": 2,
+                        "total": 2000,
+                    }
+                ],
+            },
+            headers={"X-Webhook-Secret": "test-secret"},
+            timeout=10,
+        )
+
+    @patch("orders.webhooks.requests.post")
+    @patch("orders.views.get_amocrm_client")
+    def test_checkout_sends_both_partner_webhooks(
+        self,
+        get_client: Mock,
+        post: Mock,
+    ) -> None:
+        self.user.telegram_id = 111
+        self.user.max_id = 222
+        self.user.save(update_fields=["telegram_id", "max_id"])
+        self._create_cart()
+        self._mock_amocrm_client(get_client, {"id": 12345})
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(post.call_count, 2)
+        urls = [call.args[0] for call in post.call_args_list]
+        self.assertEqual(
+            urls,
+            [
+                "https://bots-webhook.hite-pro.ru/tg_partners/site-order",
+                "https://bots-webhook.hite-pro.ru/max_partners/site-order",
+            ],
+        )
+
+    @patch("orders.webhooks.requests.post")
+    @patch("orders.views.get_amocrm_client")
+    def test_checkout_skips_webhooks_without_amocrm_lead_id(
+        self,
+        get_client: Mock,
+        post: Mock,
+    ) -> None:
+        self.user.telegram_id = 111
+        self.user.max_id = 222
+        self.user.save(update_fields=["telegram_id", "max_id"])
+        self._create_cart()
+        self._mock_amocrm_client(get_client, {})
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        post.assert_not_called()
+
+    @patch("orders.webhooks.requests.post")
+    @patch("orders.views.get_amocrm_client")
+    def test_checkout_skips_channel_without_external_id(
+        self,
+        get_client: Mock,
+        post: Mock,
+    ) -> None:
+        self.user.telegram_id = 111
+        self.user.save(update_fields=["telegram_id"])
+        self._create_cart()
+        self._mock_amocrm_client(get_client, {"id": 12345})
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(
+            post.call_args.args[0],
+            "https://bots-webhook.hite-pro.ru/tg_partners/site-order",
+        )
+
+    @patch("orders.webhooks.requests.post")
+    @patch("orders.views.get_amocrm_client")
+    def test_webhook_failure_does_not_break_checkout(
+        self,
+        get_client: Mock,
+        post: Mock,
+    ) -> None:
+        self.user.telegram_id = 111
+        self.user.save(update_fields=["telegram_id"])
+        self._create_cart()
+        self._mock_amocrm_client(get_client, {"id": 12345})
+        post.side_effect = requests.RequestException("timeout")
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Order.objects.count(), 1)
+        post.assert_called_once()
 
 
 class CartDeliveryAddressPersistenceTests(TestCase):

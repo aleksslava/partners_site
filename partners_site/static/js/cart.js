@@ -156,7 +156,7 @@
     }
 
     if (checkoutForm && checkoutButton) {
-        checkoutForm.addEventListener('submit', function (event) {
+        checkoutForm.addEventListener('submit', async function (event) {
             if (termsCheckbox && !termsCheckbox.checked) {
                 event.preventDefault();
                 setTermsHighlight(true);
@@ -169,6 +169,29 @@
             checkoutButton.disabled = true;
             if (mobileCheckoutButton) {
                 mobileCheckoutButton.disabled = true;
+            }
+
+            const validateInvoiceRequisites = window.validateAndSaveInvoiceRequisitesForCheckout;
+            if (typeof validateInvoiceRequisites === 'function') {
+                try {
+                    const canCheckout = await validateInvoiceRequisites();
+                    if (!canCheckout) {
+                        checkoutButton.disabled = false;
+                        if (mobileCheckoutButton) {
+                            mobileCheckoutButton.disabled = false;
+                        }
+                        syncCheckoutState();
+                        return;
+                    }
+                } catch (error) {
+                    alert(error.message || 'Не удалось сохранить реквизиты');
+                    checkoutButton.disabled = false;
+                    if (mobileCheckoutButton) {
+                        mobileCheckoutButton.disabled = false;
+                    }
+                    syncCheckoutState();
+                    return;
+                }
             }
 
             fetch('/api/cart/checkout/', {

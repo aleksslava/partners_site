@@ -950,6 +950,11 @@
   box-shadow:0 0 0 4px rgba(220,38,38,.14);
 }
 
+.cart-field__input.is-invalid::placeholder{
+  color:#dc2626;
+  opacity:1;
+}
+
 .cart-field__hint{
   margin-top:6px;
   font-size:12px;

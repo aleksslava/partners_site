@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from django.test import TestCase
 
-from users.models import Address, Customer, User
+from users.models import Address, Customer, Requisites, User
 from shop.models import (
     Category,
     CategoryStatusDiscountCap,
@@ -12,7 +12,7 @@ from shop.models import (
     RelatedProductGroup,
 )
 
-from .models import Cart, CartItem, OrderItem
+from .models import Cart, CartItem, Order, OrderItem
 from .services import recalculate_cart
 
 
@@ -205,6 +205,106 @@ class RelatedProductTrackingTests(TestCase):
         order_item = OrderItem.objects.get(product=self.product)
         self.assertEqual(order_item.qty, 3)
         self.assertEqual(order_item.related_added_qty, 2)
+
+
+class InvoiceCheckoutRequisitesTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="invoice_partner",
+            password="secret",
+        )
+        self.client.force_login(self.user)
+        category = Category.objects.create(name="Invoice category", discount=0)
+        group = ProductGroup.objects.create(name="Invoice group", category=category)
+        self.product = Product.objects.create(
+            name="Invoice product",
+            amo_id=3201,
+            price=1000,
+            title="Description",
+            group=group,
+            is_primary=True,
+            is_visible=True,
+        )
+
+    def _create_cart(self, *, payment_type: str) -> Cart:
+        cart = Cart.objects.create(user=self.user, payment_type=payment_type)
+        CartItem.objects.create(cart=cart, product=self.product, qty=1)
+        return cart
+
+    def _checkout(self):
+        return self.client.post(
+            "/api/cart/checkout/",
+            data=json.dumps({}),
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+    @patch("orders.views.get_amocrm_client")
+    def test_invoice_checkout_without_requisites_is_rejected(self, get_client):
+        self._create_cart(payment_type=Cart.PaymentType.INVOICE)
+
+        response = self._checkout()
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "invoice_requisites_required")
+        self.assertEqual(Order.objects.count(), 0)
+        get_client.assert_not_called()
+
+    @patch("orders.views.get_amocrm_client")
+    def test_invoice_checkout_with_incomplete_requisites_is_rejected(self, get_client):
+        requisites = Requisites.objects.create(
+            user=self.user,
+            company_name="ООО Ромашка",
+            inn="7701000000",
+            bik="",
+            legal_address="Москва",
+            settlement_account="40702810000000000001",
+        )
+        cart = self._create_cart(payment_type=Cart.PaymentType.INVOICE)
+        cart.requisites = requisites
+        cart.save(update_fields=["requisites", "time_updated"])
+
+        response = self._checkout()
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "invoice_requisites_required")
+        self.assertEqual(Order.objects.count(), 0)
+        get_client.assert_not_called()
+
+    @patch("orders.views.get_amocrm_client")
+    def test_invoice_checkout_with_complete_requisites_creates_order(self, get_client):
+        client = Mock()
+        client.send_lead_to_amo.return_value = {"id": 12346}
+        get_client.return_value = client
+        requisites = Requisites.objects.create(
+            user=self.user,
+            company_name="ООО Ромашка",
+            inn="7701000000",
+            bik="044525225",
+            legal_address="Москва",
+            settlement_account="40702810000000000001",
+        )
+        cart = self._create_cart(payment_type=Cart.PaymentType.INVOICE)
+        cart.requisites = requisites
+        cart.save(update_fields=["requisites", "time_updated"])
+
+        response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        order = Order.objects.get()
+        self.assertEqual(order.requisites_id, requisites.id)
+
+    @patch("orders.views.get_amocrm_client")
+    def test_non_invoice_checkout_does_not_require_requisites(self, get_client):
+        client = Mock()
+        client.send_lead_to_amo.return_value = {"id": 12347}
+        get_client.return_value = client
+        self._create_cart(payment_type=Cart.PaymentType.SBP)
+
+        response = self._checkout()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Order.objects.count(), 1)
 
 
 class CartDeliveryAddressPersistenceTests(TestCase):

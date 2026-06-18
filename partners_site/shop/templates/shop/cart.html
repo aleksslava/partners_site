@@ -307,6 +307,7 @@
                   <input id="invoice-company"
                          class="cart-field__input js-invoice-company-name"
                          type="text"
+                         data-invoice-required="true"
                          value="{{ r.company_name|default:'' }}"
                          placeholder="ООО «Ромашка»">
                 </div>
@@ -316,6 +317,7 @@
                   <input id="invoice-inn"
                          class="cart-field__input js-invoice-inn"
                          type="text"
+                         data-invoice-required="true"
                          value="{{ r.inn|default:'' }}"
                          placeholder="10–12 цифр">
                 </div>
@@ -325,6 +327,7 @@
                   <input id="invoice-bik"
                          class="cart-field__input js-invoice-bik"
                          type="text"
+                         data-invoice-required="true"
                          value="{{ r.bik|default:'' }}"
                          placeholder="9 цифр">
                 </div>
@@ -334,6 +337,7 @@
                   <input id="invoice-legal"
                          class="cart-field__input js-invoice-legal-address"
                          type="text"
+                         data-invoice-required="true"
                          value="{{ r.legal_address|default:'' }}"
                          placeholder="Город, улица, дом">
                 </div>
@@ -343,6 +347,7 @@
                   <input id="invoice-account"
                          class="cart-field__input js-invoice-account"
                          type="text"
+                         data-invoice-required="true"
                          value="{{ r.settlement_account|default:'' }}"
                          placeholder="20 цифр">
                 </div>

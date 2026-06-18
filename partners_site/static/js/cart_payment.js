@@ -187,6 +187,10 @@
     const fAccount = document.querySelector('.js-invoice-account');
 
     const saveBtn = document.querySelector('.js-save-requisites');
+    const invoiceRequiredFields = Array.from(
+      document.querySelectorAll('[data-invoice-required="true"]')
+    );
+    const requiredFieldPlaceholder = 'Обязательно для заполнения';
 
     // Текущий выбранный requisites_id (если ты проставляешь при рендере — можно заполнить)
     // window.__activeRequisitesId = window.__activeRequisitesId || null;
@@ -200,6 +204,94 @@
       invoiceWrap.style.display = isInvoiceSelected() ? '' : 'none';
       if (!isInvoiceSelected()) closePortal();
     }
+
+    function expandInvoiceSection() {
+      if (!invoiceWrap) return;
+      invoiceWrap.style.display = '';
+      const section = invoiceWrap.closest('.js-cart-section');
+      const toggle = section?.querySelector('.js-cart-section-toggle');
+      if (!section) return;
+      section.classList.add('is-open');
+      section.dataset.userOpen = 'true';
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function clearInvoiceFieldError(field) {
+      field.classList.remove('is-invalid');
+      field.removeAttribute('aria-invalid');
+      if (field.dataset.originalPlaceholder !== undefined) {
+        field.placeholder = field.dataset.originalPlaceholder;
+        delete field.dataset.originalPlaceholder;
+      }
+    }
+
+    function setInvoiceFieldError(field) {
+      if (field.dataset.originalPlaceholder === undefined) {
+        field.dataset.originalPlaceholder = field.placeholder || '';
+      }
+      field.value = '';
+      field.placeholder = requiredFieldPlaceholder;
+      field.classList.add('is-invalid');
+      field.setAttribute('aria-invalid', 'true');
+    }
+
+    function validateInvoiceRequiredFields() {
+      if (!isInvoiceSelected()) return true;
+
+      let firstInvalid = null;
+      invoiceRequiredFields.forEach(field => {
+        if ((field.value || '').trim()) {
+          clearInvoiceFieldError(field);
+          return;
+        }
+
+        setInvoiceFieldError(field);
+        firstInvalid = firstInvalid || field;
+      });
+
+      if (!firstInvalid) return true;
+
+      expandInvoiceSection();
+      firstInvalid.scrollIntoView({behavior: 'smooth', block: 'center'});
+      firstInvalid.focus({preventScroll: true});
+      return false;
+    }
+
+    function getRequisitesPayload() {
+      return {
+        id: window.__activeRequisitesId || null,
+        name: fCompany?.value || '',
+        inn: fInn?.value || '',
+        bik: fBik?.value || '',
+        legal_address: fLegal?.value || '',
+        settlement_account: fAccount?.value || ''
+      };
+    }
+
+    async function saveInvoiceRequisites() {
+      if (!isInvoiceSelected()) return true;
+      if (!validateInvoiceRequiredFields()) return false;
+
+      const data = await apiPost('/api/cart/save-requisites/', getRequisitesPayload());
+      if (data?.success) {
+        window.__activeRequisitesId = data.requisites_id;
+        activeReqId = data.requisites_id;
+        applyTotals(data);
+      }
+      return Boolean(data?.success);
+    }
+
+    window.validateAndSaveInvoiceRequisitesForCheckout = saveInvoiceRequisites;
+
+    invoiceRequiredFields.forEach(field => {
+      field.addEventListener('input', () => {
+        if ((field.value || '').trim()) {
+          clearInvoiceFieldError(field);
+        }
+      });
+    });
 
     if (paymentSelect) toggleInvoiceFields();
 
@@ -267,6 +359,7 @@
       if (fBik) fBik.value = r.bik || '';
       if (fLegal) fLegal.value = r.legal_address || '';
       if (fAccount) fAccount.value = r.settlement_account || '';
+      invoiceRequiredFields.forEach(clearInvoiceFieldError);
     }
 
     function buildReqOptions(results, query) {
@@ -380,29 +473,7 @@
 
     // --- save requisites button ---
     async function saveRequisites() {
-      if (!isInvoiceSelected()) return;
-
-      const payload = {
-        id: window.__activeRequisitesId || null,
-        name: fCompany?.value || '',
-        inn: fInn?.value || '',
-        bik: fBik?.value || '',
-        legal_address: fLegal?.value || '',
-        settlement_account: fAccount?.value || ''
-      };
-
-      // минимальная валидация
-      if (!payload.name.trim()) {
-        alert('Заполните "Наименование организации"');
-        return;
-      }
-
-      const data = await apiPost('/api/cart/save-requisites/', payload);
-      if (data?.success) {
-        window.__activeRequisitesId = data.requisites_id;
-        activeReqId = data.requisites_id;
-        applyTotals(data);
-      }
+      await saveInvoiceRequisites();
     }
 
     if (saveBtn) {

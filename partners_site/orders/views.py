@@ -24,6 +24,13 @@ logger = logging.getLogger(__name__)
 _PHONE_RE = re.compile(r'^\+?\d{10,15}$')
 COMMERCIAL_PROPOSAL_URL = "https://education.hite-pro.ru/kp/partner"
 RELATED_PRODUCTS_SOURCE = "related_products"
+INVOICE_REQUISITES_REQUIRED_FIELDS = (
+    "company_name",
+    "inn",
+    "bik",
+    "legal_address",
+    "settlement_account",
+)
 
 
 def _normalize_phone(s: str) -> str:
@@ -85,6 +92,16 @@ def _get_customer_bonuses(user: User) -> int:
 def _get_bonus_spend_limit(cart: Cart, user: User) -> int:
     items_total_after_discount = max(0, int(cart.items_subtotal or 0) - int(cart.discount_total or 0))
     return min(max(items_total_after_discount - 11, 0), _get_customer_bonuses(user))
+
+
+def _has_required_invoice_requisites(cart: Cart) -> bool:
+    requisites = cart.requisites
+    if requisites is None:
+        return False
+    return all(
+        bool((getattr(requisites, field_name, "") or "").strip())
+        for field_name in INVOICE_REQUISITES_REQUIRED_FIELDS
+    )
 
 
 def _clamp_related_added_qty(cart_item: CartItem) -> None:
@@ -1062,6 +1079,17 @@ def api_cart_checkout(request):
         return redirect("/cart/?checkout_error=empty")
 
     cart = recalculate_cart(cart)
+    if (
+        cart.payment_type == Cart.PaymentType.INVOICE
+        and not _has_required_invoice_requisites(cart)
+    ):
+        if expects_json:
+            return JsonResponse(
+                {"success": False, "error": "invoice_requisites_required"},
+                status=400,
+            )
+        return redirect("/cart/?checkout_error=invoice_requisites_required")
+
     cart_items = list(cart.items.select_related("product").all())
 
     order = Order.objects.create(

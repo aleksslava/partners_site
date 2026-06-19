@@ -1,0 +1,10 @@
+.amo-contact-create-widget {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.amo-contact-create-widget input {
+    max-width: 20em;
+}

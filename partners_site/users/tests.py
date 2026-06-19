@@ -1,12 +1,18 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.auth.models import Permission
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
+from integrations.amocrm.client import AmoCRMWrapper
+from integrations.amocrm.exceptions import AmoServerError, ContactNotFoundError
 from orders.models import Cart, Order
 from users.models import Address, Customer, Requisites, User
+from users.services.amocrm_login import resolve_user_via_amocrm_contact_id
 from users.services.amocrm_sync import sync_customer_from_amocrm
 
 
@@ -287,6 +293,271 @@ class CustomerChangedWebhookTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ignored")
         sync_customer.assert_not_called()
+
+
+class ResolveUserViaAmoContactIdTests(TestCase):
+    def test_creates_user_and_customer_from_amocrm_contact_id(self):
+        contact_payload = {
+            "id": 123,
+            "first_name": "Ivan",
+            "last_name": "Partner",
+            "custom_fields_values": [],
+            "_embedded": {"customers": [{"id": 456}]},
+        }
+        customer_payload = {
+            "id": 456,
+            "name": "Partner Customer",
+            "custom_fields_values": [],
+        }
+
+        with patch("users.services.amocrm_login.get_amocrm_client") as get_client:
+            amo_client = get_client.return_value
+            amo_client.get_contact_by_id.return_value = contact_payload
+            amo_client.get_customer_by_id.return_value = (True, customer_payload)
+
+            user, created = resolve_user_via_amocrm_contact_id(contact_id=123)
+
+        self.assertTrue(created)
+        self.assertEqual(user.username, "123")
+        self.assertEqual(user.amo_id_contact, 123)
+        self.assertFalse(user.has_usable_password())
+        self.assertIsNotNone(user.customer)
+        self.assertEqual(user.customer.amo_id_customer, 456)
+        self.assertEqual(user.customer.name, "Partner Customer")
+        amo_client.get_contact_by_id.assert_called_once_with(
+            contact_id=123,
+            with_customers=True,
+        )
+        amo_client.get_customer_by_id.assert_called_once_with(customer_id=456)
+
+    def test_uses_existing_customer_from_amocrm_contact_id(self):
+        customer = Customer.objects.create(
+            name="Existing Customer",
+            amo_id_customer=456,
+        )
+        contact_payload = {
+            "id": 123,
+            "first_name": "Ivan",
+            "last_name": "Partner",
+            "custom_fields_values": [],
+            "_embedded": {"customers": [{"id": 456}]},
+        }
+
+        with patch("users.services.amocrm_login.get_amocrm_client") as get_client:
+            amo_client = get_client.return_value
+            amo_client.get_contact_by_id.return_value = contact_payload
+
+            user, created = resolve_user_via_amocrm_contact_id(contact_id=123)
+
+        self.assertTrue(created)
+        self.assertEqual(user.customer, customer)
+        amo_client.get_customer_by_id.assert_not_called()
+
+    def test_returns_existing_user_without_amocrm_request(self):
+        user = User.objects.create_user(
+            username="123",
+            password="secret",
+            amo_id_contact=123,
+        )
+
+        with patch("users.services.amocrm_login.get_amocrm_client") as get_client:
+            resolved_user, created = resolve_user_via_amocrm_contact_id(contact_id=123)
+
+        self.assertFalse(created)
+        self.assertEqual(resolved_user, user)
+        get_client.assert_not_called()
+
+    def test_missing_contact_id_does_not_create_records(self):
+        with patch("users.services.amocrm_login.get_amocrm_client") as get_client:
+            get_client.return_value.get_contact_by_id.return_value = {}
+
+            with self.assertRaisesMessage(
+                AmoServerError,
+                "Контакт с ID 123 не найден в AmoCRM",
+            ):
+                resolve_user_via_amocrm_contact_id(contact_id=123)
+
+        self.assertFalse(User.objects.filter(username="123").exists())
+        self.assertFalse(Customer.objects.exists())
+
+    def test_taken_exact_username_does_not_create_user(self):
+        User.objects.create_user(username="123", password="secret")
+
+        contact_payload = {
+            "id": 123,
+            "first_name": "Ivan",
+            "last_name": "Partner",
+            "custom_fields_values": [],
+            "_embedded": {"customers": [{"id": 456}]},
+        }
+
+        with patch("users.services.amocrm_login.get_amocrm_client") as get_client:
+            get_client.return_value.get_contact_by_id.return_value = contact_payload
+
+            with self.assertRaisesMessage(
+                ValidationError,
+                "Логин 123 уже занят другим пользователем.",
+            ):
+                resolve_user_via_amocrm_contact_id(contact_id=123)
+
+        self.assertFalse(User.objects.filter(amo_id_contact=123).exists())
+
+
+class AmoCRMContactClientTests(TestCase):
+    def test_contact_by_id_raises_not_found_without_json_parsing(self):
+        client = AmoCRMWrapper(
+            amocrm_subdomain="test",
+            amocrm_client_id="client",
+            amocrm_client_secret="secret",
+            amocrm_redirect_url="https://example.test",
+            amocrm_access_token="token",
+            amocrm_refresh_token="refresh",
+            amocrm_secret_code="code",
+        )
+
+        with patch.object(client, "_base_request") as base_request:
+            response = SimpleNamespace(status_code=404)
+            base_request.return_value = response
+
+            with self.assertRaisesMessage(
+                ContactNotFoundError,
+                "Контакт с ID 123 не найден в AmoCRM",
+            ):
+                client.get_contact_by_id(contact_id=123, with_customers=True)
+
+
+class UserAdminCreateFromAmoCRMTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="admin",
+            password="password",
+            email="admin@example.test",
+        )
+        self.client.force_login(self.admin_user)
+        self.add_url = reverse("admin:users_user_add")
+        self.create_url = reverse("admin:users_user_create_from_amocrm")
+
+    def test_add_form_contains_amocrm_create_button(self):
+        response = self.client.get(self.add_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Создать по ID AmoCrm")
+        self.assertContains(response, "data-amo-contact-create-button")
+
+    def test_create_from_amocrm_redirects_to_created_user(self):
+        def create_user(contact_id):
+            user = User.objects.create_user(
+                username=str(contact_id),
+                amo_id_contact=contact_id,
+            )
+            return user, True
+
+        with patch(
+            "users.admin.resolve_user_via_amocrm_contact_id",
+            side_effect=create_user,
+        ) as resolve_user:
+            response = self.client.post(self.create_url, {"amo_id_contact": "123"})
+
+        user = User.objects.get(username="123")
+        self.assertRedirects(
+            response,
+            reverse("admin:users_user_change", args=[user.pk]),
+            fetch_redirect_response=False,
+        )
+        resolve_user.assert_called_once_with(contact_id=123)
+
+    def test_existing_amocrm_user_redirects_to_existing_user(self):
+        user = User.objects.create_user(username="123", amo_id_contact=123)
+
+        with patch(
+            "users.admin.resolve_user_via_amocrm_contact_id",
+            return_value=(user, False),
+        ) as resolve_user:
+            response = self.client.post(self.create_url, {"amo_id_contact": "123"})
+
+        self.assertRedirects(
+            response,
+            reverse("admin:users_user_change", args=[user.pk]),
+            fetch_redirect_response=False,
+        )
+        resolve_user.assert_called_once_with(contact_id=123)
+
+    def test_invalid_amocrm_contact_id_redirects_to_add_form(self):
+        with patch("users.admin.resolve_user_via_amocrm_contact_id") as resolve_user:
+            response = self.client.post(
+                self.create_url,
+                {"amo_id_contact": ""},
+                follow=True,
+            )
+
+        self.assertRedirects(response, self.add_url)
+        self.assertContains(response, "Введите корректный ID контакта AmoCRM.")
+        resolve_user.assert_not_called()
+
+    def test_missing_amocrm_contact_redirects_to_add_form_with_error(self):
+        with patch(
+            "users.admin.resolve_user_via_amocrm_contact_id",
+            side_effect=AmoServerError("Контакт с ID 123 не найден в AmoCRM"),
+        ):
+            response = self.client.post(
+                self.create_url,
+                {"amo_id_contact": "123"},
+                follow=True,
+            )
+
+        self.assertRedirects(response, self.add_url)
+        self.assertContains(response, "Контакт с ID 123 не найден в AmoCRM")
+
+
+class UserAdminPermissionFieldsTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="admin",
+            password="password",
+            email="admin@example.test",
+        )
+        self.staff_user = User.objects.create_user(
+            username="staff",
+            password="password",
+            is_staff=True,
+        )
+        self.target_user = User.objects.create_user(username="target")
+        change_user_permission = Permission.objects.get(
+            content_type__app_label="users",
+            codename="change_user",
+        )
+        self.staff_user.user_permissions.add(change_user_permission)
+
+    def test_non_superuser_change_form_hides_permission_fields(self):
+        self.client.force_login(self.staff_user)
+
+        response = self.client.get(
+            reverse("admin:users_user_change", args=[self.target_user.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="is_staff"')
+        self.assertNotContains(response, 'name="is_superuser"')
+        self.assertNotContains(response, 'name="groups"')
+        self.assertNotContains(response, 'name="user_permissions"')
+
+    def test_non_superuser_cannot_change_superuser(self):
+        self.client.force_login(self.staff_user)
+
+        response = self.client.get(
+            reverse("admin:users_user_change", args=[self.admin_user.pk])
+        )
+
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_non_superuser_changelist_excludes_superusers(self):
+        self.client.force_login(self.staff_user)
+
+        response = self.client.get(reverse("admin:users_user_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(self.admin_user, response.context["cl"].queryset)
+        self.assertIn(self.target_user, response.context["cl"].queryset)
 
 
 class SyncCustomerFromAmoCRMTests(TestCase):

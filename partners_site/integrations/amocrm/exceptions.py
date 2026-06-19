@@ -52,6 +52,11 @@ class ContactHasMultipleCustomersError(ContactCustomerBindingError):
         super().__init__(message)
 
 
+class ContactNotFoundError(AmoCRMError):
+    def __init__(self, contact_id: int):
+        super().__init__(f"Контакт с ID {contact_id} не найден в AmoCRM")
+
+
 class CustomerNotFound(ContactCustomerBindingError):
     def __init__(
         self,

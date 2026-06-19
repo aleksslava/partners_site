@@ -8,6 +8,7 @@ from requests.exceptions import JSONDecodeError
 
 from .exceptions import (
     AmoServerError,
+    ContactNotFoundError,
     CustomerNotFound,
     MultipleContactsError,
     NotFoundMaxIdContactError,
@@ -397,11 +398,25 @@ class AmoCRMWrapper:
         url = f"/api/v4/contacts/{contact_id}"
         if with_customers:
             query = str("with=customers")
-            response = self._base_request(endpoint=url, type="get_param", parameters=query)
+            response = self._base_request(
+                endpoint=url,
+                type="get_param",
+                parameters=query,
+            )
         else:
             response = self._base_request(type="get", endpoint=url)
 
-        return response.json()
+        if response.status_code in (204, 404):
+            raise ContactNotFoundError(contact_id=int(contact_id))
+        if response.status_code != 200:
+            raise AmoServerError()
+
+        try:
+            return response.json()
+        except ValueError as error:
+            raise AmoServerError(
+                "AmoCRM вернула некорректные данные контакта"
+            ) from error
 
     def get_responsible_user_by_id(self, manager_id: int):
         url = f"/api/v4/users/{manager_id}"

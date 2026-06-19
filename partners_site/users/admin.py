@@ -1,13 +1,71 @@
-from django.contrib import admin
+import logging
+from typing import Any
+
+from django import forms
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html, format_html_join
 from django.forms.models import BaseInlineFormSet
-from django.core.exceptions import ValidationError
-from django.urls import reverse
+from django.http import HttpResponseRedirect
+from django.urls import path, reverse
 
+from integrations.amocrm.exceptions import AmoCRMError
 from .models import User, Address, Customer, UserPhone, Requisites
 from orders.models import Cart
+from users.services.amocrm_login import (
+    extract_error_message,
+    parse_external_id,
+    resolve_user_via_amocrm_contact_id,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class AmoContactCreateWidget(forms.Widget):
+    """Render the amoCRM contact ID input with an admin submit button."""
+
+    def __init__(
+        self,
+        base_widget: forms.Widget,
+        create_url: str,
+        attrs: dict[str, object] | None = None,
+    ) -> None:
+        super().__init__(attrs)
+        self.base_widget = base_widget
+        self.create_url = create_url
+
+    @property
+    def media(self) -> forms.Media:
+        return self.base_widget.media + forms.Media(
+            css={"all": ("admin/css/amo_contact_create.css",)},
+            js=("admin/js/amo_contact_create.js",),
+        )
+
+    def render(
+        self,
+        name: str,
+        value: Any,
+        attrs: dict[str, object] | None = None,
+        renderer: object | None = None,
+    ) -> str:
+        widget_html = self.base_widget.render(
+            name,
+            value,
+            attrs=attrs,
+            renderer=renderer,
+        )
+        return format_html(
+            '<div class="amo-contact-create-widget">{}'
+            '<button type="submit" class="button" formaction="{}" '
+            'formmethod="post" formnovalidate disabled '
+            'data-amo-contact-create-button>'
+            "{}</button></div>",
+            widget_html,
+            self.create_url,
+            "Создать по ID AmoCrm",
+        )
 
 
 class AddressInlineFormSet(BaseInlineFormSet):
@@ -154,13 +212,13 @@ class UserAdmin(BaseUserAdmin):
     inlines = [AddressInline, UserPhoneInline, RequisitesInline, CartInline]
 
     list_display = (
-        "username", "first_name", "last_name",
+        "login", "first_name", "last_name",
         "customer", "role_badge",
         "email", "phone",
         "address_count",
         "is_staff", "is_active",
     )
-    list_display_links = ("username", "first_name", "last_name")
+    list_display_links = ("login", "first_name", "last_name")
     list_select_related = ("customer",)
     date_hierarchy = "date_joined"
     autocomplete_fields = ("customer",)
@@ -178,9 +236,126 @@ class UserAdmin(BaseUserAdmin):
         User.Role.MANAGER: "#0d6efd",
         User.Role.ADMIN: "#dc3545",
     }
+    _NON_SUPERUSER_HIDDEN_FIELDS = {
+        "groups",
+        "is_staff",
+        "is_superuser",
+        "user_permissions",
+    }
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "create-from-amocrm/",
+                self.admin_site.admin_view(self.create_from_amocrm),
+                name="users_user_create_from_amocrm",
+            ),
+        ]
+        return custom_urls + urls
+
+    def get_form(self, request, obj=None, **kwargs):
+        request._user_admin_add_form = obj is None
+        return super().get_form(request, obj=obj, **kwargs)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj=obj)
+        if request.user.is_superuser:
+            return fieldsets
+
+        filtered_fieldsets = []
+        for name, options in fieldsets:
+            fields = tuple(
+                field
+                for field in options["fields"]
+                if field not in self._NON_SUPERUSER_HIDDEN_FIELDS
+            )
+            filtered_fieldsets.append((name, {**options, "fields": fields}))
+        return tuple(filtered_fieldsets)
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and obj.is_superuser and not request.user.is_superuser:
+            return False
+        return super().has_change_permission(request, obj=obj)
+
+    def has_view_permission(self, request, obj=None):
+        if obj is not None and obj.is_superuser and not request.user.is_superuser:
+            return False
+        return super().has_view_permission(request, obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.is_superuser and not request.user.is_superuser:
+            return False
+        return super().has_delete_permission(request, obj=obj)
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "username" and formfield is not None:
+            formfield.label = "Логин"
+        if (
+            db_field.name == "amo_id_contact"
+            and formfield is not None
+            and getattr(request, "_user_admin_add_form", False)
+        ):
+            formfield.widget = AmoContactCreateWidget(
+                base_widget=formfield.widget,
+                create_url=reverse("admin:users_user_create_from_amocrm"),
+            )
+        return formfield
+
+    def create_from_amocrm(self, request):
+        if not self.has_add_permission(request):
+            raise PermissionDenied
+
+        add_url = reverse("admin:users_user_add")
+        if request.method != "POST":
+            return HttpResponseRedirect(add_url)
+
+        contact_id = parse_external_id(request.POST.get("amo_id_contact"))
+        if contact_id is None:
+            messages.error(request, "Введите корректный ID контакта AmoCRM.")
+            return HttpResponseRedirect(add_url)
+
+        try:
+            user, created = resolve_user_via_amocrm_contact_id(contact_id=contact_id)
+        except ValidationError as error:
+            messages.error(request, error.messages[0] if error.messages else str(error))
+            return HttpResponseRedirect(add_url)
+        except AmoCRMError as error:
+            messages.error(
+                request,
+                extract_error_message(
+                    error,
+                    "Не удалось создать пользователя из AmoCRM.",
+                ),
+            )
+            return HttpResponseRedirect(add_url)
+        except Exception:
+            logger.exception(
+                "Unexpected admin amoCRM user creation error for contact_id=%s",
+                contact_id,
+            )
+            messages.error(request, "Не удалось создать пользователя из AmoCRM.")
+            return HttpResponseRedirect(add_url)
+
+        if created:
+            messages.success(request, "Пользователь создан из AmoCRM.")
+        else:
+            messages.info(
+                request,
+                "Пользователь с таким ID контакта AmoCRM уже существует.",
+            )
+
+        return HttpResponseRedirect(reverse("admin:users_user_change", args=[user.pk]))
+
+    @admin.display(description="Логин", ordering="username")
+    def login(self, obj):
+        return obj.username
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            qs = qs.filter(is_superuser=False)
         return qs.prefetch_related("addresses", "phones", "requisites_set")
 
     @admin.display(description=_("Роль"), ordering="role")
@@ -223,7 +398,15 @@ class UserAdmin(BaseUserAdmin):
         (_("Связь с покупателем"), {"fields": ("customer", "role")}),
         (_("Контакты"), {"fields": ("email", "phone")}),
         (_("Интеграции"), {"fields": ("amo_id_contact", "telegram_id", "max_id")}),
-        (_("Права доступа"), {"fields": ("is_active", "is_staff", "is_superuser")}),
+        (_("Права доступа"), {
+            "fields": (
+                "is_active",
+                "is_staff",
+                "is_superuser",
+                "groups",
+                "user_permissions",
+            ),
+        }),
         (_("Даты"), {"fields": ("last_login", "date_joined", "time_created", "time_updated")}),
     )
 

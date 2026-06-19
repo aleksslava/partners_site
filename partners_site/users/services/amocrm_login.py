@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from integrations.amocrm.exceptions import AmoServerError, ContactDoubleError
@@ -86,6 +87,10 @@ def extract_contact_id(contact_payload: dict[str, Any]) -> int:
     return contact_id
 
 
+def _get_contact_not_found_message(contact_id: int) -> str:
+    return f"Контакт с ID {contact_id} не найден в AmoCRM"
+
+
 def get_full_contact(contact_id: int) -> dict[str, Any]:
     amo_api = get_amocrm_client()
     try:
@@ -96,7 +101,7 @@ def get_full_contact(contact_id: int) -> dict[str, Any]:
         ) from error
 
     if not isinstance(contact, dict) or to_int_or_none(contact.get("id")) is None:
-        raise AmoServerError("Не удалось получить данные контакта, обратитесь к менеджеру")
+        raise AmoServerError(_get_contact_not_found_message(contact_id))
 
     return contact
 
@@ -220,7 +225,11 @@ def build_unique_username(contact_id: int, telegram_id: int | None, max_id: int 
         suffix += 1
 
 
-def create_user_from_contact(contact_payload: dict[str, Any], contact_id: int) -> User:
+def create_user_from_contact(
+    contact_payload: dict[str, Any],
+    contact_id: int,
+    username: str | None = None,
+) -> User:
     custom_fields_values = contact_payload.get("custom_fields_values") or []
 
     first_name = (contact_payload.get("first_name") or "").strip()
@@ -241,7 +250,12 @@ def create_user_from_contact(contact_payload: dict[str, Any], contact_id: int) -
     telegram_id = to_int_or_none(get_custom_field_first_value(custom_fields_values, CONTACT_TG_ID_FIELD_ID))
     max_id = to_int_or_none(get_custom_field_first_value(custom_fields_values, CONTACT_MAX_ID_FIELD_ID))
 
-    username = build_unique_username(contact_id=contact_id, telegram_id=telegram_id, max_id=max_id)
+    if username is None:
+        username = build_unique_username(
+            contact_id=contact_id,
+            telegram_id=telegram_id,
+            max_id=max_id,
+        )
 
     user = User.objects.create(
         username=username,
@@ -257,6 +271,37 @@ def create_user_from_contact(contact_payload: dict[str, Any], contact_id: int) -
     user.set_unusable_password()
     user.save(update_fields=["password"])
     return user
+
+
+def resolve_user_via_amocrm_contact_id(contact_id: int) -> tuple[User, bool]:
+    """Create or return an active user using an amoCRM contact ID."""
+    user = User.objects.filter(amo_id_contact=contact_id, is_active=True).first()
+    if user is not None:
+        return user, False
+
+    contact_full = get_full_contact(contact_id=contact_id)
+    if extract_contact_id(contact_full) != contact_id:
+        raise AmoServerError(_get_contact_not_found_message(contact_id))
+
+    username = str(contact_id)
+    if User.objects.filter(username=username).exists():
+        raise ValidationError(f"Логин {username} уже занят другим пользователем.")
+
+    with transaction.atomic():
+        user = User.objects.filter(amo_id_contact=contact_id, is_active=True).first()
+        if user is not None:
+            return user, False
+
+        user = create_user_from_contact(
+            contact_payload=contact_full,
+            contact_id=contact_id,
+            username=username,
+        )
+        customer = get_or_create_customer_by_contact(contact_payload=contact_full)
+        user.customer = customer
+        user.save(update_fields=["customer"])
+
+    return user, True
 
 
 def resolve_user_via_amocrm(field_name: str, field_value: int) -> User:

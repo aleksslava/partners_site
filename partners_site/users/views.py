@@ -29,11 +29,6 @@ from users.services.amocrm_sync import sync_customer_from_amocrm, sync_user_and_
 
 logger = logging.getLogger(__name__)
 
-EXTERNAL_IDENTITY_PLATFORMS = {
-    "telegram_id": "telegram",
-    "max_id": "max",
-}
-
 
 def embedded_webapp_entry(request, platform: str):
     if platform not in settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS:
@@ -98,11 +93,6 @@ class UserLoginView(LoginView):
         if identity is None:
             return super().get(request, *args, **kwargs)
 
-        field_name, field_value = identity
-        request.session[settings.EMBEDDED_WEBAPP_SESSION_KEY] = (
-            EXTERNAL_IDENTITY_PLATFORMS[field_name]
-        )
-
         if request.GET.get(self.auth_exec_param) != "1":
             auth_query_params = request.GET.copy()
             auth_query_params[self.auth_exec_param] = "1"
@@ -112,6 +102,7 @@ class UserLoginView(LoginView):
                 {"auth_redirect_url": f"{request.path}?{auth_query_params.urlencode()}"},
             )
 
+        field_name, field_value = identity
         user = get_local_user_by_external_identity(field_name=field_name, field_value=field_value)
 
         if user is None:

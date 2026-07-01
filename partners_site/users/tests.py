@@ -632,6 +632,35 @@ class EmbeddedWebAppFrameOptionsTests(TestCase):
         self.assert_embedded_csp(response, "https://web.max.ru")
         self.assertEqual(response.context["embedded_webapp_platform"], "max")
 
+    def test_max_frame_root_request_stores_session_before_login_redirect(self):
+        response = self.client.get(
+            reverse("catalog"),
+            HTTP_REFERER="https://web.max.ru/",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/")
+        self.assertEqual(
+            self.client.session.get(settings.EMBEDDED_WEBAPP_SESSION_KEY),
+            "max",
+        )
+        self.assert_embedded_csp(response, "https://web.max.ru")
+
+        login_response = self.client.get(response.url)
+
+        self.assert_embedded_csp(login_response, "https://web.max.ru")
+        self.assertEqual(login_response.context["embedded_webapp_platform"], "max")
+
+    def test_unknown_frame_referer_keeps_x_frame_options(self):
+        response = self.client.get(
+            reverse("catalog"),
+            HTTP_REFERER="https://example.com/",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers.get("X-Frame-Options"), "SAMEORIGIN")
+        self.assertNotIn("Content-Security-Policy", response.headers)
+
     def test_authenticated_page_without_embedded_session_keeps_x_frame_options(self):
         user = User.objects.create_user(username="plain_user", password="secret")
         self.client.force_login(user)

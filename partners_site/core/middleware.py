@@ -1,4 +1,7 @@
+from urllib.parse import urlsplit
+
 from django.conf import settings
+from django.http import HttpRequest
 from django.shortcuts import redirect
 
 
@@ -15,16 +18,39 @@ PUBLIC_PATHS = frozenset(
 )
 
 
+def _get_origin(value: str) -> str | None:
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}".lower()
+
+
+def _infer_embedded_platform(request: HttpRequest) -> str | None:
+    origins = (
+        _get_origin(request.headers.get("Origin", "")),
+        _get_origin(request.headers.get("Referer", "")),
+    )
+    for platform, frame_ancestor in settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS.items():
+        if frame_ancestor.lower() in origins:
+            return platform
+    return None
+
+
 class EmbeddedWebAppFrameOptionsMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        platform = request.session.get(settings.EMBEDDED_WEBAPP_SESSION_KEY)
+        if platform not in settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS:
+            platform = _infer_embedded_platform(request)
+            if platform is not None:
+                request.session[settings.EMBEDDED_WEBAPP_SESSION_KEY] = platform
+
         response = self.get_response(request)
         if request.path.startswith("/admin/"):
             return response
 
-        platform = request.session.get(settings.EMBEDDED_WEBAPP_SESSION_KEY)
         frame_ancestor = settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS.get(platform)
         if frame_ancestor is None:
             return response

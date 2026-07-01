@@ -588,18 +588,23 @@ class SyncCustomerFromAmoCRMTests(TestCase):
 
 
 class EmbeddedWebAppFrameOptionsTests(TestCase):
-    def assert_embedded_csp(self, response, frame_ancestor):
+    def assert_embedded_csp(self, response, *frame_ancestors):
         self.assertNotIn("X-Frame-Options", response.headers)
         csp = response.headers["Content-Security-Policy"]
-        self.assertIn(f"frame-ancestors 'self' {frame_ancestor}", csp)
+        self.assertIn("frame-ancestors 'self'", csp)
+        for frame_ancestor in frame_ancestors:
+            self.assertIn(frame_ancestor, csp)
         self.assertIn("upgrade-insecure-requests", csp)
         self.assertIn("block-all-mixed-content", csp)
 
-    def test_regular_login_keeps_x_frame_options(self):
+    def test_regular_login_allows_known_webapp_frame_ancestors(self):
         response = self.client.get(reverse("users:login"))
 
-        self.assertEqual(response.headers.get("X-Frame-Options"), "SAMEORIGIN")
-        self.assertNotIn("Content-Security-Policy", response.headers)
+        self.assert_embedded_csp(
+            response,
+            "https://web.telegram.org",
+            "https://web.max.ru",
+        )
         self.assertEqual(response.context["embedded_webapp_platform"], "")
 
     def test_telegram_entry_stores_session_and_redirects_to_login(self):
@@ -632,7 +637,27 @@ class EmbeddedWebAppFrameOptionsTests(TestCase):
         self.assert_embedded_csp(response, "https://web.max.ru")
         self.assertEqual(response.context["embedded_webapp_platform"], "max")
 
-    def test_max_frame_root_request_stores_session_before_login_redirect(self):
+    def test_root_request_allows_known_webapp_frame_ancestors_before_login(self):
+        response = self.client.get(reverse("catalog"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/login/?next=/")
+        self.assert_embedded_csp(
+            response,
+            "https://web.telegram.org",
+            "https://web.max.ru",
+        )
+
+        login_response = self.client.get(response.url)
+
+        self.assert_embedded_csp(
+            login_response,
+            "https://web.telegram.org",
+            "https://web.max.ru",
+        )
+        self.assertEqual(login_response.context["embedded_webapp_platform"], "")
+
+    def test_max_frame_referer_stores_session_before_login_redirect(self):
         response = self.client.get(
             reverse("catalog"),
             HTTP_REFERER="https://web.max.ru/",
@@ -646,14 +671,9 @@ class EmbeddedWebAppFrameOptionsTests(TestCase):
         )
         self.assert_embedded_csp(response, "https://web.max.ru")
 
-        login_response = self.client.get(response.url)
-
-        self.assert_embedded_csp(login_response, "https://web.max.ru")
-        self.assertEqual(login_response.context["embedded_webapp_platform"], "max")
-
     def test_unknown_frame_referer_keeps_x_frame_options(self):
         response = self.client.get(
-            reverse("catalog"),
+            reverse("catalog_legacy"),
             HTTP_REFERER="https://example.com/",
         )
 
@@ -661,11 +681,24 @@ class EmbeddedWebAppFrameOptionsTests(TestCase):
         self.assertEqual(response.headers.get("X-Frame-Options"), "SAMEORIGIN")
         self.assertNotIn("Content-Security-Policy", response.headers)
 
+    def test_max_id_login_stores_embedded_session(self):
+        User.objects.create_user(username="max_user", password="secret", max_id=123)
+
+        response = self.client.get(
+            f"{reverse('users:login')}?max_id=123&auth_exec=1",
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            self.client.session.get(settings.EMBEDDED_WEBAPP_SESSION_KEY),
+            "max",
+        )
+
     def test_authenticated_page_without_embedded_session_keeps_x_frame_options(self):
         user = User.objects.create_user(username="plain_user", password="secret")
         self.client.force_login(user)
 
-        response = self.client.get(reverse("catalog"))
+        response = self.client.get(reverse("catalog_legacy"))
 
         self.assertEqual(response.headers.get("X-Frame-Options"), "SAMEORIGIN")
 

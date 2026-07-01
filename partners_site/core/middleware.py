@@ -17,6 +17,15 @@ PUBLIC_PATHS = frozenset(
     )
 )
 
+EMBEDDED_WEBAPP_PUBLIC_PATHS = frozenset(
+    (
+        settings.LOGIN_REDIRECT_URL,
+        settings.LOGIN_URL,
+        "/telegram/",
+        "/max/",
+    )
+)
+
 
 def _get_origin(value: str) -> str | None:
     parsed = urlsplit(value)
@@ -36,6 +45,14 @@ def _infer_embedded_platform(request: HttpRequest) -> str | None:
     return None
 
 
+def _build_frame_ancestors_csp(frame_ancestors: tuple[str, ...]) -> str:
+    allowed_ancestors = " ".join(("'self'", *frame_ancestors))
+    return (
+        f"frame-ancestors {allowed_ancestors}; "
+        "upgrade-insecure-requests; block-all-mixed-content"
+    )
+
+
 class EmbeddedWebAppFrameOptionsMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -52,13 +69,17 @@ class EmbeddedWebAppFrameOptionsMiddleware:
             return response
 
         frame_ancestor = settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS.get(platform)
-        if frame_ancestor is None:
+        if frame_ancestor is not None:
+            frame_ancestors = (frame_ancestor,)
+        elif request.path in EMBEDDED_WEBAPP_PUBLIC_PATHS:
+            frame_ancestors = tuple(settings.EMBEDDED_WEBAPP_FRAME_ANCESTORS.values())
+        else:
             return response
 
         response.xframe_options_exempt = True
-        response.headers[
-            "Content-Security-Policy"
-        ] = f"frame-ancestors 'self' {frame_ancestor}; upgrade-insecure-requests; block-all-mixed-content"
+        response.headers["Content-Security-Policy"] = _build_frame_ancestors_csp(
+            frame_ancestors,
+        )
         return response
 
 
